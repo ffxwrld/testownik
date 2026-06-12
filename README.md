@@ -1,6 +1,6 @@
 # Testownik
 
-Testownik is a desktop application designed for learning and testing through custom question banks. It focuses on efficiency and memory retention by enforcing repeated correct answers for questions you get wrong.
+Testownik is a desktop application designed for learning and testing through custom question banks. It focuses on efficiency and memory retention by enforcing repeated correct answers for questions you get wrong. You can download it on [Releases page](https://github.com/ffxwrld/testownik/releases).
 
 ## Features
 
