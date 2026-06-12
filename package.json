@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
-    "build": "vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
+    "build": "vite build && copy electron\\main.cjs dist-electron\\ && copy electron\\preload.cjs dist-electron\\",
     "build:mac": "npm run build && electron-builder --mac --publish=never",
     "build:win": "npm run build && electron-builder --win --publish=never",
     "build:all": "npm run build && electron-builder -mw --publish=never",
