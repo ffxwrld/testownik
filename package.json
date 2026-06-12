@@ -1,0 +1,71 @@
+{
+  "name": "testownik",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "homepage": "./",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
+    "build:mac": "npm run build && electron-builder --mac --publish=never",
+    "build:win": "npm run build && electron-builder --win --publish=never",
+    "build:all": "npm run build && electron-builder -mw --publish=never",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/jszip": "^3.4.0",
+    "clsx": "2.1.1",
+    "jszip": "^3.10.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "tailwind-merge": "3.4.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "@tailwindcss/vite": "4.1.17",
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.2",
+    "electron-is-dev": "^3.0.1",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3",
+    "vite": "7.3.2",
+    "vite-plugin-singlefile": "2.3.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.testownik.app",
+    "productName": "Testownik",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.education"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    }
+  }
+}
