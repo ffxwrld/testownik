@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { SessionState, AnswerFeedback } from '../models/types';
+import { Question } from '../models/types';
 import {
   processCorrectAnswer,
   processWrongAnswer,
@@ -18,6 +19,13 @@ interface TestViewProps {
   sessionId: string;
   onSessionUpdate: (session: SessionState) => void;
   onQuit: () => void;
+}
+
+interface PreviousQuestionData {
+  question: Question;
+  shuffledOrder: number[];
+  correctShuffledIndices: number[];
+  feedback: AnswerFeedback;
 }
 
 // Shorter delay — user just confirmed, no need to wait long
@@ -40,6 +48,9 @@ export const TestView: React.FC<TestViewProps> = ({
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   // Optimistic streak: shown immediately after confirm, before session update
   const [optimisticStreak, setOptimisticStreak] = useState<number | null>(null);
+  // Previous question for review
+  const [previousQuestion, setPreviousQuestion] = useState<PreviousQuestionData | null>(null);
+  const [showingPrevious, setShowingPrevious] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionRef = useRef(session);
@@ -140,11 +151,13 @@ export const TestView: React.FC<TestViewProps> = ({
       setOptimisticStreak(0);
     }
 
-    setFeedback({
+    const newFeedback: AnswerFeedback = {
       selectedAnswerIndices: selectedIndices,
       state: isCorrect ? 'correct' : 'wrong',
       correctShuffledIndices,
-    });
+    };
+
+    setFeedback(newFeedback);
     setIsTransitioning(true);
 
     setTimeout(() => {
@@ -169,17 +182,28 @@ export const TestView: React.FC<TestViewProps> = ({
   ]);
 
   const handleNext = useCallback(() => {
+    // Save current question as "previous" for review
+    if (currentQuestion && feedback) {
+      setPreviousQuestion({
+        question: currentQuestion,
+        shuffledOrder: shuffledOrder,
+        correctShuffledIndices: correctShuffledIndices,
+        feedback: feedback,
+      });
+    }
+
     setFeedback(null);
     setSelectedIndices([]);
     setOptimisticStreak(null);
     setQuestionKey(k => k + 1);
+    setShowingPrevious(false);
     if (processedSession) {
       // Store in ref BEFORE calling onSessionUpdate, which may unmount this component.
       processedSessionRef.current = processedSession;
       onSessionUpdate(processedSession);
       setProcessedSession(null);
     }
-  }, [processedSession, onSessionUpdate]);
+  }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices]);
 
   // ─── Keyboard shortcuts ────────────────────────────────────────────────────
 
@@ -192,12 +216,27 @@ export const TestView: React.FC<TestViewProps> = ({
         return;
 
       if (e.key === 'Escape') {
-        setConfirmQuit(q => !q);
+        if (showingPrevious) {
+          setShowingPrevious(false);
+        } else {
+          setConfirmQuit(q => !q);
+        }
+        return;
+      }
+
+      // ArrowLeft: toggle previous question view
+      if (e.key === 'ArrowLeft' && previousQuestion) {
+        e.preventDefault();
+        setShowingPrevious(prev => !prev);
         return;
       }
 
       // Space or Enter: confirm (even without selection = skip) or advance
       if ((e.key === ' ' || e.key === 'Enter') && !isTransitioning) {
+        if (showingPrevious) {
+          setShowingPrevious(false);
+          return;
+        }
         if (feedback !== null) {
           handleNext();
         } else {
@@ -207,13 +246,13 @@ export const TestView: React.FC<TestViewProps> = ({
       }
 
       const idx = ANSWER_KEYS.indexOf(e.key);
-      if (idx !== -1 && idx < (currentQuestion?.answers.length ?? 0) && feedback === null) {
+      if (idx !== -1 && idx < (currentQuestion?.answers.length ?? 0) && feedback === null && !showingPrevious) {
         handleToggleAnswer(idx);
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [handleToggleAnswer, handleConfirm, handleNext, currentQuestion, feedback, isTransitioning]);
+  }, [handleToggleAnswer, handleConfirm, handleNext, currentQuestion, feedback, isTransitioning, showingPrevious, previousQuestion]);
 
   // ─── Derived stats ────────────────────────────────────────────────────────
 
@@ -342,7 +381,7 @@ export const TestView: React.FC<TestViewProps> = ({
   const renderStreakDots = () => {
     if (requiredStreak <= 1) return null;
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
         {Array.from({ length: requiredStreak }, (_, i) => (
           <div
             key={i}
@@ -370,7 +409,7 @@ export const TestView: React.FC<TestViewProps> = ({
 
       {/* ── Sticky Header ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-zinc-900">
-        <div className="max-w-3xl mx-auto px-4 py-3">
+        <div className="max-w-5xl mx-auto px-4 py-3">
 
           {/* Top row: quit | stats | timer */}
           <div className="flex items-center justify-between gap-4 mb-2.5">
@@ -456,246 +495,378 @@ export const TestView: React.FC<TestViewProps> = ({
       </header>
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col items-center px-4 py-8 pb-16">
-        <div className="w-full max-w-2xl space-y-5">
+      <main className="flex-1 flex items-start px-4 py-8 pb-16">
+        <div className="w-full max-w-5xl mx-auto flex gap-6 items-stretch">
 
-          {/* Question metadata row */}
-          <div className="flex items-center justify-between flex-wrap gap-2 animate-fadeIn">
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* "Do końca: X pytań" instead of "Pytanie X / Y" */}
-              <Badge variant="info">
-                Do końca: {remainingCount} {remainingCount === 1 ? 'pytanie' : remainingCount < 5 ? 'pytania' : 'pytań'}
-              </Badge>
+          {/* ── Left column: question + answers ──────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-4">
 
-              {isMultiAnswer && (
-                <Badge variant="warning">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Wiele poprawnych
+            {/* Question metadata row */}
+            <div className="flex items-center justify-between flex-wrap gap-2 animate-fadeIn">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="info">
+                  Do końca: {remainingCount} {remainingCount === 1 ? 'pytanie' : remainingCount < 5 ? 'pytania' : 'pytań'}
                 </Badge>
-              )}
 
-              {wrongCountForCurrent > 0 && (
-                <Badge variant="warning">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                    />
-                  </svg>
-                  Błędy: {wrongCountForCurrent}
-                </Badge>
-              )}
+                {isMultiAnswer && (
+                  <Badge variant="warning">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Wiele poprawnych
+                  </Badge>
+                )}
+
+                {wrongCountForCurrent > 0 && (
+                  <Badge variant="warning">
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                      />
+                    </svg>
+                    Błędy: {wrongCountForCurrent}
+                  </Badge>
+                )}
+              </div>
             </div>
 
-            {/* Streak indicator */}
-            {renderStreakDots()}
-          </div>
-
-          {/* Question card */}
-          <Card
-            key={`q-${questionKey}`}
-            className="animate-fadeIn"
-          >
-            {/* Source file label */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-600 font-mono mb-3">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                />
-              </svg>
-              <span className="truncate">
-                {currentQuestion.sourceFile.split('/').pop()?.replace('.txt', '') ??
-                  currentItem.questionId}
-              </span>
-            </div>
-
-            {/* Question text */}
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
-              {currentQuestion.text}
-            </h2>
-          </Card>
-
-          {/* Feedback banner */}
-          {feedback && (
-            <div
-              className={`
-                rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold
-                animate-slideDown border
-                ${
-                  feedback.state === 'correct'
-                    ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                    : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/60'
-                }
-              `}
+            {/* Question card */}
+            <Card
+              key={`q-${questionKey}`}
+              className="animate-fadeIn"
             >
-              {feedback.state === 'correct' ? (
-                <>
-                  <svg
-                    className="w-5 h-5 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>
-                    Poprawna odpowiedź!
-                    {requiredStreak > 1 && consecutiveCorrect < requiredStreak && (
-                      <span className="font-normal text-emerald-700 dark:text-emerald-400 ml-1">
-                        Jeszcze{' '}
-                        {requiredStreak - consecutiveCorrect} do zaliczenia.
-                      </span>
-                    )}
-                    {requiredStreak > 1 && consecutiveCorrect >= requiredStreak && (
-                      <span className="font-normal ml-1">Pytanie zaliczone! 🎉</span>
-                    )}
-                  </span>
-                </>
-              ) : feedback.selectedAnswerIndices.length === 0 ? (
-                <>
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                  <span>Pominięto. Pytanie wróci do kolejki.</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-5 h-5 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>
-                    Błędna odpowiedź. Pytanie wróci do kolejki i będzie wymagać{' '}
-                    <strong>{session.repeatMode}</strong>{' '}
-                    {session.repeatMode === 1
-                      ? 'poprawnej odpowiedzi.'
-                      : 'kolejnych poprawnych odpowiedzi.'}
-                  </span>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Answer buttons */}
-          <div
-            key={`answers-${questionKey}`}
-            className="space-y-3 animate-fadeIn"
-          >
-            {shuffledOrder.map((originalIdx, shuffledIdx) => {
-              const answer = currentQuestion.answers[originalIdx];
-              return (
-                <button
-                  key={answer.id}
-                  onClick={() => handleToggleAnswer(shuffledIdx)}
-                  disabled={feedback !== null || isTransitioning}
-                  className={getAnswerButtonClass(shuffledIdx)}
+              {/* Source file label */}
+              <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-600 font-mono mb-3">
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
                 >
-                  <div className="flex items-start gap-3">
-                    {getAnswerBadge(shuffledIdx)}
-                    <span className="pt-0.5 flex-1 text-left">{answer.text}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+                <span className="truncate">
+                  {currentQuestion.sourceFile.split('/').pop()?.replace('.txt', '') ??
+                    currentItem.questionId}
+                </span>
+              </div>
 
-          {/* Keyboard hint */}
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
-              Klawiatura:{' '}
-              {currentQuestion.answers.map((_, i) => (
-                <React.Fragment key={i}>
-                  <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
-                    {ANSWER_KEYS[i]}
-                  </kbd>
-                </React.Fragment>
-              ))}
-              — {isMultiAnswer ? 'zaznacz' : 'wybierz'} &nbsp;|&nbsp;{' '}
-              <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
-                Spacja
-              </kbd>{' '}
-              — {feedback ? 'dalej' : 'zatwierdź'} &nbsp;|&nbsp;{' '}
-              <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono">
-                Esc
-              </kbd>{' '}
-              — zakończ
-            </p>
-          </div>
+              {/* Question text */}
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
+                {currentQuestion.text}
+              </h2>
+            </Card>
 
-          {/* Action buttons: Confirm or Next */}
-          <div className="flex justify-center gap-3 pt-4">
-            {feedback === null && !isTransitioning && (
-              <Button
-                onClick={handleConfirm}
-                variant="primary"
-                size="lg"
-                disabled={!canConfirm}
-                className={`animate-fadeIn transition-all shadow-xl shadow-blue-600/20 ${
-                  selectedIndices.length === 0 ? 'opacity-60' : ''
-                }`}
+            {/* Feedback banner */}
+            {feedback && (
+              <div
+                className={`
+                  rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold
+                  animate-slideDown border
+                  ${
+                    feedback.state === 'correct'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                      : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/60'
+                  }
+                `}
               >
-                {selectedIndices.length === 0 ? (
+                {feedback.state === 'correct' ? (
                   <>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <svg
+                      className="w-5 h-5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>
+                      Poprawna odpowiedź!
+                      {requiredStreak > 1 && consecutiveCorrect < requiredStreak && (
+                        <span className="font-normal text-emerald-700 dark:text-emerald-400 ml-1">
+                          Jeszcze{' '}
+                          {requiredStreak - consecutiveCorrect} do zaliczenia.
+                        </span>
+                      )}
+                      {requiredStreak > 1 && consecutiveCorrect >= requiredStreak && (
+                        <span className="font-normal ml-1">Pytanie zaliczone! 🎉</span>
+                      )}
+                    </span>
+                  </>
+                ) : feedback.selectedAnswerIndices.length === 0 ? (
+                  <>
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
-                    Pomiń
+                    <span>Pominięto. Pytanie wróci do kolejki.</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    <svg
+                      className="w-5 h-5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
-                    Zatwierdź
+                    <span>
+                      Błędna odpowiedź. Pytanie wróci do kolejki i będzie wymagać{' '}
+                      <strong>{session.repeatMode}</strong>{' '}
+                      {session.repeatMode === 1
+                        ? 'poprawnej odpowiedzi.'
+                        : 'kolejnych poprawnych odpowiedzi.'}
+                    </span>
                   </>
                 )}
-              </Button>
+              </div>
             )}
 
-            {feedback !== null && !isTransitioning && (
-              <Button
-                onClick={handleNext}
-                variant="primary"
-                size="lg"
-                className="animate-fadeIn shadow-xl shadow-blue-600/20"
-              >
-                Dalej →
-              </Button>
-            )}
+            {/* Answer buttons */}
+            <div
+              key={`answers-${questionKey}`}
+              className="space-y-3 animate-fadeIn"
+            >
+              {shuffledOrder.map((originalIdx, shuffledIdx) => {
+                const answer = currentQuestion.answers[originalIdx];
+                return (
+                  <button
+                    key={answer.id}
+                    onClick={() => handleToggleAnswer(shuffledIdx)}
+                    disabled={feedback !== null || isTransitioning}
+                    className={getAnswerButtonClass(shuffledIdx)}
+                  >
+                    <div className="flex items-start gap-3">
+                      {getAnswerBadge(shuffledIdx)}
+                      <span className="pt-0.5 flex-1 text-left">{answer.text}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Keyboard hint */}
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
+                Klawiatura:{' '}
+                {currentQuestion.answers.map((_, i) => (
+                  <React.Fragment key={i}>
+                    <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
+                      {ANSWER_KEYS[i]}
+                    </kbd>
+                  </React.Fragment>
+                ))}
+                — {isMultiAnswer ? 'zaznacz' : 'wybierz'} &nbsp;|&nbsp;{' '}
+                <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
+                  Spacja
+                </kbd>{' '}
+                — {feedback ? 'dalej' : 'zatwierdź'}
+                {previousQuestion && (
+                  <>
+                    {' '}&nbsp;|&nbsp;{' '}
+                    <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
+                      ←
+                    </kbd>{' '}
+                    — poprzednie
+                  </>
+                )}
+              </p>
+            </div>
+
           </div>
+
+          {/* ── Right sidebar: actions ────────────────────────────────────────── */}
+          <div className="w-52 flex-shrink-0 flex flex-col justify-center gap-3">
+
+            {/* Streak indicator */}
+            {requiredStreak > 1 && (
+              <div className="bg-white dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3">
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-medium uppercase tracking-wide">
+                  Seria
+                </p>
+                {renderStreakDots()}
+              </div>
+            )}
+
+            {/* Primary action button */}
+            <div className="space-y-2">
+              {feedback === null && !isTransitioning && (
+                <Button
+                  onClick={handleConfirm}
+                  variant="primary"
+                  size="lg"
+                  disabled={!canConfirm}
+                  className={`w-full animate-fadeIn transition-all shadow-xl shadow-blue-600/20 ${
+                    selectedIndices.length === 0 ? 'opacity-60' : ''
+                  }`}
+                >
+                  {selectedIndices.length === 0 ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                      Pomiń
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Zatwierdź
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {feedback !== null && !isTransitioning && (
+                <Button
+                  onClick={handleNext}
+                  variant="primary"
+                  size="lg"
+                  className="w-full animate-fadeIn shadow-xl shadow-blue-600/20"
+                >
+                  Dalej →
+                </Button>
+              )}
+            </div>
+
+            {/* Previous question button */}
+            {previousQuestion && (
+              <button
+                onClick={() => setShowingPrevious(true)}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all duration-150 text-sm font-medium"
+              >
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <span>Poprzednie pytanie</span>
+              </button>
+            )}
+
+          </div>
+
         </div>
       </main>
+
+      {/* ── Previous question overlay ─────────────────────────────────────────── */}
+      {showingPrevious && previousQuestion && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setShowingPrevious(false)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-700 w-full max-w-xl max-h-[80vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Poprzednie pytanie
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Result badge */}
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    previousQuestion.feedback.state === 'correct'
+                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {previousQuestion.feedback.state === 'correct' ? 'Poprawna' : previousQuestion.feedback.selectedAnswerIndices.length === 0 ? 'Pominięto' : 'Błędna'}
+                </span>
+                <button
+                  onClick={() => setShowingPrevious(false)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Question text */}
+            <div className="px-6 py-4">
+              <p className="text-base font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
+                {previousQuestion.question.text}
+              </p>
+            </div>
+
+            {/* Answers (read-only with result indicators) */}
+            <div className="px-6 pb-6 space-y-2">
+              {previousQuestion.shuffledOrder.map((originalIdx, shuffledIdx) => {
+                const answer = previousQuestion.question.answers[originalIdx];
+                const isCorrect = previousQuestion.correctShuffledIndices.includes(shuffledIdx);
+                const wasSelected = previousQuestion.feedback.selectedAnswerIndices.includes(shuffledIdx);
+
+                let cls = 'flex items-start gap-3 px-4 py-3 rounded-xl border-2 text-sm ';
+                let badgeEl: React.ReactNode;
+
+                if (isCorrect) {
+                  cls += 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200';
+                  badgeEl = (
+                    <span className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </span>
+                  );
+                } else if (wasSelected && !isCorrect) {
+                  cls += 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200';
+                  badgeEl = (
+                    <span className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </span>
+                  );
+                } else {
+                  cls += 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-400 dark:text-zinc-600';
+                  badgeEl = (
+                    <span className="w-6 h-6 rounded-full border-2 border-zinc-200 dark:border-zinc-700 flex-shrink-0 mt-0.5" />
+                  );
+                }
+
+                return (
+                  <div key={answer.id} className={cls}>
+                    {badgeEl}
+                    <span className="flex-1 leading-relaxed">{answer.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -71,10 +71,8 @@ const App: React.FC = () => {
       const saved = loadSession(sessionId);
       if (saved) {
         setCurrentSessionId(sessionId);
-        if (saved.phase === 'test' || saved.phase === 'summary') {
-          setSession(saved);
-          setPhase(saved.phase === 'summary' ? 'summary' : 'test');
-        }
+        setSession(saved);
+        // Always land on HomeView — user can resume from "Moje testy"
       }
     }
   }, []);
