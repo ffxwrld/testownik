@@ -1,69 +1,62 @@
-# Testownik 🎓
+# Testownik
 
-Nowoczesna aplikacja desktopowa do nauki i rozwiązywania testów na podstawie własnych baz pytań. Stworzona z myślą o szybkiej, wygodnej i efektywnej powtórce materiału z wykorzystaniem systemu zapamiętywania (wymuszanie wielokrotnych poprawnych odpowiedzi).
+Testownik is a desktop application designed for learning and testing through custom question banks. It focuses on efficiency and memory retention by enforcing repeated correct answers for questions you get wrong.
 
-## ✨ Główne funkcje
+## Features
 
-- **Własne bazy pytań:** Wgrywaj paczki w formacie `.zip` zawierające zdjęcia pytań i plik `.json` z odpowiedziami.
-- **Inteligentne powtórki:** Algorytm "Testownika" upewnia się, że opanujesz materiał. Po złej odpowiedzi pytanie wraca do puli i wymaga podania poprawnej odpowiedzi np. 2 lub 3 razy z rzędu (w zależności od wybranego trybu).
-- **Zarządzanie sesjami:** Aplikacja automatycznie zapisuje Twój postęp w tle (w pamięci `localStorage`). Możesz przerwać w każdej chwili i kontynuować test później.
-- **Skróty klawiszowe:** Błyskawiczna obsługa bez użycia myszki – od wybierania odpowiedzi, po skalowanie interfejsu.
-- **Dostępność i skalowanie:** Skróty `Cmd/Ctrl +` oraz `Cmd/Ctrl -` płynnie powiększają cały interfejs, dostosowując go do Twojego wzroku.
-- **Dark Mode:** Wbudowany, elegancki tryb ciemny dla komfortowej nauki w nocy.
+- Custom Question Banks: Load tests via .zip files containing question images and a .json file with answers.
+- Repetition System: When you answer a question incorrectly, the app returns it to the pool and requires you to answer it correctly a set number of times in a row (e.g., 2 or 3 times) before considering it learned.
+- Auto-Saving: Progress is automatically saved locally. You can close the app at any time and resume your session later.
+- Keyboard Navigation: Fully navigable using keyboard shortcuts for a faster workflow.
+- UI Scaling: Built-in zoom functionality (Cmd/Ctrl + and -) to adjust the interface size.
+- Dark Mode: Native dark mode support.
 
-## 🛠 Technologie
+## Tech Stack
 
-Projekt bazuje na nowoczesnym stosie:
-- **[React 19](https://react.dev/)** + **[TypeScript](https://www.typescriptlang.org/)** – Serce aplikacji i interfejs użytkownika.
-- **[Tailwind CSS](https://tailwindcss.com/)** – System stylowania pozwalający na łatwe i piękne budowanie UI.
-- **[Electron](https://www.electronjs.org/)** – Pozwala spakować aplikację webową do postaci natywnego programu na Windows i macOS.
-- **[Vite](https://vitejs.dev/)** – Ultraszybki bundler i środowisko deweloperskie.
+- React 19
+- TypeScript
+- Tailwind CSS
+- Electron
+- Vite
 
-## 🚀 Jak uruchomić projekt na swoim komputerze?
+## Local Development Setup
 
-Musisz mieć zainstalowane [Node.js](https://nodejs.org/) oraz system kontroli wersji [Git](https://git-scm.com/).
+To run the project locally, ensure you have Node.js and Git installed.
 
-### 1. Pobranie kodu
-Skopiuj repozytorium na swój komputer:
+1. Clone the repository:
 ```bash
-git clone https://github.com/TwojaNazwa/Testownik-app.git
+git clone https://github.com/YourUsername/Testownik-app.git
 cd Testownik-app
 ```
 
-### 2. Instalacja zależności
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 3. Uruchomienie trybu deweloperskiego
+3. Start the development server:
 ```bash
 npm run dev:electron
 ```
-*(Aplikacja otworzy się automatycznie jako okienko Electrona. Każda zmiana w kodzie odświeży ją w czasie rzeczywistym).*
+This will spin up the Vite dev server and open the Electron application. Changes to the code will reflect automatically.
 
-## 📦 Budowanie gotowej aplikacji (Instalator)
+## Building for Production
 
-Dzięki odpowiedniej konfiguracji `electron-builder`, wygenerowanie gotowych instalatorów jest banalnie proste. 
+The project is configured with electron-builder to generate standalone executables.
 
-Aby wygenerować wersję instalacyjną, wpisz jedną z poniższych komend w terminalu:
+To build the macOS application (.dmg):
+```bash
+npm run build:mac
+```
 
-- **Dla systemu macOS (plik `.dmg`):**
-  ```bash
-  npm run build:mac
-  ```
+To build the Windows installer (.exe):
+```bash
+npm run build:win
+```
 
-- **Dla systemu Windows (plik `.exe`):**
-  ```bash
-  npm run build:win
-  ```
-  *(Uwaga: Jeżeli budujesz na Windowsa bezpośrednio z systemu macOS, musisz upewnić się, że posiadasz zainstalowane oprogramowanie `wine`).*
+To build for both platforms sequentially:
+```bash
+npm run build:all
+```
 
-- **Budowanie na oba systemy po kolei:**
-  ```bash
-  npm run build:all
-  ```
-
-Gotowe pliki instalacyjne znajdziesz w nowo utworzonym folderze `dist/` (lub `dist/mac-arm64/` itp., zależnie od platformy).
-
----
-Stworzone z dbałością o detale, żeby pomóc Ci zdać wszystko śpiewająco! 🚀
+The compiled applications will be available in the generated `dist/` directory. Note: Building the Windows version directly from macOS requires `wine` to be installed on your host system. Alternatively, run the build command on a native Windows machine.
