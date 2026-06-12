@@ -25,8 +25,8 @@ To run the project locally, ensure you have Node.js and Git installed.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YourUsername/Testownik-app.git
-cd Testownik-app
+git clone https://github.com/YourUsername/Testownik.git
+cd Testownik
 ```
 
 2. Install dependencies:
