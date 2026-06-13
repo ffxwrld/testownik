@@ -2,8 +2,6 @@
 
 Testownik is a desktop application designed for learning and testing through custom question banks. It focuses on efficiency and memory retention by enforcing repeated correct answers for questions you get wrong. You can download it on [Releases page](https://github.com/ffxwrld/testownik/releases).
 
-(If you want to work with the project on Windows you need to work on "winbranch" branch)
-
 ## Features
 
 - Custom Question Banks: Load tests via .zip files containing question images and a .json file with answers.
@@ -41,6 +39,8 @@ npm install
 npm run dev
 ```
 This will spin up the Vite dev server and open the Electron application. Changes to the code will reflect automatically.
+
+(If you want to work with the project on Windows you need to work on "winbranch" branch)
 
 ## Building for Production
 
