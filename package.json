@@ -2,6 +2,7 @@
   "name": "testownik",
   "private": true,
   "version": "1.0.0",
+  "author": "Testownik <admin@testownik.app>",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "homepage": "./",
@@ -11,7 +12,8 @@
     "build": "vite build && copy electron\\main.cjs dist-electron\\ && copy electron\\preload.cjs dist-electron\\",
     "build:mac": "npm run build && electron-builder --mac --publish=never",
     "build:win": "npm run build && electron-builder --win --publish=never",
-    "build:all": "npm run build && electron-builder -mw --publish=never",
+    "build:linux": "npm run build && electron-builder --linux --publish=never",
+    "build:all": "npm run build && electron-builder -mwl --publish=never",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -61,6 +63,13 @@
       "target": [
         "nsis"
       ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Education"
     },
     "nsis": {
       "oneClick": false,
