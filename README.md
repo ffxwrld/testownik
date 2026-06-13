@@ -1,64 +1,67 @@
 # Testownik
 
-Testownik is a desktop application designed for learning and testing through custom question banks. It focuses on efficiency and memory retention by enforcing repeated correct answers for questions you get wrong. You can download it on [Releases page](https://github.com/ffxwrld/testownik/releases).
+Testownik is a simple and fast desktop application that helps you memorize information and prepare for exams. Instead of just reading notes, you load your own tests, and the app makes sure you actually remember the answers by repeating the questions you got wrong.
 
-## Features
+![Home View - Light Mode](placeholder-home-light.png)
+*Home View (Light Mode)*
 
-- Custom Question Banks: Load tests via .zip files containing question images and a .json file with answers.
-- Repetition System: When you answer a question incorrectly, the app returns it to the pool and requires you to answer it correctly a set number of times in a row (e.g., 2 or 3 times) before considering it learned.
-- Auto-Saving: Progress is automatically saved locally. You can close the app at any time and resume your session later.
-- Keyboard Navigation: Fully navigable using keyboard shortcuts for a faster workflow.
-- UI Scaling: Built-in zoom functionality (Cmd/Ctrl + and -) to adjust the interface size.
-- Dark Mode: Native dark mode support.
+![Home View - Dark Mode](placeholder-home-dark.png)
+*Home View (Dark Mode)*
 
-## Tech Stack
+![Test View](placeholder-test-view.png)
+*Taking a test*
 
-- React 19
-- TypeScript
-- Tailwind CSS
-- Electron
-- Vite
+## How it works
 
-## Local Development Setup
+1. **Load a test**: You import a `.zip` file containing images of your questions and a `.json` file with the correct answers.
+2. **Take the test**: The app shows you the questions one by one.
+3. **Smart repetitions**: If you answer incorrectly, the app won't let you just skip it. The question will return later, and you'll have to answer it correctly a few times in a row to prove you've learned it.
+4. **Take a break**: Your progress is automatically saved. You can close the app at any moment and resume exactly where you left off.
 
-To run the project locally, ensure you have Node.js and Git installed.
+## Key Features
 
-1. Clone the repository:
-```bash
-git clone https://github.com/YourUsername/testownik.git
-cd testownik
-```
+- **Custom Question Banks**: Learn exactly what you need by loading your own materials.
+- **Auto-Saving**: Progress is always saved locally on your computer.
+- **Keyboard Shortcuts**: You don't need a mouse. Navigate and answer questions entirely with your keyboard for maximum speed.
+- **Dark & Light Mode**: Choose the theme that is easier on your eyes.
+- **Zooming**: Use `Ctrl` + `+` or `-` (or `Cmd` on Mac) to make the text and images larger.
 
-2. Install dependencies:
-```bash
-npm install
-```
+## Download & Install
 
-3. Start the development server:
-```bash
-npm run dev
-```
-This will spin up the Vite dev server and open the Electron application. Changes to the code will reflect automatically.
+You don't need to be a programmer to use Testownik. Just go to the [Releases page](https://github.com/ffxwrld/testownik/releases) and download the file for your system:
+- **macOS**: Download the `.dmg` file.
+- **Windows**: Download the `.exe` file.
+- **Linux**: Download the `.AppImage` or `.deb` file.
 
-(If you want to work with the project on Windows you need to work on "winbranch" branch)
+---
 
-## Building for Production
+## For Developers (Tech Stack & Building)
 
-The project is configured with electron-builder to generate standalone executables.
+If you want to modify the code or build the app from source, here is what you need.
 
-To build the macOS application (.dmg):
-```bash
-npm run build:mac
-```
+**Tech Stack**: React 19, TypeScript, Tailwind CSS, Electron, Vite.
 
-To build the Windows installer (.exe):
-```bash
-npm run build:win
-```
+### Local Setup
+1. Clone this repository: 
+   ```bash
+   git clone https://github.com/ffxwrld/testownik.git
+   ```
+2. Enter the directory: 
+   ```bash
+   cd testownik
+   ```
+3. Install dependencies: 
+   ```bash
+   npm install
+   ```
+4. Start development mode: 
+   ```bash
+   npm run dev
+   ```
 
-To build for both platforms sequentially:
-```bash
-npm run build:all
-```
-
-The compiled applications will be available in the generated `dist/` directory. Note: Building the Windows version directly from macOS requires `wine` to be installed on your host system. Alternatively, run the build command on a native Windows machine.
+### Building the App
+Run these commands to generate the standalone executables (they will appear in the `dist/` folder):
+- `npm run build:mac` (Builds for macOS)
+- `npm run build:win` (Builds for Windows)
+- `npm run build:linux` (Builds for Linux)
+- `npm run build:all` (Builds for all platforms)
