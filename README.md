@@ -2,13 +2,13 @@
 
 Testownik is a simple and fast desktop application that helps you memorize information and prepare for exams. Instead of just reading notes, you load your own tests, and the app makes sure you actually remember the answers by repeating the questions you got wrong.
 
-![Home View - Light Mode](placeholder-home-light.png)
-*Home View (Light Mode)*
-
-![Home View - Dark Mode](placeholder-home-dark.png)
+![Home View - Dark Mode](homeview_light.png)
 *Home View (Dark Mode)*
 
-![Test View](placeholder-test-view.png)
+![Home View - Light Mode](homeview_dark.png)
+*Home View (Light Mode)*
+
+![Test View](testview_dark.png)
 *Taking a test*
 
 ## How it works
