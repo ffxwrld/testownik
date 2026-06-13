@@ -79,16 +79,30 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-app.on('ready', createWindow);
+const gotTheLock = app.requestSingleInstanceLock();
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // Ktoś próbował odpalić drugą kopię - przywracamy i skupiamy pierwsze okno
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
 
-app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
-});
+  app.on('ready', createWindow);
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app.on('activate', () => {
+    if (mainWindow === null) {
+      createWindow();
+    }
+  });
+}
