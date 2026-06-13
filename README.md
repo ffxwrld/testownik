@@ -25,8 +25,8 @@ To run the project locally, ensure you have Node.js and Git installed.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YourUsername/Testownik.git
-cd Testownik
+git clone https://github.com/YourUsername/testownik.git
+cd testownik
 ```
 
 2. Install dependencies:
@@ -36,7 +36,7 @@ npm install
 
 3. Start the development server:
 ```bash
-npm run dev:electron
+npm run dev
 ```
 This will spin up the Vite dev server and open the Electron application. Changes to the code will reflect automatically.
 
