@@ -10,10 +10,10 @@
     "dev": "vite",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
-    "build:mac": "npm run build && electron-builder --mac --publish=never",
-    "build:win": "npm run build && electron-builder --win --publish=never",
-    "build:linux": "npm run build && electron-builder --linux --publish=never",
-    "build:all": "npm run build:mac && npm run build:win && npm run build:linux",
+    "build:mac": "npm run build && electron-builder --mac --publish=never -c.directories.output=release/mac",
+    "build:win": "npm run build && electron-builder --win --publish=never -c.directories.output=release/win",
+    "build:linux": "npm run build && electron-builder --linux --publish=never -c.directories.output=release/linux",
+    "build:all": "npm run build && electron-builder --mac --publish=never -c.directories.output=release/mac && electron-builder --win --publish=never -c.directories.output=release/win && electron-builder --linux --publish=never -c.directories.output=release/linux",
     "preview": "vite preview"
   },
   "dependencies": {
