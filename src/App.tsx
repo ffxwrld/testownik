@@ -11,9 +11,10 @@ import {
 import { HomeView } from './components/HomeView';
 import { TestView } from './components/TestView';
 import { SummaryView } from './components/SummaryView';
+import { CreatorView } from './components/CreatorView';
 import { DarkModeToggle } from './components/DarkModeToggle';
 
-type AppPhase = 'home' | 'test' | 'summary';
+type AppPhase = 'home' | 'test' | 'summary' | 'creator';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
@@ -34,6 +35,9 @@ const App: React.FC = () => {
   const [phase, setPhase] = useState<AppPhase>('home');
   const [session, setSession] = useState<SessionState | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [homeTab, setHomeTab] = useState<'new'|'saved'>('new');
+  const [creatorInitialQuestions, setCreatorInitialQuestions] = useState<any[] | null>(null);
+  const [creatorInitialBaseName, setCreatorInitialBaseName] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(() => {
     const stored = localStorage.getItem('testownik_zoom');
     return stored ? parseFloat(stored) : 1;
@@ -111,6 +115,71 @@ const App: React.FC = () => {
     }
   }, [currentSessionId]);
 
+  // ─── Edit Session in Creator ────────────────────────────────────────────────
+
+  const handleEditInCreator = useCallback((sessionId: string) => {
+    const saved = loadSession(sessionId);
+    if (!saved) return;
+    
+    // Zastąpienie na czas mapowania (aby nie importować EditingQuestion)
+    const editingQuestions = saved.questions.map((q, idx) => {
+      const maskLine = q.id.split('_')[0] || 'X';
+      const category = maskLine.charAt(0).toUpperCase() || 'X';
+      let fn = q.sourceFile;
+      if (fn.toLowerCase().endsWith('.txt')) fn = fn.slice(0, -4);
+      
+      return {
+        id: Math.random().toString(36).slice(2, 9),
+        filename: fn || `pytanie_${idx+1}`,
+        text: q.text,
+        category: category,
+        answers: q.answers.map(a => ({
+          id: Math.random().toString(36).slice(2, 9),
+          text: a.text,
+          isCorrect: a.isCorrect
+        }))
+      };
+    });
+    
+    setCreatorInitialQuestions(editingQuestions);
+    setCreatorInitialBaseName(saved.baseName);
+    setPhase('creator');
+  }, []);
+
+  const handleSaveToTestownik = useCallback((editingQuestions: any[], baseName: string) => {
+    try {
+      const questions: Question[] = editingQuestions.map((eq, idx) => {
+        const binary = eq.answers.map((a: any) => a.isCorrect ? '1' : '0').join('');
+        const maskLine = (eq.category || 'X') + binary;
+        const filename = (eq.filename || '').trim() || `pytanie_${idx+1}`;
+        const baseId = maskLine + '_' + filename.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const correctIndices = eq.answers.map((a: any, i: number) => a.isCorrect ? i : -1).filter((i: number) => i !== -1);
+        
+        return {
+          id: baseId,
+          sourceFile: filename + '.txt',
+          text: eq.text,
+          answers: eq.answers.map((a: any, i: number) => ({ id: `${filename}-ans-${i}`, text: a.text, isCorrect: a.isCorrect })),
+          correctAnswerIndex: correctIndices[0] ?? 0,
+          correctAnswerIndices: correctIndices
+        };
+      });
+      
+      const newSession = buildInitialSession(questions, 1, baseName);
+      const sessionId = saveSession(newSession);
+      setCurrentSessionId(sessionId);
+      setSession(newSession);
+      
+      setCreatorInitialQuestions(null);
+      setCreatorInitialBaseName(null);
+      setHomeTab('saved');
+      setPhase('home');
+    } catch (err: any) {
+      console.error(err);
+      alert('Wystąpił błąd podczas zapisywania: ' + err.message);
+    }
+  }, []);
+
   // ─── Live session updates (from TestView) ────────────────────────────────
 
   const handleSessionUpdate = useCallback((updated: SessionState) => {
@@ -177,13 +246,35 @@ const App: React.FC = () => {
         />
       );
     }
+    if (displayPhase === 'creator') {
+      return (
+        <CreatorView 
+          onQuit={() => {
+            setCreatorInitialQuestions(null);
+            setCreatorInitialBaseName(null);
+            setPhase('home');
+          }}
+          initialQuestions={creatorInitialQuestions || undefined}
+          initialBaseName={creatorInitialBaseName || undefined}
+          onSaveToTestownik={handleSaveToTestownik}
+        />
+      );
+    }
     return (
       <HomeView
+        activeTab={homeTab}
+        onTabChange={setHomeTab}
         onStartSession={handleStartSession}
         onResumeSession={handleResumeSession}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
         onRestartSession={handleRestartSession}
+        onEnterCreator={() => {
+          setCreatorInitialQuestions(null);
+          setCreatorInitialBaseName(null);
+          setPhase('creator');
+        }}
+        onEditInCreator={handleEditInCreator}
       />
     );
   })();
@@ -195,7 +286,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      <DarkModeToggle />
       {/* Padding so content doesn't hide behind footer at any zoom level */}
       <div style={{ paddingBottom: `${FOOTER_HEIGHT_PX}px` }}>
         {content}
@@ -209,16 +299,20 @@ const App: React.FC = () => {
           zoom: inverseZoom,
         }}
       >
-        <a
-          href="https://github.com/ffxwrld"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pl-5 text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors duration-150 font-mono"
-        >
-          by fifi
-        </a>
+        <div className="flex items-center pl-5">
+          <a
+            href="https://github.com/ffxwrld"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors duration-150 font-mono"
+          >
+            by fifi
+          </a>
+        </div>
 
-        <div className="flex items-center gap-0.5 pr-3">
+        <div className="flex items-center gap-2 pr-3">
+          <DarkModeToggle />
+          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
           <button
             onClick={() => setZoomLevel(prev => applyZoom(prev - ZOOM_STEP))}
             className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 text-base leading-none select-none"

@@ -9,6 +9,7 @@ interface SessionsListProps {
   onDelete: (sessionId: string) => void;
   onRename: (sessionId: string, newName: string) => void;
   onRestart: (sessionId: string) => void;
+  onEditInCreator: (sessionId: string) => void;
 }
 
 export const SessionsList: React.FC<SessionsListProps> = ({
@@ -17,6 +18,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
   onDelete,
   onRename,
   onRestart,
+  onEditInCreator,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -168,6 +170,19 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                   </Button>
                   <button
                     onClick={() => {
+                      if (window.confirm('Edycja w kreatorze nadpisze test nową wersją (obecny postęp zostanie zresetowany). Czy kontynuować?')) {
+                        onEditInCreator(session.id);
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-900/40"
+                    title="Edytuj pytania w Kreatorze"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
                       if (window.confirm('Czy na pewno chcesz usunąć ten test?')) {
                         onDelete(session.id);
                       }
@@ -190,6 +205,19 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     </svg>
                     Wznów
                   </Button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Edycja w kreatorze nadpisze test nową wersją (obecny postęp zostanie zresetowany). Czy kontynuować?')) {
+                        onEditInCreator(session.id);
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-900/40"
+                    title="Edytuj pytania w Kreatorze"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                    </svg>
+                  </button>
                   <button
                     onClick={() => {
                       if (window.confirm('Czy na pewno chcesz usunąć ten test?')) {

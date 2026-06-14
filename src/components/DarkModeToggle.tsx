@@ -34,7 +34,7 @@ export const DarkModeToggle: React.FC = () => {
   return (
     <button
       onClick={() => setDark(d => !d)}
-      className="fixed top-4 right-4 z-50 w-9 h-9 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-150"
+      className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150"
       aria-label={dark ? 'Przełącz na jasny motyw' : 'Przełącz na ciemny motyw'}
       title={dark ? 'Tryb jasny' : 'Tryb ciemny'}
     >
