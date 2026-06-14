@@ -8,11 +8,15 @@ import { Card } from './ui/Card';
 import { SessionsList } from './SessionsList';
 
 interface HomeViewProps {
+  activeTab: 'new' | 'saved';
+  onTabChange: (tab: 'new' | 'saved') => void;
   onStartSession: (questions: Question[], repeatMode: number, baseName: string) => void;
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void;
   onRestartSession: (sessionId: string) => void;
+  onEnterCreator: () => void;
+  onEditInCreator: (sessionId: string) => void;
 }
 
 const REPEAT_OPTIONS = [
@@ -36,11 +40,15 @@ const REPEAT_OPTIONS = [
 type ViewTab = 'new' | 'saved';
 
 export const HomeView: React.FC<HomeViewProps> = ({
+  activeTab,
+  onTabChange,
   onStartSession,
   onResumeSession,
   onDeleteSession,
   onRenameSession,
   onRestartSession,
+  onEnterCreator,
+  onEditInCreator,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -51,7 +59,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [baseName, setBaseName] = useState<string>('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeTab, setActiveTab] = useState<ViewTab>('new');
   const [savedSessions, setSavedSessions] = useState(
     getAllSessionMetadata()
   );
@@ -157,7 +164,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* Tabs */}
         <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700">
           <button
-            onClick={() => setActiveTab('new')}
+            onClick={() => onTabChange('new')}
             className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
               activeTab === 'new'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
@@ -167,7 +174,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             + Nowy test
           </button>
           <button
-            onClick={() => setActiveTab('saved')}
+            onClick={() => onTabChange('saved')}
             className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors relative ${
               activeTab === 'saved'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
@@ -180,6 +187,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 {savedSessions.length}
               </span>
             )}
+          </button>
+          <div className="flex-1"></div>
+          <button
+            onClick={onEnterCreator}
+            className="px-4 py-2 font-bold text-sm border-b-2 border-transparent text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all rounded-t-lg"
+          >
+            ✨ Kreator Baz
           </button>
         </div>
 
@@ -421,6 +435,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onRestart={(sessionId) => {
                 onRestartSession(sessionId);
               }}
+              onEditInCreator={onEditInCreator}
             />
             <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
               Wznów test lub zacznij od nowa z tą samą bazą pytań.

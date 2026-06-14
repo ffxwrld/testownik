@@ -13,12 +13,13 @@
     "build:mac": "npm run build && electron-builder --mac --publish=never",
     "build:win": "npm run build && electron-builder --win --publish=never",
     "build:linux": "npm run build && electron-builder --linux --publish=never",
-    "build:all": "npm run build && electron-builder -mwl --publish=never",
+    "build:all": "npm run build:mac && npm run build:win && npm run build:linux",
     "preview": "vite preview"
   },
   "dependencies": {
     "@types/jszip": "^3.4.0",
     "clsx": "2.1.1",
+    "electron-updater": "^6.8.9",
     "jszip": "^3.10.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",
@@ -43,6 +44,11 @@
   "build": {
     "appId": "com.testownik.app",
     "productName": "Testownik",
+    "publish": {
+      "provider": "github",
+      "owner": "ffxwrld",
+      "repo": "testownik"
+    },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",

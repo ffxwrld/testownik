@@ -46,8 +46,9 @@ export const TestView: React.FC<TestViewProps> = ({
   const [processedSession, setProcessedSession] = useState<SessionState | null>(null);
   // Selected answers (before confirming) — array of shuffled indices
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  // Optimistic streak: shown immediately after confirm, before session update
   const [optimisticStreak, setOptimisticStreak] = useState<number | null>(null);
+  const [optimisticWrongCount, setOptimisticWrongCount] = useState<number | null>(null);
+  const [isSingleAnswerRevealed, setIsSingleAnswerRevealed] = useState(false);
   // Previous question for review
   const [previousQuestion, setPreviousQuestion] = useState<PreviousQuestionData | null>(null);
   const [showingPrevious, setShowingPrevious] = useState(false);
@@ -147,8 +148,10 @@ export const TestView: React.FC<TestViewProps> = ({
     // Optimistic streak update — show immediately in UI
     if (isCorrect) {
       setOptimisticStreak((currentItem?.consecutiveCorrect ?? 0) + 1);
+      setOptimisticWrongCount(null);
     } else {
       setOptimisticStreak(0);
+      setOptimisticWrongCount((currentItem?.wrongCount ?? 0) + 1);
     }
 
     const newFeedback: AnswerFeedback = {
@@ -195,6 +198,8 @@ export const TestView: React.FC<TestViewProps> = ({
     setFeedback(null);
     setSelectedIndices([]);
     setOptimisticStreak(null);
+    setOptimisticWrongCount(null);
+    setIsSingleAnswerRevealed(false);
     setQuestionKey(k => k + 1);
     setShowingPrevious(false);
     if (processedSession) {
@@ -206,6 +211,10 @@ export const TestView: React.FC<TestViewProps> = ({
   }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices]);
 
   // ─── Keyboard shortcuts ────────────────────────────────────────────────────
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [questionKey]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -233,6 +242,7 @@ export const TestView: React.FC<TestViewProps> = ({
 
       // Space or Enter: confirm (even without selection = skip) or advance
       if ((e.key === ' ' || e.key === 'Enter') && !isTransitioning) {
+        e.preventDefault();
         if (showingPrevious) {
           setShowingPrevious(false);
           return;
@@ -267,7 +277,11 @@ export const TestView: React.FC<TestViewProps> = ({
     ? optimisticStreak
     : (currentItem?.consecutiveCorrect ?? 0);
   const requiredStreak = currentItem?.requiredCorrectStreak ?? 1;
-  const wrongCountForCurrent = currentItem?.wrongCount ?? 0;
+  const wrongCountForCurrent = optimisticWrongCount !== null
+    ? optimisticWrongCount
+    : (currentItem?.wrongCount ?? 0);
+    
+  const hasOnlyOneAnswer = currentQuestion?.answers.length === 1;
 
   // ─── Guard: no question available ────────────────────────────────────────
 
@@ -652,16 +666,32 @@ export const TestView: React.FC<TestViewProps> = ({
             >
               {shuffledOrder.map((originalIdx, shuffledIdx) => {
                 const answer = currentQuestion.answers[originalIdx];
+                const isHiddenSingle = hasOnlyOneAnswer && !isSingleAnswerRevealed && feedback === null;
+                
                 return (
                   <button
                     key={answer.id}
-                    onClick={() => handleToggleAnswer(shuffledIdx)}
+                    onClick={() => {
+                      if (isHiddenSingle) {
+                        setIsSingleAnswerRevealed(true);
+                      } else {
+                        handleToggleAnswer(shuffledIdx);
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      if (isHiddenSingle) setIsSingleAnswerRevealed(true);
+                    }}
+                    onFocus={() => {
+                      if (isHiddenSingle) setIsSingleAnswerRevealed(true);
+                    }}
                     disabled={feedback !== null || isTransitioning}
                     className={getAnswerButtonClass(shuffledIdx)}
                   >
                     <div className="flex items-start gap-3">
                       {getAnswerBadge(shuffledIdx)}
-                      <span className="pt-0.5 flex-1 text-left">{answer.text}</span>
+                      <span className={`pt-0.5 flex-1 text-left transition-all duration-300 ${isHiddenSingle ? 'text-transparent bg-zinc-300 dark:bg-zinc-700 rounded-md select-none opacity-50' : ''}`}>
+                        {isHiddenSingle ? 'Najedź myszką, aby odkryć odpowiedź...' : answer.text}
+                      </span>
                     </div>
                   </button>
                 );
