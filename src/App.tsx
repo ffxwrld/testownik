@@ -67,7 +67,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // ─── On mount: check for persisted session ─────────────────────────────────
+  // On mount: check for persisted session
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
@@ -81,7 +81,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // ─── Start a new test session ─────────────────────────────────────────────
+  // Start a new test session
 
   const handleStartSession = useCallback(
     (questions: Question[], repeatMode: number, baseName: string) => {
@@ -94,7 +94,7 @@ const App: React.FC = () => {
     []
   );
 
-  // ─── Resume saved session ─────────────────────────────────────────────────
+  // Resume saved session
 
   const handleResumeSession = useCallback((sessionId: string) => {
     const saved = loadSession(sessionId);
@@ -104,7 +104,7 @@ const App: React.FC = () => {
     setPhase(saved.phase === 'summary' ? 'summary' : 'test');
   }, []);
 
-  // ─── Delete a saved session ─────────────────────────────────────────────────
+  // Delete a saved session
 
   const handleDeleteSession = useCallback((sessionId: string) => {
     deleteSession(sessionId);
@@ -115,7 +115,7 @@ const App: React.FC = () => {
     }
   }, [currentSessionId]);
 
-  // ─── Edit Session in Creator ────────────────────────────────────────────────
+  // Edit Session in Creator
 
   const handleEditInCreator = useCallback((sessionId: string) => {
     const saved = loadSession(sessionId);
@@ -180,7 +180,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // ─── Live session updates (from TestView) ────────────────────────────────
+  // Live session updates (from TestView)
 
   const handleSessionUpdate = useCallback((updated: SessionState) => {
     setSession(updated);
@@ -189,13 +189,13 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // ─── Quit test mid-way ────────────────────────────────────────────────────
+  // Quit test mid-way
 
   const handleQuit = useCallback(() => {
     setPhase('home');
   }, []);
 
-  // ─── Return to home after summary ────────────────────────────────────────
+  // Return to home after summary
 
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);
@@ -203,7 +203,7 @@ const App: React.FC = () => {
     setPhase('home');
   }, []);
 
-  // ─── Restart an existing session ─────────────────────────────────────────
+  // Restart an existing session
 
   const handleRestartSession = useCallback((sessionId: string) => {
     const saved = loadSession(sessionId);
@@ -222,7 +222,7 @@ const App: React.FC = () => {
     }
   }, [currentSessionId, session]);
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // Render
 
   const displayPhase: AppPhase =
     session?.phase === 'summary' && phase !== 'home' ? 'summary' : phase;

@@ -62,7 +62,7 @@ export const TestView: React.FC<TestViewProps> = ({
   // doesn't overwrite a completed session with the stale prop.
   const processedSessionRef = useRef<SessionState | null>(null);
 
-  // ─── Timer ────────────────────────────────────────────────────────────────
+  // Timer
 
   useEffect(() => {
     if (!sessionId) return;
@@ -89,7 +89,7 @@ export const TestView: React.FC<TestViewProps> = ({
     };
   }, [sessionId]);
 
-  // ─── Current question ─────────────────────────────────────────────────────
+  // Current question
 
   const currentItem = session.queue[session.currentQuestionIndex];
   const currentQuestion = getQuestionForQueueItem(session.questions, currentItem);
@@ -107,7 +107,7 @@ export const TestView: React.FC<TestViewProps> = ({
     findShuffledPosition(shuffledOrder, origIdx)
   );
 
-  // ─── Toggle answer selection ───────────────────────────────────────────────
+  // Toggle answer selection
 
   const handleToggleAnswer = useCallback(
     (shuffledIndex: number) => {
@@ -128,7 +128,7 @@ export const TestView: React.FC<TestViewProps> = ({
     [feedback, isTransitioning, currentQuestion, isMultiAnswer]
   );
 
-  // ─── Confirm selected answers ──────────────────────────────────────────────
+  // Confirm selected answers
 
   const handleConfirm = useCallback(() => {
     if (feedback !== null || isTransitioning || !currentQuestion) return;
@@ -210,7 +210,7 @@ export const TestView: React.FC<TestViewProps> = ({
     }
   }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices]);
 
-  // ─── Keyboard shortcuts ────────────────────────────────────────────────────
+  // Keyboard shortcuts
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -264,7 +264,7 @@ export const TestView: React.FC<TestViewProps> = ({
     return () => window.removeEventListener('keydown', handleKey);
   }, [handleToggleAnswer, handleConfirm, handleNext, currentQuestion, feedback, isTransitioning, showingPrevious, previousQuestion]);
 
-  // ─── Derived stats ────────────────────────────────────────────────────────
+  // Derived stats
 
   const totalQuestions = session.questions.length;
   const doneCount = session.done.length;
@@ -283,7 +283,7 @@ export const TestView: React.FC<TestViewProps> = ({
     
   const hasOnlyOneAnswer = currentQuestion?.answers.length === 1;
 
-  // ─── Guard: no question available ────────────────────────────────────────
+  // Guard: no question available
 
   if (!currentQuestion || !currentItem) {
     return (
@@ -296,7 +296,7 @@ export const TestView: React.FC<TestViewProps> = ({
     );
   }
 
-  // ─── Styling helpers ──────────────────────────────────────────────────────
+  // Styling helpers
 
   const getAnswerButtonClass = (shuffledIdx: number): string => {
     const base =
@@ -390,7 +390,7 @@ export const TestView: React.FC<TestViewProps> = ({
     );
   };
 
-  // ─── Streak dots ──────────────────────────────────────────────────────────
+  // Streak dots
 
   const renderStreakDots = () => {
     if (requiredStreak <= 1) return null;
@@ -413,7 +413,7 @@ export const TestView: React.FC<TestViewProps> = ({
     );
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // Render
 
   // Confirm is always available (even without selection = skip)
   const canConfirm = feedback === null && !isTransitioning;
