@@ -83,10 +83,7 @@ function createMenu() {
 app.on('ready', () => {
   createWindow();
   
-  // To sprawdza w tle na serwerze GitHuba nową wersję,
-  // pobiera ją i po cichu szykuje dla użytkownika.
-  // Jeśli użytkownik ma Maca, to po pobraniu wywoła u niego domyślny dialog systemowy,
-  // że wersja jest do zainstalowania.
+  // Inicjalizacja automatycznych aktualizacji (auto-updater)
   autoUpdater.checkForUpdatesAndNotify();
 });
 

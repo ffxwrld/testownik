@@ -58,7 +58,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
 
   const activeQuestion = questions.find(q => q.id === activeId) || questions[0];
 
-  // ─── Actions ─────────────────────────────────────────────────────────────
+  // Actions
 
   const handleAddQuestion = () => {
     const newQ: EditingQuestion = {
@@ -110,7 +110,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
     });
   };
 
-  // ─── Import / Export ──────────────────────────────────────────────────────
+  // Import / Export
 
   const handleImportZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -207,7 +207,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
     }
   };
 
-  // ─── Render ─────────────────────────────────────────────────────────────
+  // Render
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
