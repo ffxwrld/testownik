@@ -2,7 +2,7 @@
 
 Testownik is a simple and fast desktop application that helps you memorize information and prepare for exams. Instead of just reading notes, you load your own tests, and the app makes sure you actually remember the answers by repeating the questions you got wrong.
 
-## 🚀 Download & Install (For standard users)
+## Download & Install (For standard users)
 
 You don't need to be a programmer to use Testownik. Just go to the [Releases page](https://github.com/ffxwrld/testownik/releases) and download the file for your system:
 - **Windows**: Download the **`.exe`** file.
