@@ -41,7 +41,7 @@ You don't need to be a programmer to use Testownik. Just go to the [Releases pag
 
 ---
 
-## 💻 For Developers (Tech Stack & Building)
+## For Developers (Tech Stack & Building)
 
 If you want to modify the code or build the app from source, here is what you need.
 
