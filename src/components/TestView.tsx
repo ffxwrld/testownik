@@ -13,6 +13,7 @@ import { ProgressBar } from './ui/ProgressBar';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { QuestionRenderer } from './QuestionRenderer';
 
 interface TestViewProps {
   session: SessionState;
@@ -580,7 +581,11 @@ export const TestView: React.FC<TestViewProps> = ({
 
               {/* Question text */}
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
-                {currentQuestion.text}
+                <QuestionRenderer 
+                  text={currentQuestion.text} 
+                  sourceFile={currentQuestion.sourceFile} 
+                  sessionId={sessionId} 
+                />
               </h2>
             </Card>
 
@@ -845,9 +850,13 @@ export const TestView: React.FC<TestViewProps> = ({
 
             {/* Question text */}
             <div className="px-6 py-4">
-              <p className="text-base font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
-                {previousQuestion.question.text}
-              </p>
+              <div className="text-base font-semibold text-zinc-900 dark:text-zinc-50 leading-relaxed">
+                <QuestionRenderer 
+                  text={previousQuestion.question.text} 
+                  sourceFile={previousQuestion.question.sourceFile} 
+                  sessionId={sessionId} 
+                />
+              </div>
             </div>
 
             {/* Answers (read-only with result indicators) */}

@@ -10,7 +10,7 @@ import { SessionsList } from './SessionsList';
 interface HomeViewProps {
   activeTab: 'new' | 'saved';
   onTabChange: (tab: 'new' | 'saved') => void;
-  onStartSession: (questions: Question[], repeatMode: number, baseName: string) => void;
+  onStartSession: (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob>) => void;
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void;
@@ -52,6 +52,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [images, setImages] = useState<Record<string, Blob>>({});
   const [repeatMode, setRepeatMode] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -79,12 +80,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
     setQuestions([]);
     try {
       const parsed = await parseZipFile(file);
-      if (parsed.length === 0) {
+      if (parsed.questions.length === 0) {
         setLoadError(
           'Nie znaleziono żadnych pytań w pliku. Upewnij się, że archiwum zawiera pliki .txt w odpowiednim formacie.'
         );
       } else {
-        setQuestions(parsed);
+        setQuestions(parsed.questions);
+        setImages(parsed.images);
         const nameWithoutZip = file.name.replace(/\.zip$/i, '');
         setFileName(file.name);
         setBaseName(nameWithoutZip);
@@ -119,6 +121,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const handleLoadDemo = () => {
     const demoQ = buildDemoQuestions();
     setQuestions(demoQ);
+    setImages({});
     setFileName('Pytania demonstracyjne');
     setBaseName('Pytania demonstracyjne');
     setLoadError(null);
@@ -393,7 +396,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               size="xl"
               fullWidth
               disabled={!canStart}
-              onClick={() => onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań')}
+              onClick={() => onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań', images)}
               className="shadow-xl shadow-blue-600/20 text-lg font-bold"
             >
               <svg

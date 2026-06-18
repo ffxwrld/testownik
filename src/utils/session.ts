@@ -1,5 +1,6 @@
 import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata } from '../models/types';
 import { shuffleIndices } from './shuffle';
+import { deleteSessionImages } from './db';
 
 const SESSIONS_STORAGE_KEY = 'testownik_sessions_v2';
 const CURRENT_SESSION_ID_KEY = 'testownik_current_session_id';
@@ -252,6 +253,9 @@ export function deleteSession(sessionId: string): void {
     delete sessions[sessionId];
     localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
     
+    // Clean up associated images asynchronously
+    deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));
+
     const currentId = localStorage.getItem(CURRENT_SESSION_ID_KEY);
     if (currentId === sessionId) {
       localStorage.removeItem(CURRENT_SESSION_ID_KEY);

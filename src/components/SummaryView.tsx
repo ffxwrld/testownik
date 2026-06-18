@@ -5,14 +5,17 @@ import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { ProgressBar } from './ui/ProgressBar';
+import { QuestionRenderer } from './QuestionRenderer';
 
 interface SummaryViewProps {
   session: SessionState;
+  sessionId: string;
   onNewTest: () => void;
 }
 
 export const SummaryView: React.FC<SummaryViewProps> = ({
   session,
+  sessionId,
   onNewTest,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -217,9 +220,13 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                          {question.text}
-                        </p>
+                        <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                          <QuestionRenderer 
+                            text={question.text} 
+                            sourceFile={question.sourceFile} 
+                            sessionId={sessionId} 
+                          />
+                        </div>
                         <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-0.5">
                           {question.sourceFile.split('/').pop()?.replace('.txt', '')}
                         </p>

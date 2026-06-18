@@ -84,9 +84,16 @@ const App: React.FC = () => {
   // Start a new test session
 
   const handleStartSession = useCallback(
-    (questions: Question[], repeatMode: number, baseName: string) => {
+    (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob> = {}) => {
       const newSession = buildInitialSession(questions, repeatMode, baseName);
       const sessionId = saveSession(newSession);
+      
+      if (Object.keys(images).length > 0) {
+        import('./utils/db').then(({ saveSessionImages }) => {
+          saveSessionImages(sessionId, images).catch(console.error);
+        });
+      }
+
       setCurrentSessionId(sessionId);
       setSession(newSession);
       setPhase('test');
@@ -146,7 +153,7 @@ const App: React.FC = () => {
     setPhase('creator');
   }, []);
 
-  const handleSaveToTestownik = useCallback((editingQuestions: any[], baseName: string) => {
+  const handleSaveToTestownik = useCallback((editingQuestions: any[], baseName: string, images: Record<string, Blob> = {}) => {
     try {
       const questions: Question[] = editingQuestions.map((eq, idx) => {
         const binary = eq.answers.map((a: any) => a.isCorrect ? '1' : '0').join('');
@@ -167,6 +174,13 @@ const App: React.FC = () => {
       
       const newSession = buildInitialSession(questions, 1, baseName);
       const sessionId = saveSession(newSession);
+      
+      if (Object.keys(images).length > 0) {
+        import('./utils/db').then(({ saveSessionImages }) => {
+          saveSessionImages(sessionId, images).catch(console.error);
+        });
+      }
+
       setCurrentSessionId(sessionId);
       setSession(newSession);
       
@@ -238,10 +252,11 @@ const App: React.FC = () => {
         />
       );
     }
-    if (displayPhase === 'summary' && session) {
+    if (displayPhase === 'summary' && session && currentSessionId) {
       return (
         <SummaryView
           session={session}
+          sessionId={currentSessionId}
           onNewTest={handleNewTest}
         />
       );
