@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import JSZip from 'jszip';
+import { decodeFileContent } from '../utils/parser';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 
@@ -7,7 +8,7 @@ interface CreatorViewProps {
   onQuit: () => void;
   initialQuestions?: EditingQuestion[];
   initialBaseName?: string;
-  onSaveToTestownik: (questions: EditingQuestion[], baseName: string) => void;
+  onSaveToTestownik: (questions: EditingQuestion[], baseName: string, images: Record<string, Blob>) => void;
 }
 
 export interface EditingAnswer {
@@ -44,6 +45,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
   const [isLoading, setIsLoading] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [savePromptName, setSavePromptName] = useState(initialBaseName || 'Nowa baza z kreatora');
+  const [images, setImages] = useState<Record<string, Blob>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Zabezpieczenie przed przeładowaniem strony (F5, Cmd+R) / zamknięciem karty
@@ -124,16 +126,35 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
       const imported: EditingQuestion[] = [];
       
       const txtFiles: Array<{ name: string; file: JSZip.JSZipObject }> = [];
+      const imgFiles: Array<{ name: string; file: JSZip.JSZipObject }> = [];
       loaded.forEach((relativePath, zipEntry) => {
-        if (!zipEntry.dir && relativePath.toLowerCase().endsWith('.txt') && !relativePath.startsWith('__MACOSX/')) {
-          txtFiles.push({ name: relativePath, file: zipEntry });
+        if (!zipEntry.dir && !relativePath.startsWith('__MACOSX/')) {
+          const lower = relativePath.toLowerCase();
+          if (lower.endsWith('.txt')) {
+            txtFiles.push({ name: relativePath, file: zipEntry });
+          } else if (lower.match(/\.(png|jpe?g|gif)$/i)) {
+            imgFiles.push({ name: relativePath, file: zipEntry });
+          }
         }
       });
       
       txtFiles.sort((a, b) => a.name.localeCompare(b.name));
       
+      const extractedImages: Record<string, Blob> = {};
+      await Promise.all(
+        imgFiles.map(async ({ name, file }) => {
+          try {
+            const blob = await file.async('blob');
+            const fileName = name.split('/').pop() || name;
+            extractedImages[fileName] = blob;
+          } catch (err) {}
+        })
+      );
+      setImages(extractedImages);
+      
       for (const { name, file } of txtFiles) {
-        const content = await file.async('string');
+        const bytes = await file.async('uint8array');
+        const content = decodeFileContent(bytes);
         const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').map(l => l.trim()).filter(l => l.length > 0);
         
         if (lines.length >= 3) {
@@ -419,7 +440,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
               onChange={e => setSavePromptName(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && savePromptName.trim()) {
-                  onSaveToTestownik(questions, savePromptName.trim());
+                  onSaveToTestownik(questions, savePromptName.trim(), images);
                   setShowSavePrompt(false);
                 }
                 if (e.key === 'Escape') setShowSavePrompt(false);
@@ -432,7 +453,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
               </Button>
               <Button variant="primary" onClick={() => {
                 if (savePromptName.trim()) {
-                  onSaveToTestownik(questions, savePromptName.trim());
+                  onSaveToTestownik(questions, savePromptName.trim(), images);
                   setShowSavePrompt(false);
                 }
               }} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">

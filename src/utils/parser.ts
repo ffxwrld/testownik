@@ -34,6 +34,16 @@ function decodeMask(maskLine: string): number[] {
 //   Lines 2+: Answer options
 // ─────────────────────────────────────────────────────────────────────────────
 
+export function decodeFileContent(bytes: Uint8Array): string {
+  try {
+    // Pierwsza próba: czyste UTF-8 (fatal: true wyrzuci wyjątek, jeśli plik ma inne kodowanie np. polskie znaki w ANSI)
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch (err) {
+    // Fallback: Windows-1250 (bardzo popularne dla polskich znaków w starych systemach Windows)
+    return new TextDecoder('windows-1250').decode(bytes);
+  }
+}
+
 export function parseQuestionFile(
   content: string,
   filename: string
@@ -96,20 +106,27 @@ export function parseQuestionFile(
 // Read a ZIP blob and extract all questions from .txt files inside
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function parseZipFile(file: File): Promise<Question[]> {
+export interface ParsedZipResult {
+  questions: Question[];
+  images: Record<string, Blob>;
+}
+
+export async function parseZipFile(file: File): Promise<ParsedZipResult> {
   const zip = new JSZip();
   const loaded = await zip.loadAsync(file);
 
   const questions: Question[] = [];
   const txtFiles: Array<{ name: string; file: JSZip.JSZipObject }> = [];
+  const imgFiles: Array<{ name: string; file: JSZip.JSZipObject }> = [];
 
   loaded.forEach((relativePath, zipEntry) => {
-    if (
-      !zipEntry.dir &&
-      relativePath.toLowerCase().endsWith('.txt') &&
-      !relativePath.startsWith('__MACOSX/')
-    ) {
+    if (zipEntry.dir || relativePath.startsWith('__MACOSX/')) return;
+
+    const lower = relativePath.toLowerCase();
+    if (lower.endsWith('.txt')) {
       txtFiles.push({ name: relativePath, file: zipEntry });
+    } else if (lower.match(/\.(png|jpe?g|gif)$/i)) {
+      imgFiles.push({ name: relativePath, file: zipEntry });
     }
   });
 
@@ -119,7 +136,8 @@ export async function parseZipFile(file: File): Promise<Question[]> {
   await Promise.all(
     txtFiles.map(async ({ name, file }) => {
       try {
-        const content = await file.async('string');
+        const bytes = await file.async('uint8array');
+        const content = decodeFileContent(bytes);
         const q = parseQuestionFile(content, name);
         if (q) questions.push(q);
       } catch (err) {
@@ -131,5 +149,19 @@ export async function parseZipFile(file: File): Promise<Question[]> {
   // Sort again because Promise.all doesn't preserve insertion order
   questions.sort((a, b) => a.sourceFile.localeCompare(b.sourceFile));
 
-  return questions;
+  const images: Record<string, Blob> = {};
+  await Promise.all(
+    imgFiles.map(async ({ name, file }) => {
+      try {
+        const blob = await file.async('blob');
+        // Pobieramy tylko nazwę pliku bez ewentualnej ścieżki z folderem
+        const fileName = name.split('/').pop() || name;
+        images[fileName] = blob;
+      } catch (err) {
+        console.warn(`Failed to read image "${name}":`, err);
+      }
+    })
+  );
+
+  return { questions, images };
 }
