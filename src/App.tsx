@@ -32,6 +32,70 @@ function applyZoom(level: number): number {
   return clamped;
 }
 
+const UpdaterNotification: FC = () => {
+  const [updateState, setUpdateState] = useState<'idle' | 'downloading' | 'ready' | 'mac-available'>('idle');
+
+  useEffect(() => {
+    // @ts-ignore
+    if (window.electron?.updater) {
+      // @ts-ignore
+      window.electron.updater.onUpdateAvailable(() => setUpdateState('downloading'));
+      // @ts-ignore
+      window.electron.updater.onUpdateDownloaded(() => setUpdateState('ready'));
+      // @ts-ignore
+      if (window.electron.updater.onUpdateAvailableMac) {
+        // @ts-ignore
+        window.electron.updater.onUpdateAvailableMac(() => setUpdateState('mac-available'));
+      }
+    }
+  }, []);
+
+  if (updateState === 'idle') return null;
+
+  return (
+    <div className="fixed bottom-12 right-6 z-50 bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 max-w-sm animate-in slide-in-from-bottom-5 fade-in duration-300">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex-shrink-0 text-blue-500">
+          <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+            {updateState === 'downloading' ? 'Pobieranie aktualizacji...' : 
+             updateState === 'ready' ? 'Aktualizacja gotowa!' : 
+             'Dostępna nowa wersja!'}
+          </h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+            {updateState === 'downloading' 
+              ? 'Nowa wersja jest właśnie pobierana w tle. Możesz kontynuować naukę.' 
+              : updateState === 'ready'
+              ? 'Nowa wersja została pobrana. Uruchom aplikację ponownie, aby ją zainstalować.'
+              : 'Pobierz najnowszą wersję bezpośrednio z GitHuba, aby cieszyć się nowościami.'}
+          </p>
+          {updateState === 'ready' && (
+            <button
+              // @ts-ignore
+              onClick={() => window.electron.updater.restartApp()}
+              className="mt-3 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors w-full shadow-sm"
+            >
+              Uruchom ponownie teraz
+            </button>
+          )}
+          {updateState === 'mac-available' && (
+            <button
+              onClick={() => window.open('https://github.com/ffxwrld/testownik/releases/latest', '_blank')}
+              className="mt-3 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors w-full shadow-sm"
+            >
+              Pobierz najnowszą wersję
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App: FC = () => {
   const [phase, setPhase] = useState<AppPhase>('home');
   const [session, setSession] = useState<SessionState | null>(null);
@@ -317,6 +381,7 @@ const App: FC = () => {
         style={{ paddingBottom: `${FOOTER_HEIGHT_PX / zoomLevel}px` }}
       >
         {content}
+        <UpdaterNotification />
       </div>
 
       {/* ── Footer ── fixed, inverse-zoomed to always be the same visual size ── */}

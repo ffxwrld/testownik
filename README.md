@@ -1,15 +1,15 @@
 # Testownik
 
-Testownik is a simple and fast desktop application that helps you memorize information and prepare for exams. Instead of just reading notes, you load your own tests, and the app makes sure you actually remember the answers by repeating the questions you got wrong.
+Testownik is a lightweight, high-performance desktop application designed to optimize the learning and memorization process. Moving beyond traditional static note-reading, the application employs active recall and spaced repetition principles. Users can import their own datasets or create tests directly within the application, ensuring that incorrect answers are methodically repeated until mastery is achieved.
 
-## Download & Install (For standard users)
-
-You don't need to be a programmer to use Testownik. Just go to the [Releases page](https://github.com/ffxwrld/testownik/releases) and download the file for your system:
-- **Windows**: Download the **`.exe`** file.
-- **macOS**: Download the **`.dmg`** file.
-- **Linux**: Download the **`.AppImage`** or **`.deb`** file.
-
-*(You can ignore all the other small files like `.yml` or `.blockmap` - the app will use them automatically in the background).*
+## Table of Contents
+- [Download & Installation](#download--installation)
+- [Installation Troubleshooting](#installation-troubleshooting)
+  - [Windows SmartScreen](#windows-smartscreen)
+  - [macOS Gatekeeper](#macos-gatekeeper)
+- [Application Workflow](#application-workflow)
+- [Detailed Features](#detailed-features)
+- [For Developers](#for-developers)
 
 ---
 
@@ -22,52 +22,102 @@ You don't need to be a programmer to use Testownik. Just go to the [Releases pag
 ![Test View](https://github.com/user-attachments/assets/8d946cf0-1e2d-49fc-89a5-90290c048302)
 *Taking a test*
 
-## How it works
+---
 
-1. **Create or Load a test**: Use the built-in Creator to write your questions, or import a `.zip` file containing images of your questions and a `.json` file with the correct answers.
-2. **Take the test**: The app shows you the questions one by one.
-3. **Smart repetitions**: If you answer incorrectly, the app won't let you just skip it. The question will return later, and you'll have to answer it correctly a few times in a row to prove you've learned it.
-4. **Take a break**: Your progress is automatically saved. You can close the app at any moment and resume exactly where you left off.
+## Download & Installation
 
-## Key Features
+The application is distributed as pre-compiled standalone executables for all major operating systems. Navigate to the [Releases page](https://github.com/ffxwrld/testownik/releases) and download the appropriate package for your architecture:
 
-- **Built-in Creator**: Create, edit, and save custom question databases directly inside the app.
-- **Auto-Updates**: The app silently checks for new versions in the background so you are always up to date.
-- **Custom Question Banks**: Learn exactly what you need by loading your own materials.
-- **Auto-Saving**: Progress is always saved locally on your computer.
-- **Keyboard Shortcuts**: You don't need a mouse. Navigate and answer questions entirely with your keyboard for maximum speed.
-- **Dark & Light Mode**: Choose the theme that is easier on your eyes.
-- **Zooming**: Use `Ctrl` + `+` or `-` (or `Cmd` on Mac) to make the text and images larger.
+- **Windows**: Download the `.exe` installer.
+- **macOS**: Download the `.dmg` image (Universal build for both Intel and Apple Silicon is available; select the corresponding architecture).
+- **Linux**: Download the `.AppImage` or `.deb` package.
+
+Note: Additional metadata files generated in the release folder (such as `.yml` or `.blockmap`) are utilized internally by the application's auto-updater mechanism and do not need to be downloaded manually.
 
 ---
 
-## For Developers (Tech Stack & Building)
+## Installation Troubleshooting
 
-If you want to modify the code or build the app from source, here is what you need.
+Due to strict modern operating system security protocols, unsigned applications distributed outside of official app stores may trigger warnings. Please follow the instructions below to bypass these security mechanisms safely.
 
-**Tech Stack**: React 19, TypeScript, Tailwind CSS, Electron, Vite.
+### Windows SmartScreen
 
-### Local Setup
-1. Clone this repository: 
+Because this application does not currently possess a paid EV (Extended Validation) code signing certificate, Windows Defender SmartScreen may interrupt the initial launch, displaying a "Windows protected your PC" dialog.
+
+To proceed with the installation:
+1. Click on **More info** within the dialog window.
+2. A new button labeled **Run anyway** will appear at the bottom.
+3. Click **Run anyway** to authorize the application. The installer will then execute silently and launch the application.
+
+### macOS Gatekeeper
+
+macOS implements a strict security feature known as Gatekeeper. When an application without an Apple Developer certificate is downloaded via a web browser, macOS attaches a quarantine extended attribute (`com.apple.quarantine`) to the file. Attempting to launch the application may result in an error stating that the application is **damaged and can't be opened**, prompting you to move it to the Trash.
+
+To remove the quarantine attribute and run the application:
+1. Open the downloaded `.dmg` file and drag `Testownik.app` into your **Applications** folder.
+2. Open the **Terminal** application (accessible via Spotlight Search).
+3. Execute the following command to strip the quarantine attribute:
+   ```bash
+   xattr -cr /Applications/Testownik.app
+   ```
+4. You may now launch the application normally from your Applications directory. The error will not appear again.
+
+---
+
+## Application Workflow
+
+1. **Database Creation or Import**: Utilize the built-in Creator module to generate a custom database of questions and answers. Alternatively, import an existing `.zip` archive containing image-based questions and a corresponding `.json` file containing the correct answer keys.
+2. **Active Testing Phase**: The application presents the questions sequentially, recording the accuracy of your responses.
+3. **Algorithmic Repetition**: Incorrectly answered questions are not discarded. The system queues them for subsequent review, requiring multiple consecutive correct answers to mark the question as successfully learned.
+4. **Persistent State Management**: Your learning progress is continuously auto-saved to the local disk. You may terminate the application at any time and seamlessly resume your session upon relaunching.
+
+---
+
+## Detailed Features
+
+- **Integrated Test Creator**: A comprehensive graphical interface for creating, editing, and managing custom question databases directly within the application environment.
+- **Intelligent Auto-Updater**: A robust background service monitors the repository for new releases. On Windows, updates are downloaded and installed entirely in the background, utilizing custom bypass logic to prevent deployment race conditions. On macOS, the application intelligently disables background execution to comply with Gatekeeper policies, instead surfacing a non-intrusive UI notification that directs the user to the latest `.dmg` download.
+- **Custom Question Banks**: Complete flexibility in defining the scope of your learning material.
+- **Real-Time Auto-Saving**: All session data, including current progress and repetition queues, is serialized and saved locally to prevent data loss.
+- **Keyboard-Centric Navigation**: The entire testing interface is fully navigable via keyboard shortcuts, drastically increasing the speed and efficiency of the learning session.
+- **Theming & Accessibility**: Full support for both Dark and Light modes, ensuring optimal contrast and readability across different environments.
+- **Dynamic Zoom Interface**: Leverage `Ctrl` + `+`/`-` (or `Cmd` on macOS) to dynamically scale the application interface, accommodating various screen resolutions and visual preferences.
+
+---
+
+## For Developers
+
+This project is built utilizing a modern, high-performance desktop application stack. 
+
+**Technology Stack**: 
+- **Frontend**: React 19, TypeScript, Tailwind CSS, Vite.
+- **Backend/Container**: Electron.
+- **Package Management**: npm.
+
+### Local Setup Instructions
+
+1. Clone the repository to your local machine:
    ```bash
    git clone https://github.com/ffxwrld/testownik.git
    ```
-2. Enter the directory: 
+2. Navigate into the project directory:
    ```bash
    cd testownik
    ```
-3. Install dependencies: 
+3. Install the required Node.js dependencies:
    ```bash
    npm install
    ```
-4. Start development mode: 
+4. Initialize the local development server with Hot Module Replacement (HMR):
    ```bash
    npm run dev
    ```
 
-### Building the App
-Run these commands to generate the standalone executables (they will appear in the `release/` folder):
-- `npm run build:mac` (Builds for macOS Intel & Apple Silicon)
-- `npm run build:win` (Builds for Windows x64)
-- `npm run build:linux` (Builds for Linux x64)
-- `npm run build:all` (Builds for all platforms into their respective folders)
+### Build Instructions
+
+To compile the source code and generate production-ready standalone executables, execute the following npm scripts. The output artifacts will be placed in the `release/` directory.
+
+- `npm run build:mac` : Generates `.dmg` and `.zip` archives for macOS (includes configurations for both Intel x64 and Apple Silicon ARM64 architectures).
+- `npm run build:win` : Generates the `.exe` NSIS installer for Windows x64.
+- `npm run build:linux` : Generates `.AppImage` and `.deb` packages for Linux x64.
+- `npm run build:all` : Sequentially compiles the application for all supported operating systems.

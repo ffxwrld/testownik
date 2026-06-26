@@ -80,15 +80,103 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+let downloadedUpdatePath = null;
+
 app.on('ready', () => {
   createWindow();
   
-  // Inicjalizacja automatycznych aktualizacji (auto-updater)
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.autoInstallOnAppQuit = false;
+  if (process.platform === 'darwin') {
+    autoUpdater.autoDownload = false;
+  }
+  
+  autoUpdater.on('update-downloaded', (info) => {
+    downloadedUpdatePath = info.downloadedFile;
+    if (mainWindow) {
+      mainWindow.webContents.send('update-downloaded', info);
+    }
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    if (mainWindow) {
+      if (process.platform === 'darwin') {
+        mainWindow.webContents.send('update-available-mac', info);
+      } else {
+        mainWindow.webContents.send('update-available', info);
+      }
+    }
+  });
+
+  const { ipcMain } = require('electron');
+  
+  function installUpdateAndQuit() {
+    if (!downloadedUpdatePath) return app.quit();
+    
+    const { spawn } = require('child_process');
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Tworzymy tymczasowy skrypt Node.js, który odczeka 4 sekundy i uruchomi instalator
+    const scriptPath = path.join(app.getPath('temp'), 'testownik-update.js');
+    const scriptContent = `
+      setTimeout(() => {
+        const { spawn } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Magiczna sztuczka: usuwamy stary deinstalator zanim włączymy nowy instalator.
+        // Dzięki temu NSIS całkowicie pominie uszkodzoną procedurę deinstalacji (która wywala Błąd 2)
+        // i po prostu czysto nadpisze wszystkie stare pliki.
+        const appDir = path.dirname(process.execPath);
+        const uninstallerPath = path.join(appDir, 'Uninstall Testownik.exe');
+        
+        try {
+          if (fs.existsSync(uninstallerPath)) {
+            fs.unlinkSync(uninstallerPath);
+          }
+        } catch (e) {
+          // Ignorujemy błędy, jeśli pliku nie ma lub jest zablokowany
+        }
+        
+        const installer = spawn(${JSON.stringify(downloadedUpdatePath)}, ['/S', '--force-run'], {
+          detached: true,
+          stdio: 'ignore'
+        });
+        installer.unref();
+      }, 4000);
+    `;
+    fs.writeFileSync(scriptPath, scriptContent);
+    
+    // Uruchamiamy ten skrypt w tle używając wbudowanego w aplikację środowiska Node (bez okien CMD!)
+    const subprocess = spawn(process.execPath, [scriptPath], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
+    });
+    
+    subprocess.unref();
+    app.quit();
+  }
+
+  ipcMain.on('restart-app', () => {
+    installUpdateAndQuit();
+  });
+
+  // W razie błędu, wypisz do konsoli zamiast pokazywać okienko
+  autoUpdater.on('error', (err) => {
+    console.error('Błąd auto-updatera:', err);
+  });
+
+  // Uruchomienie sprawdzania (bez domyślnego powiadomienia systemowego)
+  autoUpdater.checkForUpdates();
 });
 
+// Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (downloadedUpdatePath) {
+    installUpdateAndQuit();
+  } else if (process.platform !== 'darwin') {
     app.quit();
   }
 });

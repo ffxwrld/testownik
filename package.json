@@ -1,7 +1,7 @@
 {
   "name": "testownik",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.1.2",
   "author": "Testownik <admin@testownik.app>",
   "type": "module",
   "main": "dist-electron/main.cjs",
@@ -45,6 +45,7 @@
   "build": {
     "appId": "com.testownik.app",
     "productName": "Testownik",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
     "publish": {
       "provider": "github",
       "owner": "ffxwrld",
@@ -71,6 +72,10 @@
         "nsis"
       ]
     },
+    "mac": {
+      "target": "default",
+      "artifactName": "Testownik-Setup-${version}-mac-${arch}.${ext}"
+    },
     "linux": {
       "target": [
         "AppImage",
@@ -79,8 +84,7 @@
       "category": "Education"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
       "perMachine": false
     }
   }
