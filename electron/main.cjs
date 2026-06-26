@@ -83,8 +83,31 @@ function createMenu() {
 app.on('ready', () => {
   createWindow();
   
-  // Inicjalizacja automatycznych aktualizacji (auto-updater)
-  autoUpdater.checkForUpdatesAndNotify();
+  // Nasłuchiwanie na pobraną aktualizację
+  autoUpdater.on('update-downloaded', (info) => {
+    const { dialog } = require('electron');
+    dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Aktualizacja gotowa',
+      message: `Wersja ${info.version} została pobrana.`,
+      detail: 'Uruchom ponownie aplikację, aby zainstalować aktualizację.',
+      buttons: ['Uruchom ponownie', 'Później']
+    }).then((result) => {
+      if (result.response === 0) {
+        // Użytkownik kliknął "Uruchom ponownie"
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  // W przypadku błędu (np. z powodu braku certyfikatu Apple na Macu) 
+  // możemy powiadomić użytkownika o konieczności ręcznego pobrania
+  autoUpdater.on('error', (err) => {
+    console.error('Błąd aktualizacji:', err);
+  });
+
+  // Uruchomienie sprawdzania (bez domyślnego powiadomienia systemowego)
+  autoUpdater.checkForUpdates();
 });
 
 app.on('window-all-closed', () => {
