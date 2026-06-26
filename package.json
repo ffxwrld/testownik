@@ -10,10 +10,10 @@
     "dev": "vite",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
-    "build:mac": "npm run build && electron-builder --mac --x64 --arm64 --publish=never -c.directories.output=release/mac",
-    "build:win": "npm run build && electron-builder --win --x64 --publish=never -c.directories.output=release/win",
-    "build:linux": "npm run build && electron-builder --linux --x64 --publish=never -c.directories.output=release/linux",
-    "build:all": "npm run build && electron-builder --mac --x64 --arm64 --publish=never -c.directories.output=release/mac && electron-builder --win --x64 --publish=never -c.directories.output=release/win && electron-builder --linux --x64 --publish=never -c.directories.output=release/linux",
+    "build:mac": "rm -rf release/mac && npm run build && electron-builder --mac --x64 --arm64 --publish=never -c.directories.output=release/mac",
+    "build:win": "rm -rf release/win && npm run build && electron-builder --win --x64 --publish=never -c.directories.output=release/win",
+    "build:linux": "rm -rf release/linux && npm run build && electron-builder --linux --x64 --publish=never -c.directories.output=release/linux",
+    "build:all": "rm -rf release && npm run build && electron-builder --mac --x64 --arm64 --publish=never -c.directories.output=release/mac && electron-builder --win --x64 --publish=never -c.directories.output=release/win && electron-builder --linux --x64 --publish=never -c.directories.output=release/linux",
     "preview": "vite preview"
   },
   "dependencies": {
