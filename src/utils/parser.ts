@@ -12,7 +12,7 @@ import { Question, Answer } from '../models/types';
 // is the index of the correct answer.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function decodeMask(maskLine: string): number[] {
+export function decodeMask(maskLine: string): number[] {
   // Strip leading non-digit characters (the category letter)
   const digits = maskLine.replace(/^[^01]*/, '');
   const indices: number[] = [];
@@ -44,7 +44,7 @@ export function decodeFileContent(bytes: Uint8Array): string {
   }
 }
 
-export function parseQuestionFile(
+function parseQuestionFile(
   content: string,
   filename: string
 ): Question | null {
@@ -125,7 +125,7 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
     const lower = relativePath.toLowerCase();
     if (lower.endsWith('.txt')) {
       txtFiles.push({ name: relativePath, file: zipEntry });
-    } else if (lower.match(/\.(png|jpe?g|gif)$/i)) {
+    } else if (lower.match(/\.(png|jpe?g|gif)$/)) {
       imgFiles.push({ name: relativePath, file: zipEntry });
     }
   });

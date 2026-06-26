@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useMemo, FC } from 'react';
 import { SessionState } from '../models/types';
 import { getHardestQuestions, formatTime } from '../utils/session';
 import { Card } from './ui/Card';
@@ -13,12 +13,27 @@ interface SummaryViewProps {
   onNewTest: () => void;
 }
 
-export const SummaryView: React.FC<SummaryViewProps> = ({
+const getAccuracyColor = (pct: number) => {
+  if (pct >= 80) return 'emerald';
+  if (pct >= 60) return 'amber';
+  return 'red';
+};
+
+const getAccuracyLabel = (pct: number) => {
+  if (pct >= 90) return { text: 'Wybitny!', color: 'success' as const };
+  if (pct >= 80) return { text: 'Bardzo dobry', color: 'success' as const };
+  if (pct >= 70) return { text: 'Dobry', color: 'info' as const };
+  if (pct >= 60) return { text: 'Dostateczny', color: 'warning' as const };
+  return { text: 'Wymaga poprawy', color: 'danger' as const };
+};
+
+export const SummaryView: FC<SummaryViewProps> = ({
   session,
   sessionId,
   onNewTest,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [showBeerModal, setShowBeerModal] = useState(true);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -37,21 +52,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
     session.totalFirstAttempts > 0
       ? Math.round((session.totalFirstCorrect / session.totalFirstAttempts) * 100)
       : 0;
-  const hardest = getHardestQuestions(session, 10);
-
-  const getAccuracyColor = (pct: number) => {
-    if (pct >= 80) return 'emerald';
-    if (pct >= 60) return 'amber';
-    return 'red';
-  };
-
-  const getAccuracyLabel = (pct: number) => {
-    if (pct >= 90) return { text: 'Wybitny!', color: 'success' as const };
-    if (pct >= 80) return { text: 'Bardzo dobry', color: 'success' as const };
-    if (pct >= 70) return { text: 'Dobry', color: 'info' as const };
-    if (pct >= 60) return { text: 'Dostateczny', color: 'warning' as const };
-    return { text: 'Wymaga poprawy', color: 'danger' as const };
-  };
+  const hardest = useMemo(() => getHardestQuestions(session, 10), [session]);
 
   const label = getAccuracyLabel(accuracy);
 
@@ -59,7 +60,32 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   const totalErrors = session.doneStats.reduce((sum, s) => sum + s.wrongCount, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
+    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
+      
+      {/* ── Beer Modal ── */}
+      {showBeerModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn"
+          onClick={() => setShowBeerModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-zinc-200 dark:border-zinc-800 animate-slideDown"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-6xl mb-4 animate-bounce">🍻</div>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+              Koniec testu!
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+              Gratulacje, świetna robota! W pełni zasłużyłeś na zimne piwo.
+            </p>
+            <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full">
+              Dzięki!
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-2xl space-y-6">
 
         {/* Header */}
@@ -286,7 +312,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
           size="xl"
           fullWidth
           onClick={onNewTest}
-          className="shadow-xl shadow-blue-600/20"
+          className="shadow-xl shadow-primary-600/20"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />

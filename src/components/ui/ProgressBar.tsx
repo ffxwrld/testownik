@@ -1,4 +1,4 @@
-import React from 'react';
+import { type FC } from 'react';
 import { cn } from '../../utils/cn';
 
 interface ProgressBarProps {
@@ -10,7 +10,20 @@ interface ProgressBarProps {
   showLabel?: boolean;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({
+const colors = {
+  blue: 'bg-primary-500',
+  emerald: 'bg-emerald-500',
+  amber: 'bg-amber-500',
+  red: 'bg-red-500',
+};
+
+const sizes = {
+  sm: 'h-1.5',
+  md: 'h-2.5',
+  lg: 'h-4',
+};
+
+export const ProgressBar: FC<ProgressBarProps> = ({
   value,
   className,
   color = 'emerald',
@@ -19,19 +32,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   showLabel = false,
 }) => {
   const clamped = Math.min(100, Math.max(0, value));
-
-  const colors = {
-    blue: 'bg-blue-500',
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500',
-    red: 'bg-red-500',
-  };
-
-  const sizes = {
-    sm: 'h-1.5',
-    md: 'h-2.5',
-    lg: 'h-4',
-  };
 
   return (
     <div className={cn('w-full', className)}>

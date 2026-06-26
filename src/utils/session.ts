@@ -1,5 +1,5 @@
 import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata } from '../models/types';
-import { shuffleIndices } from './shuffle';
+import { shuffle, shuffleIndices } from './shuffle';
 import { deleteSessionImages } from './db';
 
 const SESSIONS_STORAGE_KEY = 'testownik_sessions_v2';
@@ -16,7 +16,7 @@ export function buildInitialSession(
   baseName: string = 'Baza pytań'
 ): SessionState {
   // Shuffle the initial queue order
-  const shuffled = [...questions].sort(() => Math.random() - 0.5);
+  const shuffled = shuffle([...questions]);
 
   // When repeatMode > 1, ALL questions start with the higher streak requirement,
   // not just questions that were previously answered wrong.
@@ -207,7 +207,9 @@ export function saveSession(session: SessionState, sessionId?: string): string {
     const id = sessionId || generateSessionId();
     const sessions = loadAllSessions();
     sessions[id] = session;
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+    const serialized = JSON.stringify(sessions);
+    localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
+    invalidateSessionsCache();
     localStorage.setItem(CURRENT_SESSION_ID_KEY, id);
     return id;
   } catch (err) {
@@ -225,33 +227,41 @@ export function loadSession(sessionId?: string): SessionState | null {
     const session = sessions[id];
     if (!session) return null;
     
-    const parsed = session as SessionState;
-    if (parsed.version !== SCHEMA_VERSION) return null;
-    return parsed;
+    if (session.version !== SCHEMA_VERSION) return null;
+    return session;
   } catch {
     return null;
   }
 }
 
+let _sessionsCache: Record<string, SessionState> | null = null;
+let _sessionsCacheRaw: string | null = null;
+
 function loadAllSessions(): Record<string, SessionState> {
   try {
     const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as Record<string, SessionState>;
+    if (raw === _sessionsCacheRaw && _sessionsCache) return _sessionsCache;
+    _sessionsCache = JSON.parse(raw) as Record<string, SessionState>;
+    _sessionsCacheRaw = raw;
+    return _sessionsCache;
   } catch {
     return {};
   }
 }
 
-export function clearSession(): void {
-  localStorage.removeItem(CURRENT_SESSION_ID_KEY);
+function invalidateSessionsCache(): void {
+  _sessionsCache = null;
+  _sessionsCacheRaw = null;
 }
 
 export function deleteSession(sessionId: string): void {
   try {
     const sessions = loadAllSessions();
     delete sessions[sessionId];
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+    const serialized = JSON.stringify(sessions);
+    localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
+    invalidateSessionsCache();
     
     // Clean up associated images asynchronously
     deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));
@@ -288,7 +298,9 @@ export function renameSession(sessionId: string, newBaseName: string): void {
     const sessions = loadAllSessions();
     if (sessions[sessionId]) {
       sessions[sessionId] = { ...sessions[sessionId], baseName: newBaseName };
-      localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+      const serialized = JSON.stringify(sessions);
+      localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
+      invalidateSessionsCache();
     }
   } catch (err) {
     console.warn('Could not rename session:', err);

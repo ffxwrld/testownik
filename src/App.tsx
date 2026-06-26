@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, FC } from 'react';
 import { SessionState, Question } from './models/types';
 import {
   buildInitialSession,
@@ -11,8 +11,9 @@ import {
 import { HomeView } from './components/HomeView';
 import { TestView } from './components/TestView';
 import { SummaryView } from './components/SummaryView';
-import { CreatorView } from './components/CreatorView';
+import { CreatorView, EditingQuestion, EditingAnswer } from './components/CreatorView';
 import { DarkModeToggle } from './components/DarkModeToggle';
+import { ThemePicker } from './components/ThemePicker';
 
 type AppPhase = 'home' | 'test' | 'summary' | 'creator';
 
@@ -31,13 +32,14 @@ function applyZoom(level: number): number {
   return clamped;
 }
 
-const App: React.FC = () => {
+const App: FC = () => {
   const [phase, setPhase] = useState<AppPhase>('home');
   const [session, setSession] = useState<SessionState | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [homeTab, setHomeTab] = useState<'new'|'saved'>('new');
-  const [creatorInitialQuestions, setCreatorInitialQuestions] = useState<any[] | null>(null);
+  const [creatorInitialQuestions, setCreatorInitialQuestions] = useState<EditingQuestion[] | null>(null);
   const [creatorInitialBaseName, setCreatorInitialBaseName] = useState<string | null>(null);
+  const [creatorInitialImages, setCreatorInitialImages] = useState<Record<string, Blob> | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(() => {
     const stored = localStorage.getItem('testownik_zoom');
     return stored ? parseFloat(stored) : 1;
@@ -84,14 +86,13 @@ const App: React.FC = () => {
   // Start a new test session
 
   const handleStartSession = useCallback(
-    (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob> = {}) => {
+    async (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob> = {}) => {
       const newSession = buildInitialSession(questions, repeatMode, baseName);
       const sessionId = saveSession(newSession);
       
       if (Object.keys(images).length > 0) {
-        import('./utils/db').then(({ saveSessionImages }) => {
-          saveSessionImages(sessionId, images).catch(console.error);
-        });
+        const { saveSessionImages } = await import('./utils/db');
+        await saveSessionImages(sessionId, images);
       }
 
       setCurrentSessionId(sessionId);
@@ -124,7 +125,7 @@ const App: React.FC = () => {
 
   // Edit Session in Creator
 
-  const handleEditInCreator = useCallback((sessionId: string) => {
+  const handleEditInCreator = useCallback(async (sessionId: string) => {
     const saved = loadSession(sessionId);
     if (!saved) return;
     
@@ -132,13 +133,13 @@ const App: React.FC = () => {
     const editingQuestions = saved.questions.map((q, idx) => {
       const maskLine = q.id.split('_')[0] || 'X';
       const category = maskLine.charAt(0).toUpperCase() || 'X';
-      let fn = q.sourceFile;
+      let fn = q.sourceFile || '';
       if (fn.toLowerCase().endsWith('.txt')) fn = fn.slice(0, -4);
       
       return {
         id: Math.random().toString(36).slice(2, 9),
         filename: fn || `pytanie_${idx+1}`,
-        text: q.text,
+        text: q.text || '',
         category: category,
         answers: q.answers.map(a => ({
           id: Math.random().toString(36).slice(2, 9),
@@ -148,25 +149,29 @@ const App: React.FC = () => {
       };
     });
     
+    const { getAllSessionImages } = await import('./utils/db');
+    const images = await getAllSessionImages(sessionId);
+    
     setCreatorInitialQuestions(editingQuestions);
     setCreatorInitialBaseName(saved.baseName);
+    setCreatorInitialImages(images);
     setPhase('creator');
   }, []);
 
-  const handleSaveToTestownik = useCallback((editingQuestions: any[], baseName: string, images: Record<string, Blob> = {}) => {
+  const handleSaveToTestownik = useCallback(async (editingQuestions: EditingQuestion[], baseName: string, images: Record<string, Blob> = {}) => {
     try {
       const questions: Question[] = editingQuestions.map((eq, idx) => {
-        const binary = eq.answers.map((a: any) => a.isCorrect ? '1' : '0').join('');
+        const binary = eq.answers.map((a: EditingAnswer) => a.isCorrect ? '1' : '0').join('');
         const maskLine = (eq.category || 'X') + binary;
         const filename = (eq.filename || '').trim() || `pytanie_${idx+1}`;
         const baseId = maskLine + '_' + filename.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const correctIndices = eq.answers.map((a: any, i: number) => a.isCorrect ? i : -1).filter((i: number) => i !== -1);
+        const correctIndices = eq.answers.map((a: EditingAnswer, i: number) => a.isCorrect ? i : -1).filter((i: number) => i !== -1);
         
         return {
           id: baseId,
           sourceFile: filename + '.txt',
           text: eq.text,
-          answers: eq.answers.map((a: any, i: number) => ({ id: `${filename}-ans-${i}`, text: a.text, isCorrect: a.isCorrect })),
+          answers: eq.answers.map((a: EditingAnswer, i: number) => ({ id: `${filename}-ans-${i}`, text: a.text, isCorrect: a.isCorrect })),
           correctAnswerIndex: correctIndices[0] ?? 0,
           correctAnswerIndices: correctIndices
         };
@@ -176,9 +181,8 @@ const App: React.FC = () => {
       const sessionId = saveSession(newSession);
       
       if (Object.keys(images).length > 0) {
-        import('./utils/db').then(({ saveSessionImages }) => {
-          saveSessionImages(sessionId, images).catch(console.error);
-        });
+        const { saveSessionImages } = await import('./utils/db');
+        await saveSessionImages(sessionId, images);
       }
 
       setCurrentSessionId(sessionId);
@@ -186,6 +190,7 @@ const App: React.FC = () => {
       
       setCreatorInitialQuestions(null);
       setCreatorInitialBaseName(null);
+      setCreatorInitialImages(null);
       setHomeTab('saved');
       setPhase('home');
     } catch (err: any) {
@@ -219,10 +224,11 @@ const App: React.FC = () => {
 
   // Restart an existing session
 
-  const handleRestartSession = useCallback((sessionId: string) => {
+  const handleRestartSession = useCallback((sessionId: string, newRepeatMode?: number) => {
     const saved = loadSession(sessionId);
     if (!saved) return;
-    const fresh = buildInitialSession(saved.questions, saved.repeatMode, saved.baseName);
+    const modeToUse = newRepeatMode ?? saved.repeatMode;
+    const fresh = buildInitialSession(saved.questions, modeToUse, saved.baseName);
     saveSession(fresh, sessionId);
     setCurrentSessionId(sessionId);
     setSession(fresh);
@@ -267,10 +273,12 @@ const App: React.FC = () => {
           onQuit={() => {
             setCreatorInitialQuestions(null);
             setCreatorInitialBaseName(null);
+            setCreatorInitialImages(null);
             setPhase('home');
           }}
           initialQuestions={creatorInitialQuestions || undefined}
           initialBaseName={creatorInitialBaseName || undefined}
+          initialImages={creatorInitialImages || undefined}
           onSaveToTestownik={handleSaveToTestownik}
         />
       );
@@ -287,6 +295,7 @@ const App: React.FC = () => {
         onEnterCreator={() => {
           setCreatorInitialQuestions(null);
           setCreatorInitialBaseName(null);
+          setCreatorInitialImages(null);
           setPhase('creator');
         }}
         onEditInCreator={handleEditInCreator}
@@ -300,9 +309,13 @@ const App: React.FC = () => {
   const inverseZoom = Math.round((1 / zoomLevel) * 1000) / 1000;
 
   return (
-    <>
-      {/* Padding so content doesn't hide behind footer at any zoom level */}
-      <div style={{ paddingBottom: `${FOOTER_HEIGHT_PX}px` }}>
+    <div className="flex flex-col min-h-screen">
+      {/* The main content container is flex-1 and flex-col so that views can take remaining space. 
+          We add paddingBottom here so that content never hides behind the fixed footer. */}
+      <div 
+        className="flex-1 flex flex-col"
+        style={{ paddingBottom: `${FOOTER_HEIGHT_PX / zoomLevel}px` }}
+      >
         {content}
       </div>
 
@@ -326,6 +339,7 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 pr-3">
+          <ThemePicker />
           <DarkModeToggle />
           <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
           <button
@@ -355,7 +369,7 @@ const App: React.FC = () => {
           </button>
         </div>
       </footer>
-    </>
+    </div>
   );
 };
 

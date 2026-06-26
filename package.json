@@ -1,7 +1,7 @@
 {
   "name": "testownik",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Testownik <admin@testownik.app>",
   "type": "module",
   "main": "dist-electron/main.cjs",

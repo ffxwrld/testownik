@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { type FC, useState } from 'react';
 import { SavedSessionMetadata } from '../models/types';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -8,11 +8,11 @@ interface SessionsListProps {
   onResume: (sessionId: string) => void;
   onDelete: (sessionId: string) => void;
   onRename: (sessionId: string, newName: string) => void;
-  onRestart: (sessionId: string) => void;
+  onRestart: (sessionId: string, newRepeatMode?: number) => void;
   onEditInCreator: (sessionId: string) => void;
 }
 
-export const SessionsList: React.FC<SessionsListProps> = ({
+export const SessionsList: FC<SessionsListProps> = ({
   sessions,
   onResume,
   onDelete,
@@ -22,6 +22,8 @@ export const SessionsList: React.FC<SessionsListProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [restartingId, setRestartingId] = useState<string | null>(null);
+  const [restartRepeatMode, setRestartRepeatMode] = useState(1);
 
   const startEdit = (session: SavedSessionMetadata) => {
     setEditingId(session.id);
@@ -84,7 +86,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                       if (e.key === 'Escape') setEditingId(null);
                     }}
                     autoFocus
-                    className="flex-1 px-3 py-1 text-sm font-semibold bg-white dark:bg-zinc-900 border-2 border-blue-400 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    className="flex-1 px-3 py-1 text-sm font-semibold bg-white dark:bg-zinc-900 border-2 border-primary-400 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                     placeholder="Nazwa bazy pytań..."
                   />
                   <button
@@ -112,7 +114,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     </span>
                     <button
                       onClick={() => startEdit(session)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all flex-shrink-0"
                       title="Zmień nazwę"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +140,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
               <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    isCompleted ? 'bg-emerald-500' : 'bg-blue-500'
+                    isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
                   }`}
                   style={{ width: `${progress}%` }}
                 />
@@ -158,7 +160,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
               {isCompleted ? (
                 <>
                   <Button
-                    onClick={() => onRestart(session.id)}
+                    onClick={() => setRestartingId(session.id)}
                     size="sm"
                     variant="primary"
                     className="flex-1"
@@ -206,6 +208,15 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     Wznów
                   </Button>
                   <button
+                    onClick={() => setRestartingId(session.id)}
+                    className="px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors border border-primary-200 dark:border-primary-900/40"
+                    title="Zacznij od nowa"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                  </button>
+                  <button
                     onClick={() => {
                       if (window.confirm('Edycja w kreatorze nadpisze test nową wersją (obecny postęp zostanie zresetowany). Czy kontynuować?')) {
                         onEditInCreator(session.id);
@@ -234,6 +245,62 @@ export const SessionsList: React.FC<SessionsListProps> = ({
           </div>
         );
       })}
+
+      {/* Restart Configuration Modal */}
+      {restartingId && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn"
+          onClick={() => setRestartingId(null)}
+        >
+          <div 
+            className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-sm p-6 border border-zinc-200 dark:border-zinc-800 animate-slideDown"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+              Zacznij od nowa
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+              Bieżący postęp w tym teście zostanie utracony. Wybierz wymaganą liczbę poprawnych odpowiedzi z rzędu do zaliczenia pytania:
+            </p>
+            
+            <div className="flex gap-2 mb-6">
+              {[1, 2, 3].map(num => (
+                <button
+                  key={num}
+                  onClick={() => setRestartRepeatMode(num)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all border-2 ${
+                    restartRepeatMode === num
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                      : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
+                  }`}
+                >
+                  {num}x
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() => setRestartingId(null)}
+              >
+                Anuluj
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={() => {
+                  onRestart(restartingId, restartRepeatMode);
+                  setRestartingId(null);
+                }}
+              >
+                Restartuj test
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

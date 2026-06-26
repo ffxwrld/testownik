@@ -77,7 +77,7 @@ export interface SavedSessionMetadata {
 // Answer feedback state
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type FeedbackState = 'correct' | 'wrong';
+type FeedbackState = 'correct' | 'wrong';
 
 export interface AnswerFeedback {
   selectedAnswerIndices: number[]; // which answers (in shuffled order) were selected

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, FC, MouseEvent, ChangeEvent } from 'react';
 import JSZip from 'jszip';
 import { decodeFileContent } from '../utils/parser';
 import { Button } from './ui/Button';
@@ -8,6 +8,7 @@ interface CreatorViewProps {
   onQuit: () => void;
   initialQuestions?: EditingQuestion[];
   initialBaseName?: string;
+  initialImages?: Record<string, Blob>;
   onSaveToTestownik: (questions: EditingQuestion[], baseName: string, images: Record<string, Blob>) => void;
 }
 
@@ -29,7 +30,7 @@ export function generateId() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestions, initialBaseName, onSaveToTestownik }) => {
+export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, initialBaseName, initialImages, onSaveToTestownik }) => {
   const [questions, setQuestions] = useState<EditingQuestion[]>(initialQuestions && initialQuestions.length > 0 ? initialQuestions : [{
     id: generateId(),
     filename: 'pytanie_1',
@@ -45,7 +46,9 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
   const [isLoading, setIsLoading] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [savePromptName, setSavePromptName] = useState(initialBaseName || 'Nowa baza z kreatora');
-  const [images, setImages] = useState<Record<string, Blob>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [images, setImages] = useState<Record<string, Blob>>(initialImages || {});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Zabezpieczenie przed przeładowaniem strony (F5, Cmd+R) / zamknięciem karty
@@ -60,6 +63,81 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
 
   const activeQuestion = questions.find(q => q.id === activeId) || questions[0];
 
+  const activeImageKey = useMemo(() => {
+    if (!activeQuestion) return null;
+    
+    // 1. Sprawdź tagi [img] w tekście pytania
+    const regex = /\[img\](.*?)\[\/img\]/i;
+    const match = regex.exec(activeQuestion.text || '');
+    if (match) {
+      const tagFileName = match[1].trim().toLowerCase();
+      const foundKey = Object.keys(images).find(k => k.toLowerCase() === tagFileName);
+      if (foundKey) return foundKey;
+    }
+
+    // 2. Fallback - dopasowanie nazwy pliku
+    return Object.keys(images).find(k => {
+      const nameWithoutExt = k.replace(/\.[^/.]+$/, "");
+      return nameWithoutExt.toLowerCase() === (activeQuestion.filename || '').toLowerCase();
+    });
+  }, [activeQuestion?.filename, activeQuestion?.text, images]);
+
+  const activeImageUrl = useMemo(() => {
+    if (!activeImageKey) return null;
+    return URL.createObjectURL(images[activeImageKey]);
+  }, [activeImageKey, images]);
+
+  useEffect(() => {
+    return () => {
+      if (activeImageUrl) URL.revokeObjectURL(activeImageUrl);
+    };
+  }, [activeImageUrl]);
+
+  const handleImageUpload = (file: File) => {
+    if (!activeQuestion || !file.type.startsWith('image/')) return;
+    
+    let newKey = activeImageKey;
+    if (!newKey) {
+      const ext = file.name.split('.').pop() || 'png';
+      newKey = `${activeQuestion.filename}.${ext}`;
+    }
+    
+    setImages(prev => {
+      const next = { ...prev };
+      if (activeImageKey) delete next[activeImageKey];
+      next[newKey] = file;
+      return next;
+    });
+
+    const imgTag = `[img]${newKey}[/img]`;
+    if (!(activeQuestion.text || '').includes(imgTag)) {
+      setQuestions(prev => prev.map(q => 
+        q.id === activeId 
+          ? { ...q, text: (q.text ? q.text + '\n' : '') + imgTag } 
+          : q
+      ));
+    }
+  };
+
+  const handleImageDelete = () => {
+    if (!activeImageKey || !activeQuestion) return;
+    
+    setImages(prev => {
+      const next = { ...prev };
+      delete next[activeImageKey];
+      return next;
+    });
+
+    const regex = new RegExp(`\\[img\\]${activeImageKey}\\[\\/img\\]\\s*`, 'gi');
+    if (regex.test(activeQuestion.text || '')) {
+      setQuestions(prev => prev.map(q => 
+        q.id === activeId 
+          ? { ...q, text: (q.text || '').replace(regex, '').trimEnd() } 
+          : q
+      ));
+    }
+  };
+
   // Actions
 
   const handleAddQuestion = () => {
@@ -73,22 +151,27 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
         { id: generateId(), text: '', isCorrect: false },
       ],
     };
-    setQuestions([...questions, newQ]);
+    setQuestions(prev => [...prev, newQ]);
     setActiveId(newQ.id);
   };
 
-  const handleDeleteQuestion = (e: React.MouseEvent, id: string) => {
+  const handleDeleteQuestion = (e: MouseEvent, id: string) => {
     e.stopPropagation();
     if (questions.length <= 1) return;
-    const filtered = questions.filter(q => q.id !== id);
-    setQuestions(filtered);
+    setQuestions(prev => {
+      const filtered = prev.filter(q => q.id !== id);
+      return filtered;
+    });
     if (activeId === id) {
-      setActiveId(filtered[0].id);
+      setQuestions(prev => {
+        if (prev.length > 0) setActiveId(prev[0].id);
+        return prev;
+      });
     }
   };
 
   const updateActiveQuestion = (updates: Partial<EditingQuestion>) => {
-    setQuestions(questions.map(q => q.id === activeId ? { ...q, ...updates } : q));
+    setQuestions(prev => prev.map(q => q.id === activeId ? { ...q, ...updates } : q));
   };
 
   const handleAddAnswer = () => {
@@ -114,7 +197,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
 
   // Import / Export
 
-  const handleImportZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportZip = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
@@ -147,7 +230,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
             const blob = await file.async('blob');
             const fileName = name.split('/').pop() || name;
             extractedImages[fileName] = blob;
-          } catch (err) {}
+          } catch (err) { console.warn('Failed to extract image:', err); }
         })
       );
       setImages(extractedImages);
@@ -231,7 +314,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
   // Render
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+    <div className="flex-1 bg-white dark:bg-zinc-950 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -270,17 +353,34 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
       </header>
 
       {/* Main Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto flex overflow-hidden h-[calc(100vh-60px)]">
+      <main className="flex-1 max-w-7xl w-full mx-auto flex min-h-0">
         
         {/* Sidebar: List of questions */}
         <div className="w-72 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
-          <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="p-3 border-b border-zinc-100 dark:border-zinc-800 flex flex-col gap-3">
             <Button size="sm" variant="ghost" fullWidth onClick={handleAddQuestion} className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 border-dashed">
               + Dodaj kolejne pytanie
             </Button>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-zinc-400">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Szukaj pytania..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
+              />
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {questions.map((q, index) => {
+            {questions
+              .filter(q => (q.filename || '').toLowerCase().includes(searchQuery.toLowerCase()) || (q.text || '').toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((q) => {
+              const index = questions.indexOf(q);
               const isActive = q.id === activeId;
               return (
                 <div
@@ -288,15 +388,15 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
                   onClick={() => setActiveId(q.id)}
                   className={`group relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                     isActive 
-                      ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800' 
+                      ? 'bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800' 
                       : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent'
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-mono truncate ${isActive ? 'text-blue-700 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                    <p className={`text-xs font-mono truncate ${isActive ? 'text-primary-700 dark:text-primary-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                       {q.filename || `pytanie_${index+1}`}
                     </p>
-                    <p className={`text-sm truncate font-medium ${isActive ? 'text-blue-900 dark:text-blue-200' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                    <p className={`text-sm truncate font-medium ${isActive ? 'text-primary-900 dark:text-primary-200' : 'text-zinc-700 dark:text-zinc-300'}`}>
                       {q.text || '(Puste pytanie)'}
                     </p>
                   </div>
@@ -333,7 +433,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
                       value={activeQuestion.filename}
                       onChange={e => updateActiveQuestion({ filename: e.target.value })}
                       placeholder="np. pytanie_1"
-                      className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-zinc-900 dark:text-zinc-100 font-mono text-sm"
+                      className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 font-mono text-sm"
                     />
                     <span className="absolute right-4 top-2.5 text-zinc-400 font-mono text-sm pointer-events-none">.txt</span>
                   </div>
@@ -348,7 +448,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
                     onChange={e => updateActiveQuestion({ category: e.target.value.charAt(0).toUpperCase() || 'X' })}
                     placeholder="X"
                     maxLength={1}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-zinc-900 dark:text-zinc-100 font-mono text-sm text-center uppercase"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 font-mono text-sm text-center uppercase"
                   />
                 </div>
               </div>
@@ -363,8 +463,71 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
                   onChange={e => updateActiveQuestion({ text: e.target.value })}
                   placeholder="Wpisz treść pytania..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-zinc-900 dark:text-zinc-100 text-lg resize-y"
+                  className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 text-lg resize-y"
                 />
+              </div>
+
+              {/* Image Uploader */}
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
+                  Zdjęcie do pytania (opcjonalne)
+                </label>
+                {activeImageUrl ? (
+                  <div className="relative inline-block rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 group shadow-sm bg-zinc-50 dark:bg-zinc-900">
+                    <img 
+                      src={activeImageUrl} 
+                      alt="Podgląd" 
+                      className="max-h-48 object-contain w-auto cursor-pointer"
+                      onClick={() => setFullscreenImage(activeImageUrl)}
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 pointer-events-none group-hover:pointer-events-auto">
+                      <button
+                        onClick={() => setFullscreenImage(activeImageUrl)}
+                        className="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full shadow-lg transform hover:scale-105 transition-all backdrop-blur-sm"
+                        title="Powiększ zdjęcie"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={handleImageDelete}
+                        className="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transform hover:scale-105 transition-all backdrop-blur-sm"
+                        title="Usuń zdjęcie"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6l-1.5 14.5a2 2 0 01-2 2H8a2 2 0 01-2-2L4.5 6m15 0H4.5m4.5 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-6 4v8m4-8v8" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="w-full border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-primary-400 dark:hover:border-primary-600 rounded-xl p-6 flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-colors cursor-pointer"
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleImageUpload(file);
+                    }}
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) handleImageUpload(file);
+                      };
+                      input.click();
+                    }}
+                  >
+                    <svg className="w-8 h-8 mb-2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                    <p className="text-sm font-medium">Kliknij by wgrać zdjęcie lub przeciągnij plik tutaj</p>
+                    <p className="text-xs mt-1 text-zinc-400">PNG, JPG, GIF do 5MB</p>
+                  </div>
+                )}
               </div>
 
               {/* Answers */}
@@ -411,7 +574,7 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
                   ))}
                   
                   <div className="pt-2 px-2 pb-1">
-                    <Button size="sm" variant="ghost" onClick={handleAddAnswer} className="text-blue-600 dark:text-blue-400 font-semibold border border-dashed border-blue-200 dark:border-blue-800/50 w-full bg-blue-50/50 dark:bg-blue-900/10">
+                    <Button size="sm" variant="ghost" onClick={handleAddAnswer} className="text-primary-600 dark:text-primary-400 font-semibold border border-dashed border-primary-200 dark:border-primary-800/50 w-full bg-primary-50/50 dark:bg-primary-900/10">
                       + Dodaj wariant odpowiedzi
                     </Button>
                   </div>
@@ -426,6 +589,20 @@ export const CreatorView: React.FC<CreatorViewProps> = ({ onQuit, initialQuestio
           )}
         </div>
       </main>
+
+      {/* Fullscreen Image Modal */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4 cursor-zoom-out"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <img 
+            src={fullscreenImage} 
+            alt="Podgląd zdjęcia" 
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" 
+          />
+        </div>
+      )}
 
       {/* Save Prompt Modal */}
       {showSavePrompt && (
