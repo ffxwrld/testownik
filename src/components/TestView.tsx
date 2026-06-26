@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { SessionState, AnswerFeedback } from '../models/types';
-import { Question } from '../models/types';
+import { useEffect, useRef, useState, useCallback, FC, ReactNode, Fragment } from 'react';
+import { SessionState, AnswerFeedback, Question } from '../models/types';
 import {
   processCorrectAnswer,
   processWrongAnswer,
@@ -33,7 +32,7 @@ interface PreviousQuestionData {
 const FEEDBACK_DELAY_MS = 150;
 const ANSWER_KEYS = ['1', '2', '3', '4', '5', '6'];
 
-export const TestView: React.FC<TestViewProps> = ({
+export const TestView: FC<TestViewProps> = ({
   session,
   sessionId,
   onSessionUpdate,
@@ -55,6 +54,13 @@ export const TestView: React.FC<TestViewProps> = ({
   const [showingPrevious, setShowingPrevious] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+    };
+  }, []);
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const elapsedRef = useRef(elapsed);
@@ -164,7 +170,7 @@ export const TestView: React.FC<TestViewProps> = ({
     setFeedback(newFeedback);
     setIsTransitioning(true);
 
-    setTimeout(() => {
+    feedbackTimeoutRef.current = setTimeout(() => {
       const currentElapsed = elapsedRef.current;
       const baseSession = { ...sessionRef.current, elapsedSeconds: currentElapsed };
       const updatedSession = isCorrect
@@ -290,7 +296,7 @@ export const TestView: React.FC<TestViewProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mx-auto" />
+          <div className="w-12 h-12 rounded-full border-4 border-primary-200 border-t-blue-600 animate-spin mx-auto" />
           <p className="text-zinc-500 dark:text-zinc-400 text-sm">Ładowanie pytania…</p>
         </div>
       </div>
@@ -306,9 +312,9 @@ export const TestView: React.FC<TestViewProps> = ({
     if (feedback === null) {
       const isSelected = selectedIndices.includes(shuffledIdx);
       if (isSelected) {
-        return `${base} border-blue-500 bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 shadow-sm cursor-pointer`;
+        return `${base} border-primary-500 bg-primary-50/80 dark:bg-primary-900/30 text-primary-900 dark:text-primary-100 shadow-sm cursor-pointer`;
       }
-      return `${base} border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/60 dark:hover:bg-blue-900/20 hover:shadow-sm cursor-pointer active:scale-[0.99]`;
+      return `${base} border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/60 dark:hover:bg-primary-900/20 hover:shadow-sm cursor-pointer active:scale-[0.99]`;
     }
 
     // After confirmation — show results
@@ -326,7 +332,7 @@ export const TestView: React.FC<TestViewProps> = ({
     return `${base} border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-400 dark:text-zinc-600 opacity-50 cursor-default`;
   };
 
-  const getAnswerBadge = (shuffledIdx: number): React.ReactNode => {
+  const getAnswerBadge = (shuffledIdx: number): ReactNode => {
     if (feedback === null) {
       const isSelected = selectedIndices.includes(shuffledIdx);
       if (isMultiAnswer) {
@@ -335,8 +341,8 @@ export const TestView: React.FC<TestViewProps> = ({
           <span
             className={`w-7 h-7 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
               isSelected
-                ? 'bg-blue-500 border-blue-500'
-                : 'border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 dark:group-hover:border-blue-500'
+                ? 'bg-primary-500 border-primary-500'
+                : 'border-zinc-300 dark:border-zinc-600 group-hover:border-primary-400 dark:group-hover:border-primary-500'
             }`}
           >
             {isSelected && (
@@ -352,8 +358,8 @@ export const TestView: React.FC<TestViewProps> = ({
         <span
           className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
             isSelected
-              ? 'bg-blue-500 border-blue-500 text-white'
-              : 'border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 dark:group-hover:border-blue-500 text-zinc-400 dark:text-zinc-500 group-hover:text-blue-500'
+              ? 'bg-primary-500 border-primary-500 text-white'
+              : 'border-zinc-300 dark:border-zinc-600 group-hover:border-primary-400 dark:group-hover:border-primary-500 text-zinc-400 dark:text-zinc-500 group-hover:text-primary-500'
           }`}
         >
           {!isSelected && ANSWER_KEYS[shuffledIdx]}
@@ -420,7 +426,7 @@ export const TestView: React.FC<TestViewProps> = ({
   const canConfirm = feedback === null && !isTransitioning;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+    <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
 
       {/* ── Sticky Header ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-zinc-900">
@@ -708,11 +714,11 @@ export const TestView: React.FC<TestViewProps> = ({
               <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
                 Klawiatura:{' '}
                 {currentQuestion.answers.map((_, i) => (
-                  <React.Fragment key={i}>
+                  <Fragment key={i}>
                     <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
                       {ANSWER_KEYS[i]}
                     </kbd>
-                  </React.Fragment>
+                  </Fragment>
                 ))}
                 — {isMultiAnswer ? 'zaznacz' : 'wybierz'} &nbsp;|&nbsp;{' '}
                 <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
@@ -754,7 +760,7 @@ export const TestView: React.FC<TestViewProps> = ({
                   variant="primary"
                   size="lg"
                   disabled={!canConfirm}
-                  className={`w-full animate-fadeIn transition-all shadow-xl shadow-blue-600/20 ${
+                  className={`w-full animate-fadeIn transition-all shadow-xl shadow-primary-600/20 ${
                     selectedIndices.length === 0 ? 'opacity-60' : ''
                   }`}
                 >
@@ -781,7 +787,7 @@ export const TestView: React.FC<TestViewProps> = ({
                   onClick={handleNext}
                   variant="primary"
                   size="lg"
-                  className="w-full animate-fadeIn shadow-xl shadow-blue-600/20"
+                  className="w-full animate-fadeIn shadow-xl shadow-primary-600/20"
                 >
                   Dalej →
                 </Button>
@@ -867,7 +873,7 @@ export const TestView: React.FC<TestViewProps> = ({
                 const wasSelected = previousQuestion.feedback.selectedAnswerIndices.includes(shuffledIdx);
 
                 let cls = 'flex items-start gap-3 px-4 py-3 rounded-xl border-2 text-sm ';
-                let badgeEl: React.ReactNode;
+                let badgeEl: ReactNode;
 
                 if (isCorrect) {
                   cls += 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200';

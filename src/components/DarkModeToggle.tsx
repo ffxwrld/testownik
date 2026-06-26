@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
-export const DarkModeToggle: React.FC = () => {
+export const DarkModeToggle: FC = () => {
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem('testownik_dark');

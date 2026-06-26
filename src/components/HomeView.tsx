@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, FC, ChangeEvent, DragEvent } from 'react';
 import { parseZipFile } from '../utils/parser';
 import { buildDemoQuestions } from '../utils/demo';
 import { Question } from '../models/types';
@@ -14,7 +14,7 @@ interface HomeViewProps {
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void;
-  onRestartSession: (sessionId: string) => void;
+  onRestartSession: (sessionId: string, newRepeatMode?: number) => void;
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
 }
@@ -37,9 +37,9 @@ const REPEAT_OPTIONS = [
   },
 ];
 
-type ViewTab = 'new' | 'saved';
 
-export const HomeView: React.FC<HomeViewProps> = ({
+
+export const HomeView: FC<HomeViewProps> = ({
   activeTab,
   onTabChange,
   onStartSession,
@@ -98,20 +98,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
     e.target.value = '';
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -135,12 +135,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const canStart = questions.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
+    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl space-y-5">
         {/* Header */}
         <div className="text-center space-y-2 pb-2">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-600/30">
               <svg
                 className="w-9 h-9 text-white"
                 fill="none"
@@ -170,7 +170,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             onClick={() => onTabChange('new')}
             className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
               activeTab === 'new'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
@@ -180,13 +180,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
             onClick={() => onTabChange('saved')}
             className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors relative ${
               activeTab === 'saved'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             Moje testy
             {savedSessions.length > 0 && (
-              <span className="ml-2 inline-block px-2 py-0.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full">
+              <span className="ml-2 inline-block px-2 py-0.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full">
                 {savedSessions.length}
               </span>
             )}
@@ -246,10 +246,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onDragLeave={handleDragLeave}
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
                   isDragging
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.01]'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.01]'
                     : canStart
                     ? 'border-emerald-400 dark:border-emerald-600/70 bg-emerald-50/50 dark:bg-emerald-900/10'
-                    : 'border-zinc-300 dark:border-zinc-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40'
+                    : 'border-zinc-300 dark:border-zinc-600 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40'
                 }`}
               >
                 <svg
@@ -313,7 +313,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         onBlur={() => setIsEditingName(false)}
                         onKeyDown={e => { if (e.key === 'Enter') setIsEditingName(false); }}
                         autoFocus
-                        className="flex-1 px-3 py-1.5 text-sm font-semibold bg-white dark:bg-zinc-800 border-2 border-blue-400 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        className="flex-1 px-3 py-1.5 text-sm font-semibold bg-white dark:bg-zinc-800 border-2 border-primary-400 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                         placeholder="Nazwa bazy pytań..."
                       />
                       <button
@@ -332,7 +332,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       </span>
                       <button
                         onClick={() => setIsEditingName(true)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all"
                         title="Zmień nazwę"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -356,12 +356,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     onClick={() => setRepeatMode(opt.value)}
                     className={`relative p-4 rounded-xl border-2 text-left transition-all duration-150 cursor-pointer focus:outline-none ${
                       repeatMode === opt.value
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-sm'
                         : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
                     }`}
                   >
                     {repeatMode === opt.value && (
-                      <div className="absolute top-2 right-2 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                      <div className="absolute top-2 right-2 w-4 h-4 bg-primary-600 rounded-full flex items-center justify-center">
                         <svg
                           className="w-2.5 h-2.5 text-white"
                           fill="none"
@@ -397,7 +397,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               fullWidth
               disabled={!canStart}
               onClick={() => onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań', images)}
-              className="shadow-xl shadow-blue-600/20 text-lg font-bold"
+              className="shadow-xl shadow-primary-600/20 text-lg font-bold"
             >
               <svg
                 className="w-6 h-6"
@@ -435,8 +435,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onRenameSession(sessionId, newName);
                 setSavedSessions(getAllSessionMetadata());
               }}
-              onRestart={(sessionId) => {
-                onRestartSession(sessionId);
+              onRestart={(sessionId, config) => {
+                onRestartSession(sessionId, config);
               }}
               onEditInCreator={onEditInCreator}
             />

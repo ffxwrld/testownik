@@ -1,4 +1,5 @@
 import { Question, Answer } from '../models/types';
+import { decodeMask } from './parser';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Demo questions for testing the app without a ZIP file
@@ -88,18 +89,6 @@ const RAW_QUESTIONS: RawDemoQuestion[] = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Build Question objects from raw demo data
-// ─────────────────────────────────────────────────────────────────────────────
-
-function decodeMask(mask: string): number[] {
-  const digits = mask.replace(/^[^01]*/, '');
-  const indices: number[] = [];
-  for (let i = 0; i < digits.length; i++) {
-    if (digits[i] === '1') indices.push(i);
-  }
-  return indices;
-}
 
 export function buildDemoQuestions(): Question[] {
   return RAW_QUESTIONS.map((raw, qi) => {

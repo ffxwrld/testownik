@@ -1,27 +1,27 @@
-import React from 'react';
+import { type FC, type ReactNode } from 'react';
 import { cn } from '../../utils/cn';
 
 interface CardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   glass?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({
+const paddings = {
+  none: '',
+  sm: 'p-3',
+  md: 'p-4',
+  lg: 'p-6',
+  xl: 'p-8',
+};
+
+export const Card: FC<CardProps> = ({
   children,
   className,
   padding = 'lg',
   glass = false,
 }) => {
-  const paddings = {
-    none: '',
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
-    xl: 'p-8',
-  };
-
   return (
     <div
       className={cn(
