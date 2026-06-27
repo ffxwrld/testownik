@@ -122,15 +122,31 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
     }
   });
 
-  // Sort for deterministic ordering
-  txtFiles.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort for deterministic natural ordering
+  txtFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+  let commonPrefix = '';
+  if (txtFiles.length > 0) {
+    const firstParts = txtFiles[0].name.split('/');
+    firstParts.pop();
+    
+    while (firstParts.length > 0) {
+      const potentialPrefix = firstParts.join('/') + '/';
+      if (txtFiles.every(f => f.name.startsWith(potentialPrefix))) {
+        commonPrefix = potentialPrefix;
+        break;
+      }
+      firstParts.pop();
+    }
+  }
 
   await Promise.all(
     txtFiles.map(async ({ name, file }) => {
       try {
         const bytes = await file.async('uint8array');
         const content = decodeFileContent(bytes);
-        const q = parseQuestionFile(content, name);
+        const strippedName = commonPrefix ? name.substring(commonPrefix.length) : name;
+        const q = parseQuestionFile(content, strippedName);
         if (q) questions.push(q);
       } catch (err) {
         console.warn(`Failed to read "${name}":`, err);
@@ -139,7 +155,7 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
   );
 
   // Sort again because Promise.all doesn't preserve insertion order
-  questions.sort((a, b) => a.sourceFile.localeCompare(b.sourceFile));
+  questions.sort((a, b) => a.sourceFile.localeCompare(b.sourceFile, undefined, { numeric: true, sensitivity: 'base' }));
 
   const images: Record<string, Blob> = {};
   await Promise.all(

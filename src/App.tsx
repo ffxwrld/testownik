@@ -304,7 +304,7 @@ const App: FC = () => {
   }, [currentSessionId, session]);
 
   const displayPhase: AppPhase =
-    session?.phase === 'summary' && phase !== 'home' ? 'summary' : phase;
+    session?.phase === 'summary' && phase === 'test' ? 'summary' : phase;
 
   const content = (() => {
     if (displayPhase === 'test' && session && currentSessionId) {
@@ -368,11 +368,11 @@ const App: FC = () => {
   const inverseZoom = Math.round((1 / zoomLevel) * 1000) / 1000;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       {/* The main content container is flex-1 and flex-col so that views can take remaining space. 
           We add paddingBottom here so that content never hides behind the fixed footer. */}
       <div 
-        className="flex-1 flex flex-col"
+        className={`flex-1 flex flex-col ${displayPhase === 'creator' ? 'min-h-0' : ''}`}
         style={{ paddingBottom: `${FOOTER_HEIGHT_PX / zoomLevel}px` }}
       >
         {content}

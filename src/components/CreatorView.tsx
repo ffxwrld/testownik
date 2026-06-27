@@ -219,7 +219,23 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
         }
       });
       
-      txtFiles.sort((a, b) => a.name.localeCompare(b.name));
+      txtFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+      
+      let commonPrefix = '';
+      if (txtFiles.length > 0) {
+        const firstParts = txtFiles[0].name.split('/');
+        firstParts.pop(); // Remove the filename part
+        
+        while (firstParts.length > 0) {
+          const potentialPrefix = firstParts.join('/') + '/';
+          if (txtFiles.every(f => f.name.startsWith(potentialPrefix))) {
+            commonPrefix = potentialPrefix;
+            setSavePromptName(firstParts[firstParts.length - 1]);
+            break;
+          }
+          firstParts.pop();
+        }
+      }
       
       const extractedImages: Record<string, Blob> = {};
       await Promise.all(
@@ -252,9 +268,10 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
             isCorrect: digits[i] === '1'
           }));
           
+          const strippedName = commonPrefix ? name.substring(commonPrefix.length) : name;
           imported.push({
             id: generateId(),
-            filename: name.replace(/\.txt$/i, ''),
+            filename: strippedName.replace(/\.txt$/i, ''),
             text: questionText,
             category,
             answers
@@ -292,6 +309,10 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
         zip.file(name, content);
       });
       
+      Object.entries(images).forEach(([imgName, blob]) => {
+        zip.file(imgName, blob);
+      });
+      
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -309,7 +330,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
   };
 
   return (
-    <div className="flex-1 bg-white dark:bg-zinc-950 flex flex-col">
+    <div className="flex-1 bg-white dark:bg-zinc-950 flex flex-col min-h-0">
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -324,7 +345,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
               {t('creator.back')}
             </Button>
             <h1 className="font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-              {t('creator.title')}
+              {t('creator.title')} - <span className="text-primary-600 dark:text-primary-400">{savePromptName}</span>
             </h1>
           </div>
           

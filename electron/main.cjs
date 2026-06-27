@@ -34,6 +34,22 @@ function createWindow() {
     mainWindow = null;
   });
 
+  mainWindow.webContents.on('will-prevent-unload', (event) => {
+    const { dialog } = require('electron');
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: 'question',
+      buttons: ['Wyjdź', 'Zostań'],
+      title: 'Niezapisane zmiany',
+      message: 'Czy na pewno chcesz zamknąć aplikację? Niezapisane postępy w kreatorze zostaną bezpowrotnie utracone.',
+      defaultId: 1,
+      cancelId: 1
+    });
+    
+    if (choice === 0) {
+      event.preventDefault(); // Allow the window to close
+    }
+  });
+
   createMenu();
 }
 
