@@ -20,7 +20,7 @@ Testownik is a lightweight, high-performance desktop application designed to opt
 ![Home View - Light Mode](https://github.com/user-attachments/assets/00ee9f22-ff1f-4caf-a0ff-f0c0cfe05b03)
 
 *Taking a test*
-![Test View](https://github.com/user-attachments/assets/4faac9a0-36b7-4c32-8e09-5ddaa7d0ebba)
+![Test View](https://github.com/user-attachments/assets/15014b8c-e0a1-4038-b9eb-3f9247e5f724)
 
 *Base creator view*
 ![Creator_view](https://github.com/user-attachments/assets/fb403320-79f9-482e-abc7-f1df1a3f1fa7)
