@@ -1,10 +1,6 @@
 import { Question, Answer } from '../models/types';
 import { decodeMask } from './parser';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Demo questions for testing the app without a ZIP file
-// ─────────────────────────────────────────────────────────────────────────────
-
 interface RawDemoQuestion {
   mask: string;
   text: string;

@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { cn } from '../../utils/cn';
 
 interface ProgressBarProps {
-  value: number; // 0 – 100
+  value: number;
   className?: string;
   color?: 'blue' | 'emerald' | 'amber' | 'red';
   size?: 'sm' | 'md' | 'lg';

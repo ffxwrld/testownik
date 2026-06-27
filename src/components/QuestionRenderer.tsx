@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo, FC, ReactNode } from 'react';
+import { useState, useEffect, useMemo, FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getSessionImage } from '../utils/db';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface QuestionRendererProps {
   text: string;
@@ -16,6 +18,7 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
   localImages,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -27,14 +30,12 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
       setIsLoading(true);
       const extractedFiles = new Set<string>();
 
-      // Extract all [img] tags
       const regex = /\[img\](.*?)\[\/img\]/gi;
       let match;
       while ((match = regex.exec(text)) !== null) {
         extractedFiles.add(match[1].trim());
       }
 
-      // Fallback: If no [img] tags, check if a file with the same name as sourceFile exists
       const hasImgTags = extractedFiles.size > 0;
       if (!hasImgTags && sourceFile) {
         const baseName = sourceFile.replace(/\.txt$/i, '');
@@ -50,11 +51,9 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
         let blob: Blob | undefined;
         
         if (localImages) {
-          // If we have localImages (e.g. from CreatorView)
           const key = Object.keys(localImages).find(k => k.toLowerCase() === fileName.toLowerCase());
           if (key) blob = localImages[key];
         } else if (sessionId) {
-          // Fetch from IndexedDB (exact match first)
           blob = await getSessionImage(sessionId, fileName);
           
           // Case sensitivity fallback
@@ -86,79 +85,39 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
     };
   }, [text, sourceFile, sessionId, localImages]);
 
-  // Parse text into parts (text and images) — memoized
-  const { parts, fallbackNode } = useMemo(() => {
-    const parts: ReactNode[] = [];
+  const hasParsedTags = useMemo(() => {
     const regex = /\[img\](.*?)\[\/img\]/gi;
-    let lastIndex = 0;
-    let match;
-    let hasParsedTags = false;
+    return regex.test(text);
+  }, [text]);
 
-    while ((match = regex.exec(text)) !== null) {
-      hasParsedTags = true;
-      
-      if (match.index > lastIndex) {
-        parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex, match.index)}</span>);
-      }
-      
-      const fileName = match[1].trim();
-      const url = imageUrls[fileName];
-      
-      if (url) {
-        parts.push(
-          <div key={`img-container-${match.index}`} className="my-3 flex justify-center">
-            <img
-              src={url}
-              alt={fileName}
-              className="max-w-full h-auto max-h-96 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-800 object-contain"
-            />
-          </div>
-        );
-      } else {
-        if (isLoading) {
-          parts.push(
-            <span key={`loading-${match.index}`} className="inline-block px-2 py-1 mx-1 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded border border-zinc-200 dark:border-zinc-700 animate-pulse">
-              [Ładowanie obrazka...]
-            </span>
-          );
-        } else {
-          parts.push(
-            <span key={`missing-${match.index}`} className="inline-block px-2 py-1 mx-1 text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded border border-red-200 dark:border-red-800/50">
-              [Brak obrazka: {fileName}]
-            </span>
-          );
-        }
-      }
-
-      lastIndex = regex.lastIndex;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex)}</span>);
-    }
-
-    // Handle fallback if no [img] tags were in text, but we found a matching image
-    let fallbackNode: ReactNode = null;
+  const fallbackNode = useMemo(() => {
     if (!hasParsedTags && Object.keys(imageUrls).length > 0) {
       const firstUrl = Object.values(imageUrls)[0];
-      fallbackNode = (
+      return (
         <div className="mt-4 flex justify-center animate-fadeIn">
           <img 
             src={firstUrl} 
-            alt="Obrazek do pytania" 
-            className="max-w-full h-auto max-h-96 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 object-contain" 
+            alt={t('components.questionRenderer.imageAlt')} 
+            className="max-w-full h-auto max-h-[60vh] rounded-lg shadow-sm block object-contain" 
           />
         </div>
       );
     }
-
-    return { parts, fallbackNode };
-  }, [text, imageUrls, isLoading]);
+    return null;
+  }, [hasParsedTags, imageUrls, t]);
 
   return (
-    <div className={`whitespace-pre-wrap leading-relaxed ${className}`}>
-      {parts}
+    <div className={`relative ${className}`}>
+      {isLoading && (
+        <div className="absolute top-0 right-0 p-2">
+          <span className="inline-block px-2 py-1 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full animate-pulse border border-zinc-200 dark:border-zinc-700">
+            {t('components.questionRenderer.loadingImage') || 'Loading...'}
+          </span>
+        </div>
+      )}
+      <MarkdownRenderer content={text} imageUrls={imageUrls} />
       {fallbackNode}
     </div>
   );
 };
+

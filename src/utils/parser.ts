@@ -13,7 +13,6 @@ import { Question, Answer } from '../models/types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function decodeMask(maskLine: string): number[] {
-  // Strip leading non-digit characters (the category letter)
   const digits = maskLine.replace(/^[^01]*/, '');
   const indices: number[] = [];
   for (let i = 0; i < digits.length; i++) {
@@ -36,10 +35,10 @@ export function decodeMask(maskLine: string): number[] {
 
 export function decodeFileContent(bytes: Uint8Array): string {
   try {
-    // Pierwsza próba: czyste UTF-8 (fatal: true wyrzuci wyjątek, jeśli plik ma inne kodowanie np. polskie znaki w ANSI)
+    // First attempt: pure UTF-8 (fatal: true will throw an exception if the file has different encoding e.g. Polish characters in ANSI)
     return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   } catch (err) {
-    // Fallback: Windows-1250 (bardzo popularne dla polskich znaków w starych systemach Windows)
+    // Fallback: Windows-1250 (very popular for Polish characters in old Windows systems)
     return new TextDecoder('windows-1250').decode(bytes);
   }
 }
@@ -48,7 +47,6 @@ function parseQuestionFile(
   content: string,
   filename: string
 ): Question | null {
-  // Normalise line endings and split
   const lines = content
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
@@ -57,7 +55,6 @@ function parseQuestionFile(
     .filter(l => l.length > 0);
 
   if (lines.length < 3) {
-    // Need at least: mask, question text, one answer
     console.warn(`Skipping file "${filename}": too few lines (${lines.length})`);
     return null;
   }
@@ -89,7 +86,6 @@ function parseQuestionFile(
     isCorrect: correctIndices.includes(i),
   }));
 
-  // Derive a stable, user-friendly ID from mask + filename
   const baseId = maskLine + '_' + filename.replace(/[^a-zA-Z0-9_-]/g, '_');
 
   return {
@@ -101,10 +97,6 @@ function parseQuestionFile(
     correctAnswerIndices: correctIndices,
   };
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Read a ZIP blob and extract all questions from .txt files inside
-// ─────────────────────────────────────────────────────────────────────────────
 
 export interface ParsedZipResult {
   questions: Question[];
@@ -154,7 +146,6 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
     imgFiles.map(async ({ name, file }) => {
       try {
         const blob = await file.async('blob');
-        // Pobieramy tylko nazwę pliku bez ewentualnej ścieżki z folderem
         const fileName = name.split('/').pop() || name;
         images[fileName] = blob;
       } catch (err) {

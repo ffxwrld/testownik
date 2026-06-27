@@ -1,7 +1,7 @@
 {
   "name": "testownik",
   "private": true,
-  "version": "1.1.2",
+  "version": "1.1.3",
   "author": "Testownik <admin@testownik.app>",
   "type": "module",
   "main": "dist-electron/main.cjs",
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "wait-on http://localhost:5173 && electron .",
-    "build": "vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
+    "build": "tsc -b && vite build && cp -r electron/main.cjs electron/preload.cjs dist-electron/",
     "build:mac": "rm -rf release/mac && npm run build && electron-builder --mac --x64 --arm64 --publish=never -c.directories.output=release/mac",
     "build:win": "rm -rf release/win && npm run build && electron-builder --win --x64 --publish=never -c.directories.output=release/win",
     "build:linux": "rm -rf release/linux && npm run build && electron-builder --linux --x64 --publish=never -c.directories.output=release/linux",
@@ -20,10 +20,16 @@
     "@types/jszip": "^3.4.0",
     "clsx": "2.1.1",
     "electron-updater": "^6.8.9",
+    "i18next": "^26.3.3",
     "idb-keyval": "^6.2.5",
     "jszip": "^3.10.1",
+    "katex": "^0.17.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "react-i18next": "^17.0.8",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
@@ -39,6 +45,7 @@
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",
+    "vite-plugin-checker": "^0.14.4",
     "vite-plugin-singlefile": "2.3.0",
     "wait-on": "^7.2.0"
   },
@@ -61,20 +68,13 @@
       "buildResources": "public"
     },
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.education"
+      "target": "default",
+      "artifactName": "Testownik-Setup-${version}-mac-${arch}.${ext}"
     },
     "win": {
       "target": [
         "nsis"
       ]
-    },
-    "mac": {
-      "target": "default",
-      "artifactName": "Testownik-Setup-${version}-mac-${arch}.${ext}"
     },
     "linux": {
       "target": [

@@ -65,13 +65,13 @@ function createMenu() {
       ],
     },
     {
-      label: 'Widok',
+      label: 'View',
       submenu: [
-        { role: 'zoomIn',  label: 'Powiększ',  accelerator: 'CmdOrCtrl+=' },
-        { role: 'zoomOut', label: 'Pomniejsz', accelerator: 'CmdOrCtrl+-' },
-        { role: 'resetZoom', label: 'Przywróć domyślny zoom', accelerator: 'CmdOrCtrl+0' },
+        { role: 'zoomIn', accelerator: 'CmdOrCtrl+=' },
+        { role: 'zoomOut', accelerator: 'CmdOrCtrl+-' },
+        { role: 'resetZoom', accelerator: 'CmdOrCtrl+0' },
         { type: 'separator' },
-        { role: 'togglefullscreen', label: 'Pełny ekran' },
+        { role: 'togglefullscreen' },
       ],
     },
   ];

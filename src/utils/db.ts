@@ -1,9 +1,5 @@
 import { set, get, del, keys } from 'idb-keyval';
 
-/**
- * Zapisuje wszystkie wyciągnięte z ZIPa obrazy do IndexedDB.
- * Kluczem jest połączenie ID sesji oraz nazwy pliku, np. "session123_007.png".
- */
 export async function saveSessionImages(
   sessionId: string,
   images: Record<string, Blob>
@@ -15,9 +11,6 @@ export async function saveSessionImages(
   await Promise.all(promises);
 }
 
-/**
- * Pobiera pojedynczy obraz z IndexedDB.
- */
 export async function getSessionImage(
   sessionId: string,
   imageName: string
@@ -26,9 +19,6 @@ export async function getSessionImage(
   return await get<Blob>(key);
 }
 
-/**
- * Usuwa z IndexedDB wszystkie obrazy przypisane do danej sesji (używane podczas usuwania bazy z "Moich testów").
- */
 export async function deleteSessionImages(sessionId: string): Promise<void> {
   try {
     const allKeys = await keys();
@@ -44,9 +34,6 @@ export async function deleteSessionImages(sessionId: string): Promise<void> {
   }
 }
 
-/**
- * Pobiera wszystkie obrazy przypisane do danej sesji. Zwraca mapę: nazwa pliku -> Blob.
- */
 export async function getAllSessionImages(
   sessionId: string
 ): Promise<Record<string, Blob>> {

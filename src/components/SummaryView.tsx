@@ -1,4 +1,5 @@
 import { useState, useMemo, FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SessionState } from '../models/types';
 import { getHardestQuestions, formatTime } from '../utils/session';
 import { Card } from './ui/Card';
@@ -19,12 +20,12 @@ const getAccuracyColor = (pct: number) => {
   return 'red';
 };
 
-const getAccuracyLabel = (pct: number) => {
-  if (pct >= 90) return { text: 'Wybitny!', color: 'success' as const };
-  if (pct >= 80) return { text: 'Bardzo dobry', color: 'success' as const };
-  if (pct >= 70) return { text: 'Dobry', color: 'info' as const };
-  if (pct >= 60) return { text: 'Dostateczny', color: 'warning' as const };
-  return { text: 'Wymaga poprawy', color: 'danger' as const };
+const getAccuracyLabel = (pct: number, t: any) => {
+  if (pct >= 90) return { text: t('summary.labels.outstanding'), color: 'success' as const };
+  if (pct >= 80) return { text: t('summary.labels.veryGood'), color: 'success' as const };
+  if (pct >= 70) return { text: t('summary.labels.good'), color: 'info' as const };
+  if (pct >= 60) return { text: t('summary.labels.satisfactory'), color: 'warning' as const };
+  return { text: t('summary.labels.needsImprovement'), color: 'danger' as const };
 };
 
 export const SummaryView: FC<SummaryViewProps> = ({
@@ -32,6 +33,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
   sessionId,
   onNewTest,
 }) => {
+  const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showBeerModal, setShowBeerModal] = useState(true);
 
@@ -54,15 +56,13 @@ export const SummaryView: FC<SummaryViewProps> = ({
       : 0;
   const hardest = useMemo(() => getHardestQuestions(session, 10), [session]);
 
-  const label = getAccuracyLabel(accuracy);
+  const label = getAccuracyLabel(accuracy, t);
 
-  // Count total errors across all questions
   const totalErrors = session.doneStats.reduce((sum, s) => sum + s.wrongCount, 0);
 
   return (
     <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
       
-      {/* ── Beer Modal ── */}
       {showBeerModal && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn"
@@ -74,13 +74,13 @@ export const SummaryView: FC<SummaryViewProps> = ({
           >
             <div className="text-6xl mb-4 animate-bounce">🍻</div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-              Koniec testu!
+              {t('summary.beerModalTitle')}
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-              Gratulacje, świetna robota! W pełni zasłużyłeś na zimne piwo.
+              {t('summary.beerModalDesc')}
             </p>
             <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full">
-              Dzięki!
+              {t('summary.beerModalBtn')}
             </Button>
           </div>
         </div>
@@ -88,7 +88,6 @@ export const SummaryView: FC<SummaryViewProps> = ({
 
       <div className="w-full max-w-2xl space-y-6">
 
-        {/* Header */}
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="relative w-20 h-20">
@@ -106,37 +105,34 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </div>
           <div>
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-              Test zakończony!
+              {t('summary.testFinished')}
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
-              Gratulacje! Odpowiedziałeś poprawnie na wszystkie {totalQuestions} pytań.
+              {t('summary.testFinishedDesc', { count: totalQuestions })}
             </p>
           </div>
         </div>
 
-        {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Time */}
           <Card className="text-center">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-xs font-semibold uppercase tracking-wider">Czas</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">{t('summary.timeLabel')}</span>
             </div>
             <p className="text-3xl font-bold font-mono text-zinc-900 dark:text-zinc-50 tabular-nums">
               {formatTime(session.elapsedSeconds)}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">całkowity czas sesji</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">{t('summary.timeSub')}</p>
           </Card>
 
-          {/* Accuracy */}
           <Card className="text-center">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-xs font-semibold uppercase tracking-wider">Skuteczność</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">{t('summary.accuracyLabel')}</span>
             </div>
             <p className={`text-3xl font-bold ${accuracy >= 80 ? 'text-emerald-600 dark:text-emerald-400' : accuracy >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
               {accuracy}%
@@ -146,42 +142,39 @@ export const SummaryView: FC<SummaryViewProps> = ({
             </div>
           </Card>
 
-          {/* Total questions */}
           <Card className="text-center">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
-              <span className="text-xs font-semibold uppercase tracking-wider">Pytania</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">{t('summary.questionsLabel')}</span>
             </div>
             <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
               {totalQuestions}
             </p>
             <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">
-              {session.totalFirstCorrect} poprawnie za pierwszym razem
+              {t('summary.firstCorrectSub', { count: session.totalFirstCorrect })}
             </p>
           </Card>
 
-          {/* Errors */}
           <Card className="text-center">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              <span className="text-xs font-semibold uppercase tracking-wider">Błędy</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">{t('summary.errorsLabel')}</span>
             </div>
             <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
               {totalErrors}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">łączna liczba błędów</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">{t('summary.errorsSub')}</p>
           </Card>
         </div>
 
-        {/* Accuracy progress bar */}
         <Card>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-              Skuteczność pierwszych odpowiedzi
+              {t('summary.firstAccuracyTitle')}
             </h3>
             <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
               {session.totalFirstCorrect} / {session.totalFirstAttempts}
@@ -198,24 +191,23 @@ export const SummaryView: FC<SummaryViewProps> = ({
               <div className="font-bold text-emerald-600 dark:text-emerald-400 text-base">
                 {session.totalFirstCorrect}
               </div>
-              <div>poprawnych</div>
+              <div>{t('summary.correct')}</div>
             </div>
             <div>
               <div className="font-bold text-red-500 dark:text-red-400 text-base">
                 {session.totalFirstAttempts - session.totalFirstCorrect}
               </div>
-              <div>błędnych</div>
+              <div>{t('summary.incorrect')}</div>
             </div>
             <div>
               <div className="font-bold text-zinc-900 dark:text-zinc-50 text-base">
                 {session.totalFirstAttempts}
               </div>
-              <div>łącznie</div>
+              <div>{t('summary.total')}</div>
             </div>
           </div>
         </Card>
 
-        {/* Hardest questions — with expandable correct answers */}
         {hardest.length > 0 && (
           <Card>
             <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4 flex items-center gap-2">
@@ -223,9 +215,9 @@ export const SummaryView: FC<SummaryViewProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
               </svg>
-              Najtrudniejsze pytania
+              {t('summary.hardestQuestions')}
               <span className="text-xs font-normal text-zinc-400 dark:text-zinc-600 ml-1">
-                — kliknij, aby zobaczyć poprawną odpowiedź
+                {t('summary.clickToSee')}
               </span>
             </h3>
             <div className="space-y-2">
@@ -273,14 +265,13 @@ export const SummaryView: FC<SummaryViewProps> = ({
                       </div>
                     </button>
 
-                    {/* Expanded correct answers */}
                     {isExpanded && (
                       <div className="mx-3 mb-1 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 border-t-0 rounded-b-xl animate-slideDown">
                         <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                           </svg>
-                          {correctAnswers.length > 1 ? 'Poprawne odpowiedzi:' : 'Poprawna odpowiedź:'}
+                          {correctAnswers.length > 1 ? t('summary.correctAnswers') : t('summary.correctAnswer')}
                         </p>
                         <div className="space-y-1.5">
                           {correctAnswers.map((answer, ai) => (
@@ -306,7 +297,6 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </Card>
         )}
 
-        {/* CTA */}
         <Button
           variant="primary"
           size="xl"
@@ -317,7 +307,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
           </svg>
-          Wróć do strony głównej
+          {t('summary.goHome')}
         </Button>
       </div>
     </div>

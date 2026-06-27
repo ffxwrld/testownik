@@ -1,6 +1,8 @@
 import { type FC, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const DarkModeToggle: FC = () => {
+  const { t } = useTranslation();
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem('testownik_dark');
@@ -18,7 +20,6 @@ export const DarkModeToggle: FC = () => {
     localStorage.setItem('testownik_dark', String(dark));
   }, [dark]);
 
-  // Also listen for system preference changes
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {
@@ -35,8 +36,8 @@ export const DarkModeToggle: FC = () => {
     <button
       onClick={() => setDark(d => !d)}
       className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150"
-      aria-label={dark ? 'Przełącz na jasny motyw' : 'Przełącz na ciemny motyw'}
-      title={dark ? 'Tryb jasny' : 'Tryb ciemny'}
+      aria-label={dark ? t('theme.switchToLight') : t('theme.switchToDark')}
+      title={dark ? t('theme.lightMode') : t('theme.darkMode')}
     >
       {dark ? (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

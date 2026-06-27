@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect, FC, ChangeEvent, DragEvent } from 'react';
+import { useRef, useState, useEffect, FC, ChangeEvent, DragEvent, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { parseZipFile } from '../utils/parser';
 import { buildDemoQuestions } from '../utils/demo';
 import { Question } from '../models/types';
@@ -6,6 +7,7 @@ import { getAllSessionMetadata } from '../utils/session';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { SessionsList } from './SessionsList';
+import logo from '../assets/logo.png';
 
 interface HomeViewProps {
   activeTab: 'new' | 'saved';
@@ -18,24 +20,6 @@ interface HomeViewProps {
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
 }
-
-const REPEAT_OPTIONS = [
-  {
-    value: 1,
-    label: '1 raz',
-    description: 'Każde pytanie zaliczasz po 1 poprawnej odpowiedzi.',
-  },
-  {
-    value: 2,
-    label: '2 razy',
-    description: 'Każde pytanie wymaga 2 poprawnych odpowiedzi z rzędu.',
-  },
-  {
-    value: 3,
-    label: '3 razy',
-    description: 'Każde pytanie wymaga 3 poprawnych odpowiedzi z rzędu.',
-  },
-];
 
 
 
@@ -50,6 +34,25 @@ export const HomeView: FC<HomeViewProps> = ({
   onEnterCreator,
   onEditInCreator,
 }) => {
+  const { t } = useTranslation();
+  const REPEAT_OPTIONS = useMemo(() => [
+    {
+      value: 1,
+      label: t('repeatOptions.opt1Label'),
+      description: t('repeatOptions.opt1Desc'),
+    },
+    {
+      value: 2,
+      label: t('repeatOptions.opt2Label'),
+      description: t('repeatOptions.opt2Desc'),
+    },
+    {
+      value: 3,
+      label: t('repeatOptions.opt3Label'),
+      description: t('repeatOptions.opt3Desc'),
+    },
+  ], [t]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [images, setImages] = useState<Record<string, Blob>>({});
@@ -72,7 +75,7 @@ export const HomeView: FC<HomeViewProps> = ({
 
   const handleFile = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.zip')) {
-      setLoadError('Proszę wybrać plik w formacie .zip');
+      setLoadError(t('home.errorZipOnly'));
       return;
     }
     setIsLoading(true);
@@ -81,9 +84,7 @@ export const HomeView: FC<HomeViewProps> = ({
     try {
       const parsed = await parseZipFile(file);
       if (parsed.questions.length === 0) {
-        setLoadError(
-          'Nie znaleziono żadnych pytań w pliku. Upewnij się, że archiwum zawiera pliki .txt w odpowiednim formacie.'
-        );
+        setLoadError(t('home.errorEmptyZip'));
       } else {
         setQuestions(parsed.questions);
         setImages(parsed.images);
@@ -92,7 +93,7 @@ export const HomeView: FC<HomeViewProps> = ({
         setBaseName(nameWithoutZip);
       }
     } catch (err) {
-      setLoadError(`Błąd podczas wczytywania pliku: ${(err as Error).message}`);
+      setLoadError(t('home.errorLoad', { message: (err as Error).message }));
     } finally {
       setIsLoading(false);
     }
@@ -137,34 +138,22 @@ export const HomeView: FC<HomeViewProps> = ({
   return (
     <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl space-y-5">
-        {/* Header */}
         <div className="text-center space-y-2 pb-2">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-600/30">
-              <svg
-                className="w-9 h-9 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.8}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                />
-              </svg>
-            </div>
+            <img 
+              src={logo} 
+              alt="Testownik" 
+              className="w-20 h-20 object-contain drop-shadow-lg"
+            />
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Testownik
+            {t('home.title')}
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 text-base max-w-sm mx-auto">
-              Aplikacja do nauki i rozwiązywania testów. 
+            {t('home.subtitle')}
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700">
           <button
             onClick={() => onTabChange('new')}
@@ -174,7 +163,7 @@ export const HomeView: FC<HomeViewProps> = ({
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
-            + Nowy test
+            {t('home.tabs.newTest')}
           </button>
           <button
             onClick={() => onTabChange('saved')}
@@ -184,7 +173,7 @@ export const HomeView: FC<HomeViewProps> = ({
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
-            Moje testy
+            {t('home.tabs.myTests')}
             {savedSessions.length > 0 && (
               <span className="ml-2 inline-block px-2 py-0.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full">
                 {savedSessions.length}
@@ -196,17 +185,16 @@ export const HomeView: FC<HomeViewProps> = ({
             onClick={onEnterCreator}
             className="px-4 py-2 font-bold text-sm border-b-2 border-transparent text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all rounded-t-lg"
           >
-            ✨ Kreator Baz
+            {t('home.tabs.creator')}
           </button>
         </div>
 
-        {/* New Test Tab */}
         {activeTab === 'new' && (
           <div className="space-y-5">
             <Card>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
-                  1. Wczytaj bazę pytań
+                  {t('home.step1')}
                 </h2>
                 <Button
                   size="sm"
@@ -227,7 +215,7 @@ export const HomeView: FC<HomeViewProps> = ({
                       d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
                     />
                   </svg>
-                  Użyj pytań demonstracyjnych
+                  {t('home.useDemo')}
                 </Button>
               </div>
 
@@ -268,24 +256,24 @@ export const HomeView: FC<HomeViewProps> = ({
 
                 {isLoading ? (
                   <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Wczytywanie...
+                    {t('home.starting')}
                   </p>
                 ) : canStart ? (
                   <>
                     <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                      ✓ {fileName} ({questions.length} pytań)
+                      ✓ {fileName} ({t('home.questionsCount', { count: questions.length })})
                     </p>
                     <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
-                      Kliknij, aby wybrać inny plik
+                      {t('home.changeFile')}
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                      Przeciągnij plik .zip tutaj
+                      {t('home.dragDrop')}
                     </p>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                      lub kliknij, aby wybrać
+                      {t('home.orClick')}
                     </p>
                   </>
                 )}
@@ -302,7 +290,7 @@ export const HomeView: FC<HomeViewProps> = ({
               {canStart && (
                 <div className="mt-4 space-y-1">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Nazwa bazy pytań:
+                    {t('home.step3')}
                   </p>
                   {isEditingName ? (
                     <div className="flex items-center gap-2">
@@ -347,7 +335,7 @@ export const HomeView: FC<HomeViewProps> = ({
 
             <Card>
               <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-4">
-                2. Tryb powtórek dla błędnych odpowiedzi
+                {t('home.step2')}
               </h2>
               <div className="grid grid-cols-3 gap-3">
                 {REPEAT_OPTIONS.map(opt => (
@@ -413,18 +401,16 @@ export const HomeView: FC<HomeViewProps> = ({
                 />
               </svg>
               {canStart
-                ? `Rozpocznij test — ${questions.length} pytań`
-                : 'Wczytaj pytania, aby rozpocząć'}
+                ? t('home.startTestReady', { count: questions.length })
+                : t('home.startTestDisabled')}
             </Button>
 
             <p className="text-center text-xs text-zinc-400 dark:text-zinc-600 pb-4">
-              Postęp jest automatycznie zapisywany — możesz przerwać i
-              kontynuować w dowolnym momencie.
+              {t('home.autoSaveNotice')}
             </p>
           </div>
         )}
 
-        {/* Saved Tests Tab */}
         {activeTab === 'saved' && (
           <div className="space-y-5">
             <SessionsList
@@ -441,7 +427,7 @@ export const HomeView: FC<HomeViewProps> = ({
               onEditInCreator={onEditInCreator}
             />
             <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
-              Wznów test lub zacznij od nowa z tą samą bazą pytań.
+              {t('home.savedTestsNotice')}
             </p>
 
           </div>

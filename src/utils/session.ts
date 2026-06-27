@@ -6,16 +6,11 @@ const SESSIONS_STORAGE_KEY = 'testownik_sessions_v2';
 const CURRENT_SESSION_ID_KEY = 'testownik_current_session_id';
 const SCHEMA_VERSION = 1;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Build an initial SessionState from a list of questions + chosen repeatMode
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function buildInitialSession(
   questions: Question[],
   repeatMode: number,
   baseName: string = 'Baza pytań'
 ): SessionState {
-  // Shuffle the initial queue order
   const shuffled = shuffle([...questions]);
 
   // When repeatMode > 1, ALL questions start with the higher streak requirement,
@@ -50,10 +45,6 @@ export function buildInitialSession(
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: look up the Question object for a QueueItem
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function getQuestionForQueueItem(
   questions: Question[],
   item: QueueItem | undefined
@@ -62,17 +53,11 @@ export function getQuestionForQueueItem(
   return questions.find(q => q.id === item.questionId);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Process a correct answer for the current queue item.
-// Returns the updated session state (immutable update pattern).
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function processCorrectAnswer(session: SessionState): SessionState {
   const s = { ...session };
   const queue = [...s.queue];
   const item = { ...queue[s.currentQuestionIndex] };
 
-  // Track first-attempt stats (first time we see this question answered)
   if (item.consecutiveCorrect === 0 && item.wrongCount === 0) {
     s.totalFirstAttempts += 1;
     s.totalFirstCorrect += 1;
@@ -81,7 +66,6 @@ export function processCorrectAnswer(session: SessionState): SessionState {
   item.consecutiveCorrect += 1;
 
   if (item.consecutiveCorrect >= item.requiredCorrectStreak) {
-    // Question passes — save stats, remove from queue, add to done
     const stat: DoneStat = {
       questionId: item.questionId,
       wrongCount: item.wrongCount,
@@ -100,7 +84,6 @@ export function processCorrectAnswer(session: SessionState): SessionState {
     const nextIndex = s.currentQuestionIndex % queue.length;
     s.currentQuestionIndex = nextIndex;
   } else {
-    // Still needs more correct answers — reinsert at a random position with min gap
     queue.splice(s.currentQuestionIndex, 1);
 
     const minGap = Math.min(3, queue.length);
@@ -114,60 +97,46 @@ export function processCorrectAnswer(session: SessionState): SessionState {
     s.currentQuestionIndex = s.currentQuestionIndex % queue.length;
   }
 
-  // Pre-compute shuffled order for the next question
   const nextQ = getQuestionForQueueItem(s.questions, queue[s.currentQuestionIndex]);
   s.shuffledAnswerOrder = nextQ ? shuffleIndices(nextQ.answers.length) : [];
   s.queue = queue;
   return s;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Process a wrong answer for the current queue item.
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function processWrongAnswer(session: SessionState): SessionState {
   const s = { ...session };
   const queue = [...s.queue];
   const item = { ...queue[s.currentQuestionIndex] };
 
-  // Track first-attempt stats
   if (item.consecutiveCorrect === 0 && item.wrongCount === 0) {
     s.totalFirstAttempts += 1;
     item.firstAnswerWrong = true;
-    // totalFirstCorrect NOT incremented
+    item.consecutiveCorrect = 0;
   }
 
   item.wrongCount += 1;
-  item.consecutiveCorrect = 0; // reset streak
-  item.requiredCorrectStreak = s.repeatMode; // escalate requirement
+  item.consecutiveCorrect = 0;
+  item.requiredCorrectStreak = s.repeatMode;
 
-  // Remove from current position
   queue.splice(s.currentQuestionIndex, 1);
 
-  // Insert at a RANDOM position after the current index (not always at end)
   // Ensures at least a few questions before it appears again
   const minGap = Math.min(3, queue.length);
   const insertMin = s.currentQuestionIndex + minGap;
-  const insertMax = queue.length; // can still go to end
+  const insertMax = queue.length;
   const insertAt = insertMin >= insertMax
-    ? queue.length // just append if queue is short
+    ? queue.length
     : Math.floor(Math.random() * (insertMax - insertMin + 1)) + insertMin;
   queue.splice(insertAt, 0, item);
 
   const nextIndex = s.currentQuestionIndex % queue.length;
   s.currentQuestionIndex = nextIndex;
 
-  // Pre-compute shuffled order for the next question
   const nextQ = getQuestionForQueueItem(s.questions, queue[nextIndex]);
   s.shuffledAnswerOrder = nextQ ? shuffleIndices(nextQ.answers.length) : [];
   s.queue = queue;
   return s;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Compute "hardest questions" for summary screen
-// Returns at most `limit` items sorted by wrongCount descending
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function getHardestQuestions(
   session: SessionState,
@@ -193,10 +162,6 @@ export function getHardestQuestions(
     }))
     .filter(entry => !!entry.question);
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Multi-Session Persistence
-// ─────────────────────────────────────────────────────────────────────────────
 
 function generateSessionId(): string {
   return Date.now().toString(36);
@@ -263,7 +228,6 @@ export function deleteSession(sessionId: string): void {
     localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
     invalidateSessionsCache();
     
-    // Clean up associated images asynchronously
     deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));
 
     const currentId = localStorage.getItem(CURRENT_SESSION_ID_KEY);
@@ -310,10 +274,6 @@ export function renameSession(sessionId: string, newBaseName: string): void {
 export function getCurrentSessionId(): string | null {
   return localStorage.getItem(CURRENT_SESSION_ID_KEY);
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Utility: format seconds as HH:MM:SS
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function formatTime(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600);

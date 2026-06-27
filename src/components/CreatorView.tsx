@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, FC, MouseEvent, ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import JSZip from 'jszip';
 import { decodeFileContent } from '../utils/parser';
 import { Button } from './ui/Button';
@@ -31,9 +32,10 @@ export function generateId() {
 }
 
 export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, initialBaseName, initialImages, onSaveToTestownik }) => {
+  const { t } = useTranslation();
   const [questions, setQuestions] = useState<EditingQuestion[]>(initialQuestions && initialQuestions.length > 0 ? initialQuestions : [{
     id: generateId(),
-    filename: 'pytanie_1',
+    filename: t('creator.questionPrefix') + '1',
     text: '',
     category: 'X',
     answers: [
@@ -45,14 +47,15 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
   const [activeId, setActiveId] = useState<string>(questions[0].id);
   const [isLoading, setIsLoading] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
-  const [savePromptName, setSavePromptName] = useState(initialBaseName || 'Nowa baza z kreatora');
+  const [savePromptName, setSavePromptName] = useState(initialBaseName || t('creator.defaultNewName'));
   const [searchQuery, setSearchQuery] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, Blob>>(initialImages || {});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Zabezpieczenie przed przeładowaniem strony (F5, Cmd+R) / zamknięciem karty
+  // Protection against page reload (F5, Cmd+R) / tab close
   useEffect(() => {
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
@@ -66,7 +69,6 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
   const activeImageKey = useMemo(() => {
     if (!activeQuestion) return null;
     
-    // 1. Sprawdź tagi [img] w tekście pytania
     const regex = /\[img\](.*?)\[\/img\]/i;
     const match = regex.exec(activeQuestion.text || '');
     if (match) {
@@ -75,23 +77,23 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
       if (foundKey) return foundKey;
     }
 
-    // 2. Fallback - dopasowanie nazwy pliku
     return Object.keys(images).find(k => {
       const nameWithoutExt = k.replace(/\.[^/.]+$/, "");
       return nameWithoutExt.toLowerCase() === (activeQuestion.filename || '').toLowerCase();
     });
   }, [activeQuestion?.filename, activeQuestion?.text, images]);
 
-  const activeImageUrl = useMemo(() => {
-    if (!activeImageKey) return null;
-    return URL.createObjectURL(images[activeImageKey]);
-  }, [activeImageKey, images]);
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (activeImageUrl) URL.revokeObjectURL(activeImageUrl);
-    };
-  }, [activeImageUrl]);
+    if (!activeImageKey || !images[activeImageKey]) {
+      setActiveImageUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(images[activeImageKey]);
+    setActiveImageUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [activeImageKey, images]);
 
   const handleImageUpload = (file: File) => {
     if (!activeQuestion || !file.type.startsWith('image/')) return;
@@ -138,12 +140,10 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
     }
   };
 
-  // Actions
-
   const handleAddQuestion = () => {
     const newQ: EditingQuestion = {
       id: generateId(),
-      filename: `pytanie_${questions.length + 1}`,
+      filename: `${t('creator.questionPrefix')}${questions.length + 1}`,
       text: '',
       category: 'X',
       answers: [
@@ -194,8 +194,6 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
       answers: activeQuestion.answers.map(a => a.id === answerId ? { ...a, ...updates } : a)
     });
   };
-
-  // Import / Export
 
   const handleImportZip = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -268,10 +266,10 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
         setQuestions(imported);
         setActiveId(imported[0].id);
       } else {
-        alert('Nie znaleziono prawidłowych pytań w tym archiwum ZIP.');
+        alert(t('creator.errorNoQuestions'));
       }
     } catch (err) {
-      alert(`Błąd odczytu ZIP: ${(err as Error).message}`);
+      alert(t('creator.errorReadZip', { message: (err as Error).message }));
     } finally {
       setIsLoading(false);
     }
@@ -282,14 +280,13 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
     try {
       const zip = new JSZip();
       questions.forEach((q, index) => {
-        // Construct mask
         const binary = q.answers.map(a => a.isCorrect ? '1' : '0').join('');
         const mask = (q.category || 'X') + binary;
         
         const lines = [mask, q.text, ...q.answers.map(a => a.text)];
         const content = lines.join('\n');
         
-        let name = q.filename.trim() || `pytanie_${index + 1}`;
+        let name = q.filename.trim() || `${t('creator.questionPrefix')}${index + 1}`;
         if (!name.toLowerCase().endsWith('.txt')) name += '.txt';
         
         zip.file(name, content);
@@ -299,67 +296,62 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Moja_Baza_Pytan.zip';
+      a.download = 'Testownik_Database.zip';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert(`Błąd tworzenia ZIP: ${(err as Error).message}`);
+      alert(t('creator.errorCreateZip', { message: (err as Error).message }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Render
-
   return (
     <div className="flex-1 bg-white dark:bg-zinc-950 flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button size="sm" variant="ghost" onClick={() => {
-              if (window.confirm('Czy na pewno chcesz opuścić kreator? Wszelkie niezapisane zmiany zostaną bezpowrotnie utracone.')) {
+              if (window.confirm(t('creator.quitWarning'))) {
                 onQuit();
               }
             }} className="text-zinc-500">
               <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
-              Powrót
+              {t('creator.back')}
             </Button>
             <h1 className="font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-              Kreator Baz Pytań
+              {t('creator.title')}
             </h1>
           </div>
           
           <div className="flex items-center gap-3">
             <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImportZip} />
             <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-              Wczytaj .zip do edycji
+              {t('creator.loadZip')}
             </Button>
             <Button size="sm" variant="primary" onClick={() => setShowSavePrompt(true)} disabled={isLoading} className="shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">
               <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
               </svg>
-              Zapisz prosto do aplikacji
+              {t('creator.saveToApp')}
             </Button>
             <Button size="sm" variant="secondary" onClick={handleExportZip} disabled={isLoading}>
-              Pobierz .zip
+              {t('creator.downloadZip')}
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Layout */}
       <main className="flex-1 max-w-7xl w-full mx-auto flex min-h-0">
         
-        {/* Sidebar: List of questions */}
         <div className="w-72 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
           <div className="p-3 border-b border-zinc-100 dark:border-zinc-800 flex flex-col gap-3">
             <Button size="sm" variant="ghost" fullWidth onClick={handleAddQuestion} className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 border-dashed">
-              + Dodaj kolejne pytanie
+              {t('creator.addQuestion')}
             </Button>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-zinc-400">
@@ -369,7 +361,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
               </div>
               <input
                 type="text"
-                placeholder="Szukaj pytania..."
+                placeholder={t('creator.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
@@ -394,10 +386,10 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                 >
                   <div className="min-w-0 flex-1">
                     <p className={`text-xs font-mono truncate ${isActive ? 'text-primary-700 dark:text-primary-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
-                      {q.filename || `pytanie_${index+1}`}
+                      {q.filename || `${t('creator.questionPrefix')}${index+1}`}
                     </p>
                     <p className={`text-sm truncate font-medium ${isActive ? 'text-primary-900 dark:text-primary-200' : 'text-zinc-700 dark:text-zinc-300'}`}>
-                      {q.text || '(Puste pytanie)'}
+                      {q.text || t('creator.emptyQuestion')}
                     </p>
                   </div>
                   {questions.length > 1 && (
@@ -416,23 +408,21 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
           </div>
         </div>
 
-        {/* Editor Area */}
         <div className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-6">
           {activeQuestion ? (
             <div className="max-w-3xl mx-auto space-y-6">
               
-              {/* Filename & Category */}
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-                    Nazwa pliku
+                    {t('creator.fileNameLabel')}
                   </label>
                   <div className="relative">
                     <input
                       type="text"
                       value={activeQuestion.filename}
                       onChange={e => updateActiveQuestion({ filename: e.target.value })}
-                      placeholder="np. pytanie_1"
+                      placeholder={t('creator.fileNamePlaceholder')}
                       className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 font-mono text-sm"
                     />
                     <span className="absolute right-4 top-2.5 text-zinc-400 font-mono text-sm pointer-events-none">.txt</span>
@@ -440,7 +430,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                 </div>
                 <div className="w-32">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-                    Kategoria
+                    {t('creator.categoryLabel')}
                   </label>
                   <input
                     type="text"
@@ -453,24 +443,22 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                 </div>
               </div>
 
-              {/* Question Text */}
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-                  Treść pytania
+                  {t('creator.questionTextLabel')}
                 </label>
                 <textarea
                   value={activeQuestion.text}
                   onChange={e => updateActiveQuestion({ text: e.target.value })}
-                  placeholder="Wpisz treść pytania..."
+                  placeholder={t('creator.questionTextPlaceholder')}
                   rows={4}
                   className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-zinc-900 dark:text-zinc-100 text-lg resize-y"
                 />
               </div>
 
-              {/* Image Uploader */}
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-                  Zdjęcie do pytania (opcjonalne)
+                  {t('creator.imageLabel')}
                 </label>
                 {activeImageUrl ? (
                   <div className="relative inline-block rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 group shadow-sm bg-zinc-50 dark:bg-zinc-900">
@@ -484,7 +472,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                       <button
                         onClick={() => setFullscreenImage(activeImageUrl)}
                         className="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full shadow-lg transform hover:scale-105 transition-all backdrop-blur-sm"
-                        title="Powiększ zdjęcie"
+                        title={t('creator.zoomImage')}
                       >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
@@ -493,7 +481,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                       <button
                         onClick={handleImageDelete}
                         className="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transform hover:scale-105 transition-all backdrop-blur-sm"
-                        title="Usuń zdjęcie"
+                        title={t('creator.deleteImage')}
                       >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6l-1.5 14.5a2 2 0 01-2 2H8a2 2 0 01-2-2L4.5 6m15 0H4.5m4.5 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-6 4v8m4-8v8" />
@@ -524,20 +512,19 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                     <svg className="w-8 h-8 mb-2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                     </svg>
-                    <p className="text-sm font-medium">Kliknij by wgrać zdjęcie lub przeciągnij plik tutaj</p>
-                    <p className="text-xs mt-1 text-zinc-400">PNG, JPG, GIF do 5MB</p>
+                    <p className="text-sm font-medium">{t('creator.uploadClickOrDrag')}</p>
+                    <p className="text-xs mt-1 text-zinc-400">{t('creator.uploadFormats')}</p>
                   </div>
                 )}
               </div>
 
-              {/* Answers */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                    Odpowiedzi i klucz
+                    {t('creator.answersLabel')}
                   </label>
                   <span className="text-xs text-zinc-400">
-                    Zaznacz odpowiedź(i) uznawane za poprawne
+                    {t('creator.answersSub')}
                   </span>
                 </div>
                 
@@ -558,7 +545,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                         type="text"
                         value={ans.text}
                         onChange={e => updateAnswer(ans.id, { text: e.target.value })}
-                        placeholder={`Odpowiedź ${idx + 1}`}
+                        placeholder={t('creator.answerPlaceholder', { num: idx + 1 })}
                         className="flex-1 bg-transparent border-0 focus:ring-0 px-0 py-1 text-zinc-800 dark:text-zinc-200 font-medium placeholder-zinc-300 dark:placeholder-zinc-700"
                       />
                       <button
@@ -575,7 +562,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                   
                   <div className="pt-2 px-2 pb-1">
                     <Button size="sm" variant="ghost" onClick={handleAddAnswer} className="text-primary-600 dark:text-primary-400 font-semibold border border-dashed border-primary-200 dark:border-primary-800/50 w-full bg-primary-50/50 dark:bg-primary-900/10">
-                      + Dodaj wariant odpowiedzi
+                      {t('creator.addAnswerVariant')}
                     </Button>
                   </div>
                 </Card>
@@ -584,13 +571,12 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
             </div>
           ) : (
             <div className="h-full flex items-center justify-center text-zinc-400">
-              Wybierz pytanie z listy lub stwórz nowe.
+              {t('creator.selectOrCreate')}
             </div>
           )}
         </div>
       </main>
 
-      {/* Fullscreen Image Modal */}
       {fullscreenImage && (
         <div 
           className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4 cursor-zoom-out"
@@ -598,18 +584,17 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
         >
           <img 
             src={fullscreenImage} 
-            alt="Podgląd zdjęcia" 
+            alt={t('creator.previewImage')} 
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" 
           />
         </div>
       )}
 
-      {/* Save Prompt Modal */}
       {showSavePrompt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-zinc-200 dark:border-zinc-800">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">Zapisz do Testownika</h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Podaj nazwę, pod którą chcesz zapisać tę bazę pytań w swoich testach.</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">{t('creator.saveModalTitle')}</h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">{t('creator.saveModalDesc')}</p>
             <input
               type="text"
               autoFocus
@@ -626,7 +611,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setShowSavePrompt(false)}>
-                Anuluj
+                {t('creator.cancel')}
               </Button>
               <Button variant="primary" onClick={() => {
                 if (savePromptName.trim()) {
@@ -634,7 +619,7 @@ export const CreatorView: FC<CreatorViewProps> = ({ onQuit, initialQuestions, in
                   setShowSavePrompt(false);
                 }
               }} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">
-                Zapisz
+                {t('creator.save')}
               </Button>
             </div>
           </div>

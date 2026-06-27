@@ -14,13 +14,15 @@ import { SummaryView } from './components/SummaryView';
 import { CreatorView, EditingQuestion, EditingAnswer } from './components/CreatorView';
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThemePicker } from './components/ThemePicker';
+import { FormatInfoModal } from './components/FormatInfoModal';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 type AppPhase = 'home' | 'test' | 'summary' | 'creator';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
-// Footer height in px at zoom=1 (unscaled)
 const FOOTER_HEIGHT_PX = 36;
 
 function applyZoom(level: number): number {
@@ -33,7 +35,9 @@ function applyZoom(level: number): number {
 }
 
 const UpdaterNotification: FC = () => {
+  const { t } = useTranslation();
   const [updateState, setUpdateState] = useState<'idle' | 'downloading' | 'ready' | 'mac-available'>('idle');
+  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
     // @ts-ignore
@@ -50,11 +54,20 @@ const UpdaterNotification: FC = () => {
     }
   }, []);
 
-  if (updateState === 'idle') return null;
+  if (updateState === 'idle' || closed) return null;
 
   return (
     <div className="fixed bottom-12 right-6 z-50 bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 max-w-sm animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="flex items-start gap-3">
+      <button 
+        onClick={() => setClosed(true)} 
+        className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        aria-label="Close"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <div className="flex items-start gap-3 mt-1">
         <div className="mt-0.5 flex-shrink-0 text-blue-500">
           <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -62,16 +75,16 @@ const UpdaterNotification: FC = () => {
         </div>
         <div>
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
-            {updateState === 'downloading' ? 'Pobieranie aktualizacji...' : 
-             updateState === 'ready' ? 'Aktualizacja gotowa!' : 
-             'Dostępna nowa wersja!'}
+            {updateState === 'downloading' ? t('updater.downloading') : 
+             updateState === 'ready' ? t('updater.ready') : 
+             t('updater.macAvailable')}
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
             {updateState === 'downloading' 
-              ? 'Nowa wersja jest właśnie pobierana w tle. Możesz kontynuować naukę.' 
+              ? t('updater.downloadingDesc')
               : updateState === 'ready'
-              ? 'Nowa wersja została pobrana. Uruchom aplikację ponownie, aby ją zainstalować.'
-              : 'Pobierz najnowszą wersję bezpośrednio z GitHuba, aby cieszyć się nowościami.'}
+              ? t('updater.readyDesc')
+              : t('updater.macAvailableDesc')}
           </p>
           {updateState === 'ready' && (
             <button
@@ -79,7 +92,7 @@ const UpdaterNotification: FC = () => {
               onClick={() => window.electron.updater.restartApp()}
               className="mt-3 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors w-full shadow-sm"
             >
-              Uruchom ponownie teraz
+              {t('updater.restartBtn')}
             </button>
           )}
           {updateState === 'mac-available' && (
@@ -87,7 +100,7 @@ const UpdaterNotification: FC = () => {
               onClick={() => window.open('https://github.com/ffxwrld/testownik/releases/latest', '_blank')}
               className="mt-3 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors w-full shadow-sm"
             >
-              Pobierz najnowszą wersję
+              {t('updater.downloadBtn')}
             </button>
           )}
         </div>
@@ -97,6 +110,7 @@ const UpdaterNotification: FC = () => {
 };
 
 const App: FC = () => {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<AppPhase>('home');
   const [session, setSession] = useState<SessionState | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -105,16 +119,17 @@ const App: FC = () => {
   const [creatorInitialBaseName, setCreatorInitialBaseName] = useState<string | null>(null);
   const [creatorInitialImages, setCreatorInitialImages] = useState<Record<string, Blob> | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
     const stored = localStorage.getItem('testownik_zoom');
     return stored ? parseFloat(stored) : 1;
   });
 
-  // Apply stored zoom on mount
+  const [showFormatInfo, setShowFormatInfo] = useState(false);
+
   useEffect(() => {
     document.documentElement.style.zoom = String(zoomLevel);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard shortcuts: Cmd+= powiększ, Cmd+- pomniejsz, Cmd+0 reset
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -133,8 +148,6 @@ const App: FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // On mount: check for persisted session
-
   useEffect(() => {
     const sessionId = getCurrentSessionId();
     if (sessionId) {
@@ -142,12 +155,9 @@ const App: FC = () => {
       if (saved) {
         setCurrentSessionId(sessionId);
         setSession(saved);
-        // Always land on HomeView — user can resume from "Moje testy"
       }
     }
   }, []);
-
-  // Start a new test session
 
   const handleStartSession = useCallback(
     async (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob> = {}) => {
@@ -166,8 +176,6 @@ const App: FC = () => {
     []
   );
 
-  // Resume saved session
-
   const handleResumeSession = useCallback((sessionId: string) => {
     const saved = loadSession(sessionId);
     if (!saved) return;
@@ -175,8 +183,6 @@ const App: FC = () => {
     setSession(saved);
     setPhase(saved.phase === 'summary' ? 'summary' : 'test');
   }, []);
-
-  // Delete a saved session
 
   const handleDeleteSession = useCallback((sessionId: string) => {
     deleteSession(sessionId);
@@ -187,13 +193,12 @@ const App: FC = () => {
     }
   }, [currentSessionId]);
 
-  // Edit Session in Creator
-
   const handleEditInCreator = useCallback(async (sessionId: string) => {
     const saved = loadSession(sessionId);
     if (!saved) return;
     
-    // Zastąpienie na czas mapowania (aby nie importować EditingQuestion)
+    // Temporary mapping to avoid importing EditingQuestion type
+
     const editingQuestions = saved.questions.map((q, idx) => {
       const maskLine = q.id.split('_')[0] || 'X';
       const category = maskLine.charAt(0).toUpperCase() || 'X';
@@ -263,8 +268,6 @@ const App: FC = () => {
     }
   }, []);
 
-  // Live session updates (from TestView)
-
   const handleSessionUpdate = useCallback((updated: SessionState) => {
     setSession(updated);
     if (updated.phase === 'summary') {
@@ -272,21 +275,15 @@ const App: FC = () => {
     }
   }, []);
 
-  // Quit test mid-way
-
   const handleQuit = useCallback(() => {
     setPhase('home');
   }, []);
-
-  // Return to home after summary
 
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);
     setSession(null);
     setPhase('home');
   }, []);
-
-  // Restart an existing session
 
   const handleRestartSession = useCallback((sessionId: string, newRepeatMode?: number) => {
     const saved = loadSession(sessionId);
@@ -305,8 +302,6 @@ const App: FC = () => {
       setSession({ ...session, baseName: newName });
     }
   }, [currentSessionId, session]);
-
-  // Render
 
   const displayPhase: AppPhase =
     session?.phase === 'summary' && phase !== 'home' ? 'summary' : phase;
@@ -404,6 +399,15 @@ const App: FC = () => {
         </div>
 
         <div className="flex items-center gap-2 pr-3">
+          <button
+            onClick={() => setShowFormatInfo(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+          >
+            {t('components.formatInfo.button')}
+          </button>
+          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
+          <LanguageSwitcher />
+          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
           <ThemePicker />
           <DarkModeToggle />
           <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
@@ -418,8 +422,8 @@ const App: FC = () => {
           <button
             onClick={() => setZoomLevel(applyZoom(1))}
             className="px-1.5 h-6 flex items-center justify-center rounded-md text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 font-mono tabular-nums min-w-[2.8rem]"
-            title="Przywróć domyślny zoom (Cmd 0)"
-            aria-label="Resetuj zoom"
+            title="Reset zoom (Cmd 0)"
+            aria-label="Reset zoom"
             id="zoom-reset-btn"
           >
             {Math.round(zoomLevel * 100)}%
@@ -434,6 +438,10 @@ const App: FC = () => {
           </button>
         </div>
       </footer>
+
+      {showFormatInfo && (
+        <FormatInfoModal onClose={() => setShowFormatInfo(false)} />
+      )}
     </div>
   );
 };

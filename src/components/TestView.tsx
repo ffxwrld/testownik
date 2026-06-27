@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, FC, ReactNode, Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SessionState, AnswerFeedback, Question } from '../models/types';
 import {
   processCorrectAnswer,
@@ -12,6 +13,7 @@ import { ProgressBar } from './ui/ProgressBar';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { QuestionRenderer } from './QuestionRenderer';
 
 interface TestViewProps {
@@ -38,18 +40,17 @@ export const TestView: FC<TestViewProps> = ({
   onSessionUpdate,
   onQuit,
 }) => {
+  const { t } = useTranslation();
   const [elapsed, setElapsed] = useState(session.elapsedSeconds);
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [questionKey, setQuestionKey] = useState(0);
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [processedSession, setProcessedSession] = useState<SessionState | null>(null);
-  // Selected answers (before confirming) — array of shuffled indices
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [optimisticStreak, setOptimisticStreak] = useState<number | null>(null);
   const [optimisticWrongCount, setOptimisticWrongCount] = useState<number | null>(null);
   const [isSingleAnswerRevealed, setIsSingleAnswerRevealed] = useState(false);
-  // Previous question for review
   const [previousQuestion, setPreviousQuestion] = useState<PreviousQuestionData | null>(null);
   const [showingPrevious, setShowingPrevious] = useState(false);
 
@@ -68,8 +69,6 @@ export const TestView: FC<TestViewProps> = ({
   // Keep a ref to the latest processed session so the unmount cleanup
   // doesn't overwrite a completed session with the stale prop.
   const processedSessionRef = useRef<SessionState | null>(null);
-
-  // Timer
 
   useEffect(() => {
     if (!sessionId) return;
@@ -96,25 +95,19 @@ export const TestView: FC<TestViewProps> = ({
     };
   }, [sessionId]);
 
-  // Current question
-
   const currentItem = session.queue[session.currentQuestionIndex];
   const currentQuestion = getQuestionForQueueItem(session.questions, currentItem);
   const shuffledOrder = session.shuffledAnswerOrder;
 
-  // How many correct answers does the question have?
   const correctOriginalIndices: number[] = currentQuestion
     ? (currentQuestion.correctAnswerIndices ?? [currentQuestion.correctAnswerIndex])
     : [];
 
   const isMultiAnswer = correctOriginalIndices.length > 1;
 
-  // All correct shuffled positions for this question
   const correctShuffledIndices: number[] = correctOriginalIndices.map(origIdx =>
     findShuffledPosition(shuffledOrder, origIdx)
   );
-
-  // Toggle answer selection
 
   const handleToggleAnswer = useCallback(
     (shuffledIndex: number) => {
@@ -122,12 +115,10 @@ export const TestView: FC<TestViewProps> = ({
 
       setSelectedIndices(prev => {
         if (isMultiAnswer) {
-          // Multi-answer: toggle
           return prev.includes(shuffledIndex)
             ? prev.filter(i => i !== shuffledIndex)
             : [...prev, shuffledIndex];
         } else {
-          // Single-answer: replace (click again to deselect)
           return prev.includes(shuffledIndex) ? [] : [shuffledIndex];
         }
       });
@@ -135,15 +126,11 @@ export const TestView: FC<TestViewProps> = ({
     [feedback, isTransitioning, currentQuestion, isMultiAnswer]
   );
 
-  // Confirm selected answers
-
   const handleConfirm = useCallback(() => {
     if (feedback !== null || isTransitioning || !currentQuestion) return;
 
-    // Allow confirm with NO selection (skip / mark as wrong)
     const isSkip = selectedIndices.length === 0;
 
-    // Determine correctness: all selected must be correct AND all correct must be selected
     const allSelectedCorrect = !isSkip && selectedIndices.every(si =>
       correctShuffledIndices.includes(si)
     );
@@ -152,7 +139,6 @@ export const TestView: FC<TestViewProps> = ({
     );
     const isCorrect = !isSkip && allSelectedCorrect && allCorrectSelected;
 
-    // Optimistic streak update — show immediately in UI
     if (isCorrect) {
       setOptimisticStreak((currentItem?.consecutiveCorrect ?? 0) + 1);
       setOptimisticWrongCount(null);
@@ -192,7 +178,6 @@ export const TestView: FC<TestViewProps> = ({
   ]);
 
   const handleNext = useCallback(() => {
-    // Save current question as "previous" for review
     if (currentQuestion && feedback) {
       setPreviousQuestion({
         question: currentQuestion,
@@ -210,14 +195,11 @@ export const TestView: FC<TestViewProps> = ({
     setQuestionKey(k => k + 1);
     setShowingPrevious(false);
     if (processedSession) {
-      // Store in ref BEFORE calling onSessionUpdate, which may unmount this component.
       processedSessionRef.current = processedSession;
       onSessionUpdate(processedSession);
       setProcessedSession(null);
     }
   }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices]);
-
-  // Keyboard shortcuts
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -240,14 +222,12 @@ export const TestView: FC<TestViewProps> = ({
         return;
       }
 
-      // ArrowLeft: toggle previous question view
       if (e.key === 'ArrowLeft' && previousQuestion) {
         e.preventDefault();
         setShowingPrevious(prev => !prev);
         return;
       }
 
-      // Space or Enter: confirm (even without selection = skip) or advance
       if ((e.key === ' ' || e.key === 'Enter') && !isTransitioning) {
         e.preventDefault();
         if (showingPrevious) {
@@ -271,15 +251,12 @@ export const TestView: FC<TestViewProps> = ({
     return () => window.removeEventListener('keydown', handleKey);
   }, [handleToggleAnswer, handleConfirm, handleNext, currentQuestion, feedback, isTransitioning, showingPrevious, previousQuestion]);
 
-  // Derived stats
-
   const totalQuestions = session.questions.length;
   const doneCount = session.done.length;
-  const remainingCount = session.queue.length; // questions left to complete
+  const remainingCount = session.queue.length;
   const progressPercent =
     totalQuestions > 0 ? (doneCount / totalQuestions) * 100 : 0;
 
-  // Use optimistic streak for immediate UI feedback, fall back to session state
   const consecutiveCorrect = optimisticStreak !== null
     ? optimisticStreak
     : (currentItem?.consecutiveCorrect ?? 0);
@@ -290,20 +267,16 @@ export const TestView: FC<TestViewProps> = ({
     
   const hasOnlyOneAnswer = currentQuestion?.answers.length === 1;
 
-  // Guard: no question available
-
   if (!currentQuestion || !currentItem) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 rounded-full border-4 border-primary-200 border-t-blue-600 animate-spin mx-auto" />
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Ładowanie pytania…</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">{t('test.loading')}</p>
         </div>
       </div>
     );
   }
-
-  // Styling helpers
 
   const getAnswerButtonClass = (shuffledIdx: number): string => {
     const base =
@@ -317,7 +290,6 @@ export const TestView: FC<TestViewProps> = ({
       return `${base} border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/60 dark:hover:bg-primary-900/20 hover:shadow-sm cursor-pointer active:scale-[0.99]`;
     }
 
-    // After confirmation — show results
     const isCorrectAnswer = feedback.correctShuffledIndices.includes(shuffledIdx);
     const isSelectedAnswer = feedback.selectedAnswerIndices.includes(shuffledIdx);
 
@@ -336,7 +308,6 @@ export const TestView: FC<TestViewProps> = ({
     if (feedback === null) {
       const isSelected = selectedIndices.includes(shuffledIdx);
       if (isMultiAnswer) {
-        // Checkbox style for multi-answer
         return (
           <span
             className={`w-7 h-7 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -353,7 +324,6 @@ export const TestView: FC<TestViewProps> = ({
           </span>
         );
       }
-      // Radio style for single-answer
       return (
         <span
           className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
@@ -397,8 +367,6 @@ export const TestView: FC<TestViewProps> = ({
     );
   };
 
-  // Streak dots
-
   const renderStreakDots = () => {
     if (requiredStreak <= 1) return null;
     return (
@@ -414,43 +382,37 @@ export const TestView: FC<TestViewProps> = ({
           />
         ))}
         <span className="text-xs text-zinc-500 dark:text-zinc-400 ml-1">
-          streak
+          {t('test.streak')}
         </span>
       </div>
     );
   };
 
-  // Render
-
-  // Confirm is always available (even without selection = skip)
   const canConfirm = feedback === null && !isTransitioning;
 
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
 
-      {/* ── Sticky Header ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-zinc-900">
         <div className="max-w-5xl mx-auto px-4 py-3">
 
-          {/* Top row: quit | stats | timer */}
           <div className="flex items-center justify-between gap-4 mb-2.5">
 
-            {/* Quit controls */}
             <div className="flex items-center gap-2">
               {confirmQuit ? (
                 <>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 mr-1">
-                    Zakończyć?
+                    {t('test.quitConfirmPrompt')}
                   </span>
                   <Button size="sm" variant="danger" onClick={onQuit}>
-                    Tak
+                    {t('test.yes')}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => setConfirmQuit(false)}
                   >
-                    Nie
+                    {t('test.no')}
                   </Button>
                 </>
               ) : (
@@ -473,15 +435,14 @@ export const TestView: FC<TestViewProps> = ({
                       d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                     />
                   </svg>
-                  Zakończ
+                  {t('test.quit')}
                 </Button>
               )}
             </div>
 
-            {/* Live stats */}
             <div className="flex items-center gap-3 flex-wrap justify-end">
               <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                Zaliczone:{' '}
+                {t('test.completed')}{' '}
                 <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                   {doneCount}
                 </span>
@@ -526,7 +487,7 @@ export const TestView: FC<TestViewProps> = ({
             <div className="flex items-center justify-between flex-wrap gap-2 animate-fadeIn">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="info">
-                  Do końca: {remainingCount} {remainingCount === 1 ? 'pytanie' : remainingCount < 5 ? 'pytania' : 'pytań'}
+                  {t('test.remaining', { count: remainingCount })}
                 </Badge>
 
                 {isMultiAnswer && (
@@ -534,7 +495,7 @@ export const TestView: FC<TestViewProps> = ({
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
-                    Wiele poprawnych
+                    {t('test.multipleCorrect')}
                   </Badge>
                 )}
 
@@ -553,7 +514,7 @@ export const TestView: FC<TestViewProps> = ({
                         d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
                       />
                     </svg>
-                    Błędy: {wrongCountForCurrent}
+                    {t('test.errors', { count: wrongCountForCurrent })}
                   </Badge>
                 )}
               </div>
@@ -624,15 +585,14 @@ export const TestView: FC<TestViewProps> = ({
                       />
                     </svg>
                     <span>
-                      Poprawna odpowiedź!
+                      {t('test.correctAnswer')}
                       {requiredStreak > 1 && consecutiveCorrect < requiredStreak && (
                         <span className="font-normal text-emerald-700 dark:text-emerald-400 ml-1">
-                          Jeszcze{' '}
-                          {requiredStreak - consecutiveCorrect} do zaliczenia.
+                          {t('test.moreToPass', { count: requiredStreak - consecutiveCorrect })}
                         </span>
                       )}
                       {requiredStreak > 1 && consecutiveCorrect >= requiredStreak && (
-                        <span className="font-normal ml-1">Pytanie zaliczone! 🎉</span>
+                        <span className="font-normal ml-1">{t('test.questionPassed')}</span>
                       )}
                     </span>
                   </>
@@ -641,7 +601,7 @@ export const TestView: FC<TestViewProps> = ({
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
-                    <span>Pominięto. Pytanie wróci do kolejki.</span>
+                    <span>{t('test.skipped')}</span>
                   </>
                 ) : (
                   <>
@@ -659,11 +619,9 @@ export const TestView: FC<TestViewProps> = ({
                       />
                     </svg>
                     <span>
-                      Błędna odpowiedź. Pytanie wróci do kolejki i będzie wymagać{' '}
+                      {t('test.wrongAnswerPrefix')}
                       <strong>{session.repeatMode}</strong>{' '}
-                      {session.repeatMode === 1
-                        ? 'poprawnej odpowiedzi.'
-                        : 'kolejnych poprawnych odpowiedzi.'}
+                      {t('test.wrongAnswerSuffix', { count: session.repeatMode })}
                     </span>
                   </>
                 )}
@@ -700,9 +658,9 @@ export const TestView: FC<TestViewProps> = ({
                   >
                     <div className="flex items-start gap-3">
                       {getAnswerBadge(shuffledIdx)}
-                      <span className={`pt-0.5 flex-1 text-left transition-all duration-300 ${isHiddenSingle ? 'text-transparent bg-zinc-300 dark:bg-zinc-700 rounded-md select-none opacity-50' : ''}`}>
-                        {isHiddenSingle ? 'Najedź myszką, aby odkryć odpowiedź...' : answer.text}
-                      </span>
+                      <div className={`pt-0.5 flex-1 text-left transition-all duration-300 ${isHiddenSingle ? 'text-transparent bg-zinc-300 dark:bg-zinc-700 rounded-md select-none opacity-50' : ''}`}>
+                        {isHiddenSingle ? t('test.hoverToReveal') : <MarkdownRenderer content={answer.text} className="[&>p]:mb-0" />}
+                      </div>
                     </div>
                   </button>
                 );
@@ -712,7 +670,7 @@ export const TestView: FC<TestViewProps> = ({
             {/* Keyboard hint */}
             <div className="flex items-center justify-center gap-2 pt-1">
               <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
-                Klawiatura:{' '}
+                {t('test.keyboard')}{' '}
                 {currentQuestion.answers.map((_, i) => (
                   <Fragment key={i}>
                     <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
@@ -720,18 +678,18 @@ export const TestView: FC<TestViewProps> = ({
                     </kbd>
                   </Fragment>
                 ))}
-                — {isMultiAnswer ? 'zaznacz' : 'wybierz'} &nbsp;|&nbsp;{' '}
+                — {isMultiAnswer ? t('test.mark') : t('test.select')} &nbsp;|&nbsp;{' '}
                 <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
-                  Spacja
+                  {t('test.space')}
                 </kbd>{' '}
-                — {feedback ? 'dalej' : 'zatwierdź'}
+                — {feedback ? t('test.nextShort') : t('test.confirmShort')}
                 {previousQuestion && (
                   <>
                     {' '}&nbsp;|&nbsp;{' '}
                     <kbd className="bg-zinc-200 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded text-xs font-mono mx-0.5">
                       ←
                     </kbd>{' '}
-                    — poprzednie
+                    — {t('test.previousShort')}
                   </>
                 )}
               </p>
@@ -746,7 +704,7 @@ export const TestView: FC<TestViewProps> = ({
             {requiredStreak > 1 && (
               <div className="bg-white dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3">
                 <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-medium uppercase tracking-wide">
-                  Seria
+                  {t('test.streakTitle')}
                 </p>
                 {renderStreakDots()}
               </div>
@@ -769,14 +727,14 @@ export const TestView: FC<TestViewProps> = ({
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                       </svg>
-                      Pomiń
+                      {t('test.skipBtn')}
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
-                      Zatwierdź
+                      {t('test.confirmBtn')}
                     </>
                   )}
                 </Button>
@@ -789,7 +747,7 @@ export const TestView: FC<TestViewProps> = ({
                   size="lg"
                   className="w-full animate-fadeIn shadow-xl shadow-primary-600/20"
                 >
-                  Dalej →
+                  {t('test.nextBtn')}
                 </Button>
               )}
             </div>
@@ -803,7 +761,7 @@ export const TestView: FC<TestViewProps> = ({
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
-                <span>Poprzednie pytanie</span>
+                <span>{t('test.prevQuestion')}</span>
               </button>
             )}
 
@@ -829,7 +787,7 @@ export const TestView: FC<TestViewProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
                 <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                  Poprzednie pytanie
+                  {t('test.prevQuestion')}
                 </h3>
               </div>
               <div className="flex items-center gap-2">
@@ -841,7 +799,7 @@ export const TestView: FC<TestViewProps> = ({
                       : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
                   }`}
                 >
-                  {previousQuestion.feedback.state === 'correct' ? 'Poprawna' : previousQuestion.feedback.selectedAnswerIndices.length === 0 ? 'Pominięto' : 'Błędna'}
+                  {previousQuestion.feedback.state === 'correct' ? t('test.resultCorrect') : previousQuestion.feedback.selectedAnswerIndices.length === 0 ? t('test.resultSkipped') : t('test.resultWrong')}
                 </span>
                 <button
                   onClick={() => setShowingPrevious(false)}
@@ -903,7 +861,7 @@ export const TestView: FC<TestViewProps> = ({
                 return (
                   <div key={answer.id} className={cls}>
                     {badgeEl}
-                    <span className="flex-1 leading-relaxed">{answer.text}</span>
+                    <div className="flex-1 leading-relaxed"><MarkdownRenderer content={answer.text} className="[&>p]:mb-0" /></div>
                   </div>
                 );
               })}
