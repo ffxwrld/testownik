@@ -13,14 +13,17 @@ Testownik is a lightweight, high-performance desktop application designed to opt
 
 ---
 
-![Home View - Dark Mode](https://github.com/user-attachments/assets/a3f1aa1a-9e0f-46f1-bea0-4532e58762c2)
 *Home View (Dark Mode)*
+![Home View - Dark Mode](<img width="1313" height="959" alt="Zrzut ekranu 2026-06-27 o 18 03 46" src="https://github.com/user-attachments/assets/569f4301-f719-4a7c-8e1c-91772a105362" />)
 
-![Home View - Light Mode](https://github.com/user-attachments/assets/234fb581-86db-4d1f-9a91-5c552b7a868b)
 *Home View (Light Mode)*
+![Home View - Light Mode](<img width="1313" height="959" alt="Zrzut ekranu 2026-06-27 o 18 03 50" src="https://github.com/user-attachments/assets/00ee9f22-ff1f-4caf-a0ff-f0c0cfe05b03" />)
 
-![Test View](https://github.com/user-attachments/assets/8d946cf0-1e2d-49fc-89a5-90290c048302)
 *Taking a test*
+![Test View](<img width="1313" height="959" alt="Zrzut ekranu 2026-06-27 o 18 04 07" src="https://github.com/user-attachments/assets/4faac9a0-36b7-4c32-8e09-5ddaa7d0ebba" />)
+
+*Base creator view*
+![Creator_view](<img width="1313" height="959" alt="Zrzut ekranu 2026-06-27 o 18 04 07" src="https://github.com/user-attachments/assets/fb403320-79f9-482e-abc7-f1df1a3f1fa7" />)
 
 ---
 
