@@ -166,10 +166,10 @@ export const HomeView: FC<HomeViewProps> = ({
           </h1>
         </div>
 
-        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 relative">
+        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 relative overflow-x-auto hide-scrollbar w-full">
           <button
             onClick={() => onTabChange('new')}
-            className={`relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
+            className={`whitespace-nowrap flex-shrink-0 relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
               activeTab === 'new'
                 ? 'text-primary-600 dark:text-primary-400'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -186,7 +186,7 @@ export const HomeView: FC<HomeViewProps> = ({
           </button>
           <button
             onClick={() => onTabChange('saved')}
-            className={`relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
+            className={`whitespace-nowrap flex-shrink-0 relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
               activeTab === 'saved'
                 ? 'text-primary-600 dark:text-primary-400'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -209,7 +209,7 @@ export const HomeView: FC<HomeViewProps> = ({
           <div className="flex-1"></div>
           <button
             onClick={onEnterCreator}
-            className="relative flex items-center justify-center gap-1.5 h-12 px-4 font-bold text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+            className="whitespace-nowrap flex-shrink-0 relative flex items-center justify-center gap-1.5 h-12 px-4 font-bold text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
           >
 {t('home.tabs.creator')}
           </button>
