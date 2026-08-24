@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect, FC, ChangeEvent, DragEvent, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { parseZipFile } from '../utils/parser';
 import { buildDemoQuestions } from '../utils/demo';
-import { Question } from '../models/types';
+import { Question, SavedSessionMetadata } from '../models/types';
 import { getAllSessionMetadata } from '../utils/session';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
@@ -63,13 +64,11 @@ export const HomeView: FC<HomeViewProps> = ({
   const [baseName, setBaseName] = useState<string>('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [savedSessions, setSavedSessions] = useState(
-    getAllSessionMetadata()
-  );
+  const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
 
   useEffect(() => {
     if (activeTab === 'saved') {
-      setSavedSessions(getAllSessionMetadata());
+      getAllSessionMetadata().then(setSavedSessions);
     }
   }, [activeTab]);
 
@@ -128,15 +127,15 @@ export const HomeView: FC<HomeViewProps> = ({
     setLoadError(null);
   };
 
-  const handleDeleteAndRefresh = (sessionId: string) => {
-    onDeleteSession(sessionId);
-    setSavedSessions(getAllSessionMetadata());
+  const handleDeleteAndRefresh = async (sessionId: string) => {
+    await onDeleteSession(sessionId);
+    setSavedSessions(await getAllSessionMetadata());
   };
 
   const canStart = questions.length > 0;
 
   return (
-    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
+    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex flex-col items-center justify-start pt-12 md:pt-24 p-6 overflow-y-auto">
       <div className="w-full max-w-2xl space-y-5">
         <div className="text-center space-y-2 pb-2">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -154,28 +153,42 @@ export const HomeView: FC<HomeViewProps> = ({
           </p>
         </div>
 
-        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700">
+        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 relative">
           <button
             onClick={() => onTabChange('new')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
               activeTab === 'new'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                ? 'text-primary-600 dark:text-primary-400'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
+            {activeTab === 'new' && (
+              <motion.div
+                layoutId="homeTabIndicator"
+                className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary-500"
+                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 1 }}
+              />
+            )}
             {t('home.tabs.newTest')}
           </button>
           <button
             onClick={() => onTabChange('saved')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors relative ${
+            className={`relative flex items-center justify-center h-12 px-4 font-medium text-sm transition-colors ${
               activeTab === 'saved'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                ? 'text-primary-600 dark:text-primary-400'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
-            {t('home.tabs.myTests')}
+            {activeTab === 'saved' && (
+              <motion.div
+                layoutId="homeTabIndicator"
+                className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary-500"
+                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 1 }}
+              />
+            )}
+            <span>{t('home.tabs.myTests')}</span>
             {savedSessions.length > 0 && (
-              <span className="ml-2 inline-block px-2 py-0.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full">
+              <span className="ml-2 flex items-center justify-center px-2 py-0.5 text-[10px] font-bold bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full">
                 {savedSessions.length}
               </span>
             )}
@@ -183,8 +196,11 @@ export const HomeView: FC<HomeViewProps> = ({
           <div className="flex-1"></div>
           <button
             onClick={onEnterCreator}
-            className="px-4 py-2 font-bold text-sm border-b-2 border-transparent text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all rounded-t-lg"
+            className="relative flex items-center justify-center gap-1.5 h-12 px-4 font-bold text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
           >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
             {t('home.tabs.creator')}
           </button>
         </div>
@@ -417,9 +433,9 @@ export const HomeView: FC<HomeViewProps> = ({
               sessions={savedSessions}
               onResume={onResumeSession}
               onDelete={handleDeleteAndRefresh}
-              onRename={(sessionId, newName) => {
-                onRenameSession(sessionId, newName);
-                setSavedSessions(getAllSessionMetadata());
+              onRename={async (sessionId, newName) => {
+                await onRenameSession(sessionId, newName);
+                setSavedSessions(await getAllSessionMetadata());
               }}
               onRestart={(sessionId, config) => {
                 onRestartSession(sessionId, config);

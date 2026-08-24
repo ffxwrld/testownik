@@ -88,7 +88,7 @@ const RAW_QUESTIONS: RawDemoQuestion[] = [
 
 export function buildDemoQuestions(): Question[] {
   return RAW_QUESTIONS.map((raw, qi) => {
-    const correctIndices = decodeMask(raw.mask);
+    const { indices: correctIndices } = decodeMask(raw.mask);
     const answers: Answer[] = raw.answers.map((text, i) => ({
       id: `demo-q${qi}-a${i}`,
       text,

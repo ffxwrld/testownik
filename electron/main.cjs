@@ -38,9 +38,9 @@ function createWindow() {
     const { dialog } = require('electron');
     const choice = dialog.showMessageBoxSync(mainWindow, {
       type: 'question',
-      buttons: ['Wyjdź', 'Zostań'],
-      title: 'Niezapisane zmiany',
-      message: 'Czy na pewno chcesz zamknąć aplikację? Niezapisane postępy w kreatorze zostaną bezpowrotnie utracone.',
+      buttons: ['Zamknij i odrzuć', 'Anuluj'],
+      title: 'Odrzucić niezapisane zmiany?',
+      message: 'Wszystkie niezapisane postępy w kreatorze przepadną po wyjściu.',
       defaultId: 1,
       cancelId: 1
     });
@@ -127,56 +127,17 @@ app.on('ready', () => {
   
   function installUpdateAndQuit() {
     if (!downloadedUpdatePath) return app.quit();
-    
-    const { spawn } = require('child_process');
-    const fs = require('fs');
-    const path = require('path');
-    
-    // Tworzymy tymczasowy skrypt Node.js, który odczeka 4 sekundy i uruchomi instalator
-    const scriptPath = path.join(app.getPath('temp'), 'testownik-update.js');
-    const scriptContent = `
-      setTimeout(() => {
-        const { spawn } = require('child_process');
-        const fs = require('fs');
-        const path = require('path');
-        
-        // Magiczna sztuczka: usuwamy stary deinstalator zanim włączymy nowy instalator.
-        // Dzięki temu NSIS całkowicie pominie uszkodzoną procedurę deinstalacji (która wywala Błąd 2)
-        // i po prostu czysto nadpisze wszystkie stare pliki.
-        const appDir = path.dirname(process.execPath);
-        const uninstallerPath = path.join(appDir, 'Uninstall Testownik.exe');
-        
-        try {
-          if (fs.existsSync(uninstallerPath)) {
-            fs.unlinkSync(uninstallerPath);
-          }
-        } catch (e) {
-          // Ignorujemy błędy, jeśli pliku nie ma lub jest zablokowany
-        }
-        
-        const installer = spawn(${JSON.stringify(downloadedUpdatePath)}, ['/S', '--force-run'], {
-          detached: true,
-          stdio: 'ignore'
-        });
-        installer.unref();
-      }, 4000);
-    `;
-    fs.writeFileSync(scriptPath, scriptContent);
-    
-    // Uruchamiamy ten skrypt w tle używając wbudowanego w aplikację środowiska Node (bez okien CMD!)
-    const subprocess = spawn(process.execPath, [scriptPath], {
-      detached: true,
-      stdio: 'ignore',
-      windowsHide: true,
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
-    });
-    
-    subprocess.unref();
-    app.quit();
+    autoUpdater.quitAndInstall(false, true);
   }
 
   ipcMain.on('restart-app', () => {
     installUpdateAndQuit();
+  });
+
+  ipcMain.on('zoom-set', (event, factor) => {
+    if (mainWindow) {
+      mainWindow.webContents.setZoomFactor(factor);
+    }
   });
 
   // W razie błędu, wypisz do konsoli zamiast pokazywać okienko

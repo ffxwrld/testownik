@@ -1,4 +1,6 @@
 import { type FC, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { SavedSessionMetadata } from '../models/types';
 import { Button } from './ui/Button';
@@ -55,6 +57,7 @@ export const SessionsList: FC<SessionsListProps> = ({
 
   return (
     <div className="space-y-3">
+      <AnimatePresence mode="popLayout" initial={false}>
       {sessions.map((session) => {
         const progress = session.totalQuestions > 0
           ? Math.round((session.completedQuestions / session.totalQuestions) * 100)
@@ -66,7 +69,12 @@ export const SessionsList: FC<SessionsListProps> = ({
         const isEditing = editingId === session.id;
 
         return (
-          <div
+          <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             key={session.id}
             className={`p-4 bg-white dark:bg-zinc-800 rounded-xl border transition-shadow hover:shadow-md ${
               isCompleted
@@ -241,11 +249,13 @@ export const SessionsList: FC<SessionsListProps> = ({
                 </>
               )}
             </div>
-          </div>
+          </motion.div>
         );
       })}
+      </AnimatePresence>
 
-      {restartingId && (
+      {restartingId && createPortal(
+
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn"
           onClick={() => setRestartingId(null)}
@@ -298,7 +308,7 @@ export const SessionsList: FC<SessionsListProps> = ({
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 };

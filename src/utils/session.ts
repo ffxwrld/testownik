@@ -1,3 +1,4 @@
+import { get, set } from 'idb-keyval';
 import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata } from '../models/types';
 import { shuffle, shuffleIndices } from './shuffle';
 import { deleteSessionImages } from './db';
@@ -167,14 +168,12 @@ function generateSessionId(): string {
   return Date.now().toString(36);
 }
 
-export function saveSession(session: SessionState, sessionId?: string): string {
+export async function saveSession(session: SessionState, sessionId?: string): Promise<string> {
   try {
     const id = sessionId || generateSessionId();
-    const sessions = loadAllSessions();
+    const sessions = await loadAllSessions();
     sessions[id] = session;
-    const serialized = JSON.stringify(sessions);
-    localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
-    invalidateSessionsCache();
+    await saveAllSessions(sessions);
     localStorage.setItem(CURRENT_SESSION_ID_KEY, id);
     return id;
   } catch (err) {
@@ -183,12 +182,12 @@ export function saveSession(session: SessionState, sessionId?: string): string {
   }
 }
 
-export function loadSession(sessionId?: string): SessionState | null {
+export async function loadSession(sessionId?: string): Promise<SessionState | null> {
   try {
     const id = sessionId || localStorage.getItem(CURRENT_SESSION_ID_KEY);
     if (!id) return null;
     
-    const sessions = loadAllSessions();
+    const sessions = await loadAllSessions();
     const session = sessions[id];
     if (!session) return null;
     
@@ -199,34 +198,51 @@ export function loadSession(sessionId?: string): SessionState | null {
   }
 }
 
+const SESSIONS_IDB_KEY = 'testownik_sessions_db';
 let _sessionsCache: Record<string, SessionState> | null = null;
-let _sessionsCacheRaw: string | null = null;
+let _idbMigrated = false;
 
-function loadAllSessions(): Record<string, SessionState> {
+export async function loadAllSessions(): Promise<Record<string, SessionState>> {
+  if (_sessionsCache) return _sessionsCache;
+
   try {
-    const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
-    if (!raw) return {};
-    if (raw === _sessionsCacheRaw && _sessionsCache) return _sessionsCache;
-    _sessionsCache = JSON.parse(raw) as Record<string, SessionState>;
-    _sessionsCacheRaw = raw;
-    return _sessionsCache;
-  } catch {
-    return {};
+    let sessions = await get<Record<string, SessionState>>(SESSIONS_IDB_KEY);
+
+    if (!sessions && !_idbMigrated) {
+      const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          await set(SESSIONS_IDB_KEY, parsed);
+          sessions = parsed;
+          localStorage.removeItem(SESSIONS_STORAGE_KEY);
+        } catch (e) {
+          console.error('Migration failed:', e);
+        }
+      }
+      _idbMigrated = true;
+    }
+
+    if (!sessions) sessions = {};
+    _sessionsCache = sessions;
+    return sessions;
+  } catch (err) {
+    console.error('Failed to load sessions from IDB:', err);
+    return _sessionsCache || {};
   }
 }
 
-function invalidateSessionsCache(): void {
-  _sessionsCache = null;
-  _sessionsCacheRaw = null;
+async function saveAllSessions(sessions: Record<string, SessionState>) {
+  _sessionsCache = sessions;
+  await set(SESSIONS_IDB_KEY, sessions);
 }
 
-export function deleteSession(sessionId: string): void {
+
+export async function deleteSession(sessionId: string): Promise<void> {
   try {
-    const sessions = loadAllSessions();
+    const sessions = await loadAllSessions();
     delete sessions[sessionId];
-    const serialized = JSON.stringify(sessions);
-    localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
-    invalidateSessionsCache();
+    await saveAllSessions(sessions);
     
     deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));
 
@@ -239,9 +255,9 @@ export function deleteSession(sessionId: string): void {
   }
 }
 
-export function getAllSessionMetadata(): SavedSessionMetadata[] {
+export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
   try {
-    const sessions = loadAllSessions();
+    const sessions = await loadAllSessions();
     return Object.entries(sessions)
       .map(([id, session]) => ({
         id,
@@ -257,14 +273,12 @@ export function getAllSessionMetadata(): SavedSessionMetadata[] {
   }
 }
 
-export function renameSession(sessionId: string, newBaseName: string): void {
+export async function renameSession(sessionId: string, newBaseName: string): Promise<void> {
   try {
-    const sessions = loadAllSessions();
+    const sessions = await loadAllSessions();
     if (sessions[sessionId]) {
       sessions[sessionId] = { ...sessions[sessionId], baseName: newBaseName };
-      const serialized = JSON.stringify(sessions);
-      localStorage.setItem(SESSIONS_STORAGE_KEY, serialized);
-      invalidateSessionsCache();
+      await saveAllSessions(sessions);
     }
   } catch (err) {
     console.warn('Could not rename session:', err);

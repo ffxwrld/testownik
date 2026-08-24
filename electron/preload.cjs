@@ -9,5 +9,8 @@ contextBridge.exposeInMainWorld('electron', {
     onUpdateAvailableMac: (callback) => ipcRenderer.on('update-available-mac', (_event, info) => callback(info)),
     onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_event, info) => callback(info)),
     restartApp: () => ipcRenderer.send('restart-app')
+  },
+  zoom: {
+    set: (factor) => ipcRenderer.send('zoom-set', factor)
   }
 });

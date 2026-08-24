@@ -12,8 +12,17 @@ import { Question, Answer } from '../models/types';
 // is the index of the correct answer.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function decodeMask(maskLine: string): number[] {
-  const digits = maskLine.replace(/^[^01]*/, '');
+export interface DecodedMask {
+  indices: number[];
+  digits: string;
+}
+
+export function decodeMask(maskLine: string): DecodedMask {
+  const maskMatch = maskLine.match(/[01]+/);
+  if (!maskMatch) {
+    throw new Error(`Invalid mask format (no binary digits found): "${maskLine}"`);
+  }
+  const digits = maskMatch[0];
   const indices: number[] = [];
   for (let i = 0; i < digits.length; i++) {
     if (digits[i] === '1') indices.push(i);
@@ -21,7 +30,7 @@ export function decodeMask(maskLine: string): number[] {
   if (indices.length === 0) {
     throw new Error(`No '1' found in mask: "${maskLine}"`);
   }
-  return indices;
+  return { indices, digits };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,7 +52,7 @@ export function decodeFileContent(bytes: Uint8Array): string {
   }
 }
 
-function parseQuestionFile(
+export function parseQuestionFile(
   content: string,
   filename: string
 ): Question | null {
@@ -60,14 +69,27 @@ function parseQuestionFile(
   }
 
   const maskLine = lines[0];
-  const questionText = lines[1];
-  const answerTexts = lines.slice(2);
+  let questionText = lines[1];
+  let answerTexts = lines.slice(2);
 
-  let correctIndices: number[];
+  let decoded: DecodedMask;
   try {
-    correctIndices = decodeMask(maskLine);
+    decoded = decodeMask(maskLine);
   } catch (err) {
     console.warn(`Skipping file "${filename}": ${(err as Error).message}`);
+    return null;
+  }
+  const { indices: correctIndices, digits } = decoded;
+
+  // Auto-fix for corrupted files and support for multi-line questions: 
+  // If there are more answer lines than mask digits, the extra lines 
+  // at the top of the answers block belong to the question text.
+  const diff = answerTexts.length - digits.length;
+  if (diff > 0) {
+    const extraLines = answerTexts.splice(0, diff);
+    questionText += '\n' + extraLines.join('\n');
+  } else if (diff < 0) {
+    console.warn(`Skipping file "${filename}": missing answers (mask expects ${digits.length}, found ${answerTexts.length})`);
     return null;
   }
 
@@ -140,35 +162,47 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
     }
   }
 
-  await Promise.all(
-    txtFiles.map(async ({ name, file }) => {
-      try {
-        const bytes = await file.async('uint8array');
-        const content = decodeFileContent(bytes);
-        const strippedName = commonPrefix ? name.substring(commonPrefix.length) : name;
-        const q = parseQuestionFile(content, strippedName);
-        if (q) questions.push(q);
-      } catch (err) {
-        console.warn(`Failed to read "${name}":`, err);
-      }
-    })
-  );
+  const BATCH_SIZE = 20;
+
+  for (let i = 0; i < txtFiles.length; i += BATCH_SIZE) {
+    const batch = txtFiles.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async ({ name, file }) => {
+        try {
+          const bytes = await file.async('uint8array');
+          const content = decodeFileContent(bytes);
+          const strippedName = commonPrefix ? name.substring(commonPrefix.length) : name;
+          const q = parseQuestionFile(content, strippedName);
+          if (q) questions.push(q);
+        } catch (err) {
+          console.warn(`Failed to read "${name}":`, err);
+        }
+      })
+    );
+    // Yield to the event loop to prevent UI freezing on massive archives
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
 
   // Sort again because Promise.all doesn't preserve insertion order
   questions.sort((a, b) => a.sourceFile.localeCompare(b.sourceFile, undefined, { numeric: true, sensitivity: 'base' }));
 
   const images: Record<string, Blob> = {};
-  await Promise.all(
-    imgFiles.map(async ({ name, file }) => {
-      try {
-        const blob = await file.async('blob');
-        const fileName = name.split('/').pop() || name;
-        images[fileName] = blob;
-      } catch (err) {
-        console.warn(`Failed to read image "${name}":`, err);
-      }
-    })
-  );
+  for (let i = 0; i < imgFiles.length; i += BATCH_SIZE) {
+    const batch = imgFiles.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async ({ name, file }) => {
+        try {
+          const blob = await file.async('blob');
+          const fileName = name.split('/').pop() || name;
+          images[fileName] = blob;
+        } catch (err) {
+          console.warn(`Failed to read image "${name}":`, err);
+        }
+      })
+    );
+    // Yield to event loop to clear massive image allocations from memory
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
 
   return { questions, images };
 }

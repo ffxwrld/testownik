@@ -1,5 +1,6 @@
 import { type FC } from 'react';
 import { cn } from '../../utils/cn';
+import { motion } from 'framer-motion';
 
 interface ProgressBarProps {
   value: number;
@@ -51,13 +52,20 @@ export const ProgressBar: FC<ProgressBarProps> = ({
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div
+        <motion.div
           className={cn(
-            'h-full rounded-full transition-all duration-500',
-            colors[color],
-            animated && 'ease-out'
+            'h-full rounded-full',
+            colors[color]
           )}
-          style={{ width: `${clamped}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${clamped}%` }}
+          transition={animated ? {
+            type: 'spring',
+            stiffness: 120,
+            damping: 18,
+            mass: 0.9,
+            restDelta: 0.001
+          } : { duration: 0 }}
         />
       </div>
     </div>
