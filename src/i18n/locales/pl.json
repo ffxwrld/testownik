@@ -13,7 +13,7 @@
     "title": "Testownik",
     "subtitle": "Aplikacja do nauki i rozwiązywania testów.",
     "tabs": {
-      "newTest": "+ Nowy test",
+      "newTest": "Nowy test",
       "myTests": "Moje testy",
       "creator": "✨ Kreator Baz"
     },

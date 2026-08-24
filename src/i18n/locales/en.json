@@ -13,7 +13,7 @@
     "title": "Testownik",
     "subtitle": "An application for learning and taking tests.",
     "tabs": {
-      "newTest": "+ New test",
+      "newTest": "New test",
       "myTests": "My tests",
       "creator": "✨ Database Creator"
     },

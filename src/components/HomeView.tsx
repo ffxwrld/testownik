@@ -211,10 +211,7 @@ export const HomeView: FC<HomeViewProps> = ({
             onClick={onEnterCreator}
             className="relative flex items-center justify-center gap-1.5 h-12 px-4 font-bold text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            {t('home.tabs.creator')}
+{t('home.tabs.creator')}
           </button>
         </div>
 
