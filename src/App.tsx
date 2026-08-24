@@ -246,7 +246,15 @@ const App: FC = () => {
 
   const pageVariants = {
     initial: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
-    animate: { opacity: 1, transform: 'scale(1)', filter: 'blur(0px)' },
+    animate: { 
+      opacity: 1, 
+      transform: 'scale(1)', 
+      filter: 'blur(0px)',
+      transitionEnd: {
+        transform: 'none',
+        filter: 'none'
+      }
+    },
     exit: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
   };
 
