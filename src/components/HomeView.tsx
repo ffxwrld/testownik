@@ -150,20 +150,20 @@ export const HomeView: FC<HomeViewProps> = ({
       </button>
 
       <div className="w-full max-w-2xl space-y-5">
-        <div className="text-center space-y-2 pb-2">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="flex items-center justify-center gap-5 pb-6 pt-2">
+          <div className="relative inline-flex items-center justify-center">
+            {/* Ambient glow behind the logo */}
+            <div className="absolute inset-0 bg-primary-500/30 blur-2xl rounded-full scale-[1.5] pointer-events-none"></div>
+            
             <img 
               src={logo} 
-              alt="Testownik" 
-              className="w-20 h-20 object-contain drop-shadow-lg"
+              alt="Testownik Logo" 
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain relative z-10 drop-shadow-2xl"
             />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tighter bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400 text-transparent bg-clip-text pb-1">
             {t('home.title')}
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-base max-w-sm mx-auto">
-            {t('home.subtitle')}
-          </p>
         </div>
 
         <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 relative">
@@ -261,7 +261,7 @@ export const HomeView: FC<HomeViewProps> = ({
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+                className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition duration-200 ${
                   isDragging
                     ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.01]'
                     : canStart
@@ -349,7 +349,7 @@ export const HomeView: FC<HomeViewProps> = ({
                       </span>
                       <button
                         onClick={() => setIsEditingName(true)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition"
                         title="Zmień nazwę"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -371,7 +371,7 @@ export const HomeView: FC<HomeViewProps> = ({
                   <button
                     key={opt.value}
                     onClick={() => setRepeatMode(opt.value)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all duration-150 cursor-pointer focus:outline-none ${
+                    className={`relative p-4 rounded-xl border-2 text-left transition duration-150 cursor-pointer focus:outline-none ${
                       repeatMode === opt.value
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-sm'
                         : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'

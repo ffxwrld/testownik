@@ -39,14 +39,14 @@ export const QuestionCard: FC<QuestionCardProps> = ({
 
   const getAnswerButtonClass = (shuffledIdx: number): string => {
     const base =
-      'group w-full text-left px-5 py-4 rounded-xl border-2 font-medium text-sm transition-all duration-200 select-none leading-relaxed focus:outline-none';
+      'group w-full text-left px-5 py-4 rounded-xl border-2 font-medium text-sm transition duration-200 select-none leading-relaxed focus:outline-none';
 
     if (feedback === null) {
       const isSelected = selectedIndices.includes(shuffledIdx);
       if (isSelected) {
         return `${base} border-primary-500 bg-primary-50/80 dark:bg-primary-900/30 text-primary-900 dark:text-primary-100 shadow-sm cursor-pointer`;
       }
-      return `${base} border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/60 dark:hover:bg-primary-900/20 hover:shadow-sm cursor-pointer active:scale-[0.99]`;
+      return `${base} border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-800 dark:text-zinc-200 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50/60 dark:hover:bg-primary-900/20 hover:shadow-sm cursor-pointer active:scale-[0.97]`;
     }
 
     const isCorrectAnswer = feedback.correctShuffledIndices.includes(shuffledIdx);
@@ -160,9 +160,9 @@ export const QuestionCard: FC<QuestionCardProps> = ({
       <AnimatePresence mode="popLayout">
         <motion.div
           key={`q-${questionKey}`}
-          initial={{ opacity: 0, y: 12, scale: 0.98, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -12, scale: 0.98, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, transform: 'translateY(12px) scale(0.98)', filter: 'blur(8px)' }}
+          animate={{ opacity: 1, transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+          exit={{ opacity: 0, transform: 'translateY(-12px) scale(0.98)', filter: 'blur(8px)' }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           className="w-full"
         >

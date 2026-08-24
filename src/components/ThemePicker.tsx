@@ -49,7 +49,7 @@ export const ThemePicker: FC = () => {
     <div className="relative flex items-center" ref={pickerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 group"
+        className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 group"
         aria-label={t('theme.selectTheme')}
         title={t('theme.selectTheme')}
       >

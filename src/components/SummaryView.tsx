@@ -1,4 +1,5 @@
 import { useState, useMemo, FC } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SessionState } from '../models/types';
 import { getHardestQuestions, formatTime } from '../utils/session';
@@ -63,16 +64,30 @@ export const SummaryView: FC<SummaryViewProps> = ({
   return (
     <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
       
-      {showBeerModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn"
-          onClick={() => setShowBeerModal(false)}
-        >
-          <div 
-            className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-zinc-200 dark:border-zinc-800 animate-slideDown"
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {showBeerModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            onClick={() => setShowBeerModal(false)}
           >
-            <div className="text-6xl mb-4 animate-bounce">🍻</div>
+            <motion.div 
+              initial={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
+              animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
+              exit={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
+              transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
+              className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-zinc-200 dark:border-zinc-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <motion.div 
+                animate={{ transform: ['translateY(0px)', 'translateY(-10px)', 'translateY(0px)'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="text-6xl mb-4 origin-bottom inline-block"
+              >
+                🍻
+              </motion.div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
               {t('summary.beerModalTitle')}
             </h2>
@@ -82,11 +97,12 @@ export const SummaryView: FC<SummaryViewProps> = ({
             <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full">
               {t('summary.beerModalBtn')}
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
-      <div className="w-full max-w-2xl space-y-6">
+      <motion.div initial={{ opacity: 0, transform: "translateY(20px)", filter: "blur(4px)" }} animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }} transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }} className="w-full max-w-2xl space-y-6">
 
         <div className="text-center space-y-3">
           <div className="flex justify-center">
@@ -230,7 +246,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
                   <div key={question.id}>
                     <button
                       onClick={() => toggleExpand(question.id)}
-                      className="w-full flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-100/80 dark:hover:bg-zinc-800 transition-all text-left"
+                      className="w-full flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-100/80 dark:hover:bg-zinc-800 transition text-left"
                     >
                       <div className="w-6 h-6 flex-shrink-0 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mt-0.5">
                         <span className="text-xs font-bold text-red-600 dark:text-red-400">
@@ -309,7 +325,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </svg>
           {t('summary.goHome')}
         </Button>
-      </div>
+      </motion.div>
     </div>
   );
 };

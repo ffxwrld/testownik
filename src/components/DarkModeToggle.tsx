@@ -35,7 +35,7 @@ export const DarkModeToggle: FC = () => {
   return (
     <button
       onClick={() => setDark(d => !d)}
-      className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150"
+      className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150"
       aria-label={dark ? t('theme.switchToLight') : t('theme.switchToDark')}
       title={dark ? t('theme.lightMode') : t('theme.darkMode')}
     >

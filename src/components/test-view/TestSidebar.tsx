@@ -37,7 +37,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
         {Array.from({ length: requiredStreak }, (_, i) => (
           <div
             key={i}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+            className={`w-2.5 h-2.5 rounded-full transition duration-300 ${
               i < consecutiveCorrect
                 ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50 scale-110'
                 : 'bg-zinc-300 dark:bg-zinc-600'
@@ -78,7 +78,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
                 variant="primary"
                 size="lg"
                 disabled={!canConfirm || isTransitioning}
-                className={`w-full rounded-2xl transition-all shadow-xl shadow-primary-600/20 ${
+                className={`w-full rounded-2xl transition shadow-xl shadow-primary-600/20 ${
                   selectedIndices.length === 0 ? 'opacity-60' : ''
                 }`}
               >
@@ -121,7 +121,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
       {hasPreviousQuestion && (
         <button
           onClick={onShowPrevious}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all duration-150 text-sm font-medium"
+          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition duration-150 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4 flex-shrink-0" />
           <span>{t('test.prevQuestion')}</span>

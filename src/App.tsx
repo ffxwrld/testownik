@@ -202,7 +202,7 @@ const App: FC = () => {
       setPhase('home');
     } catch (err: any) {
       console.error(err);
-      alert('Wystąpił błąd podczas zapisywania: ' + err.message);
+      toast.error('Wystąpił błąd podczas zapisywania: ' + err.message);
     }
   }, []);
 
@@ -245,9 +245,9 @@ const App: FC = () => {
     session?.phase === 'summary' && phase === 'test' ? 'summary' : phase;
 
   const pageVariants = {
-    initial: { opacity: 0, scale: 0.98, filter: 'blur(4px)' },
-    animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
-    exit: { opacity: 0, scale: 0.98, filter: 'blur(4px)' },
+    initial: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
+    animate: { opacity: 1, transform: 'scale(1)', filter: 'blur(0px)' },
+    exit: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
   };
 
   const pageTransition = {
@@ -363,19 +363,19 @@ const App: FC = () => {
           <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
           <button
             onClick={() => setZoomLevel(prev => applyZoom(prev - ZOOM_STEP))}
-            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 text-base leading-none select-none"
+            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 text-base leading-none select-none"
           >
             −
           </button>
           <button
             onClick={() => setZoomLevel(applyZoom(1))}
-            className="px-1.5 h-6 flex items-center justify-center rounded-md text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 font-mono tabular-nums min-w-[2.8rem]"
+            className="px-1.5 h-6 flex items-center justify-center rounded-md text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 font-mono tabular-nums min-w-[2.8rem]"
           >
             {Math.round(zoomLevel * 100)}%
           </button>
           <button
             onClick={() => setZoomLevel(prev => applyZoom(prev + ZOOM_STEP))}
-            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 text-base leading-none select-none"
+            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 text-base leading-none select-none"
           >
             +
           </button>

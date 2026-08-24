@@ -34,7 +34,15 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-6 lg:p-10 relative">
-      <div className="max-w-4xl mx-auto space-y-8 pb-32">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeQuestion.id}
+          initial={{ opacity: 0, filter: "blur(4px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, filter: "blur(4px)" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+          className="max-w-4xl mx-auto space-y-8 pb-32"
+        >
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
@@ -44,7 +52,7 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
               type="text"
               value={activeQuestion.filename}
               onChange={e => updateActiveQuestion({ filename: e.target.value })}
-              className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl font-medium text-[15px] text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition-all"
+              className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl font-medium text-[15px] text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition"
             />
           </div>
           <div className="w-32">
@@ -56,7 +64,7 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
               value={activeQuestion.category}
               onChange={e => updateActiveQuestion({ category: e.target.value.toUpperCase() })}
               maxLength={1}
-              className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl font-medium text-[15px] text-center text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition-all uppercase"
+              className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl font-medium text-[15px] text-center text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition uppercase"
             />
           </div>
         </div>
@@ -69,7 +77,7 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
             value={activeQuestion.text}
             onChange={e => updateActiveQuestion({ text: e.target.value })}
             rows={4}
-            className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition-all resize-y min-h-[120px]"
+            className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition resize-y min-h-[120px]"
             placeholder={t('creator.questionPlaceholder')}
           />
         </div>
@@ -142,7 +150,7 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
                 className={`flex items-start gap-3 p-2 rounded-lg border-2 transition-colors ${ans.isCorrect ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}>
                 <button
                   onClick={() => updateAnswer(ans.id, { isCorrect: !ans.isCorrect })}
-                  className={`mt-1.5 flex-shrink-0 w-6 h-6 rounded flex items-center justify-center border-2 transition-all ${
+                  className={`mt-1.5 flex-shrink-0 w-6 h-6 rounded flex items-center justify-center border-2 transition ${
                     ans.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 text-transparent'
                   }`}
                 >
@@ -180,7 +188,8 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
             </div>
           </Card>
         </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };

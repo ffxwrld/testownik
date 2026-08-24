@@ -123,7 +123,7 @@ export const SessionsList: FC<SessionsListProps> = ({
                     </span>
                     <button
                       onClick={() => startEdit(session)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition flex-shrink-0"
                       title="Zmień nazwę"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -147,7 +147,7 @@ export const SessionsList: FC<SessionsListProps> = ({
             <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${
+                  className={`h-full rounded-full transition ${
                     isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
                   }`}
                   style={{ width: `${progress}%` }}
@@ -276,7 +276,7 @@ export const SessionsList: FC<SessionsListProps> = ({
                 <button
                   key={num}
                   onClick={() => setRestartRepeatMode(num)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all border-2 ${
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition border-2 ${
                     restartRepeatMode === num
                       ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                       : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
