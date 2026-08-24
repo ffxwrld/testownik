@@ -8,6 +8,7 @@ import { TestSidebar } from './test-view/TestSidebar';
 import { PreviousQuestionModal } from './test-view/PreviousQuestionModal';
 
 interface TestViewProps {
+  onOpenSettings?: () => void;
   session: SessionState;
   sessionId: string;
   onSessionUpdate: (session: SessionState) => void;

@@ -13,6 +13,7 @@ interface CreatorSidebarProps {
   handleAddQuestion: () => void;
   handleDeleteQuestion: (id: string) => void;
   handleDuplicateQuestion: (id: string) => void;
+  onMobileClose?: () => void;
 }
 
 
@@ -94,7 +95,7 @@ export const CreatorSidebar: FC<CreatorSidebarProps> = ({
 
   questions, activeId, setActiveId,
   searchQuery, setSearchQuery,
-  handleAddQuestion, handleDeleteQuestion, handleDuplicateQuestion
+  handleAddQuestion, handleDeleteQuestion, handleDuplicateQuestion, onMobileClose
 }) => {
   const { t } = useTranslation();
   const [isMac, setIsMac] = useState(true);
@@ -109,7 +110,7 @@ export const CreatorSidebar: FC<CreatorSidebarProps> = ({
   );
 
   return (
-    <aside className="w-full md:w-80 h-[35%] md:h-full flex-shrink-0 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col overflow-hidden">
+    <aside className="w-full h-full flex-shrink-0 bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col overflow-hidden">
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
         <div className="relative mb-3">
           <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -144,7 +145,7 @@ export const CreatorSidebar: FC<CreatorSidebarProps> = ({
               q={q}
               idx={idx}
               isActive={activeId === q.id}
-              onClick={setActiveId}
+              onClick={(id) => { setActiveId(id); onMobileClose?.(); }}
               onDelete={handleDeleteQuestion}
               onDuplicate={handleDuplicateQuestion}
               isMac={isMac}

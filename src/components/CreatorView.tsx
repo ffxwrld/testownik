@@ -1,4 +1,5 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useCreatorEngine, EditingQuestion, EditingAnswer } from '../hooks/useCreatorEngine';
 export type { EditingQuestion, EditingAnswer };
@@ -19,6 +20,7 @@ export const CreatorView: FC<CreatorViewProps> = ({
   onQuit, initialQuestions, initialBaseName, initialImages, onSaveToTestownik 
 }) => {
   const { t } = useTranslation();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   const engine = useCreatorEngine(
     initialQuestions, initialBaseName, initialImages
@@ -48,20 +50,55 @@ export const CreatorView: FC<CreatorViewProps> = ({
         questionsCount={engine.questions.length}
         baseName={engine.savePromptName}
         setBaseName={engine.setSavePromptName}
+        onToggleSidebar={() => setIsMobileSidebarOpen(true)}
       />
       
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <CreatorSidebar 
-          questions={engine.questions}
-          activeId={engine.activeId}
-          setActiveId={engine.setActiveId}
-          searchQuery={engine.searchQuery}
-          setSearchQuery={engine.setSearchQuery}
-          handleAddQuestion={engine.handleAddQuestion}
-          handleDeleteQuestion={engine.handleDeleteQuestion}
-          handleDuplicateQuestion={engine.handleDuplicateQuestion}
-        />
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        {/* Mobile Overlay */}
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40" 
+              onClick={() => setIsMobileSidebarOpen(false)} 
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar Container */}
+        <div className={`
+          fixed inset-y-0 left-0 z-50 w-[85%] max-w-sm bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out flex flex-col
+          md:relative md:flex md:w-80 md:h-full md:border-r md:border-zinc-200 md:dark:border-zinc-800 md:shadow-none md:translate-x-0
+          ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+          <div className="md:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <h2 className="font-bold text-zinc-800 dark:text-zinc-200">Lista pytań ({engine.questions.length})</h2>
+            <button 
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <CreatorSidebar 
+            questions={engine.questions}
+            activeId={engine.activeId}
+            setActiveId={engine.setActiveId}
+            searchQuery={engine.searchQuery}
+            setSearchQuery={engine.setSearchQuery}
+            handleAddQuestion={engine.handleAddQuestion}
+            handleDeleteQuestion={engine.handleDeleteQuestion}
+            handleDuplicateQuestion={engine.handleDuplicateQuestion}
+            onMobileClose={() => setIsMobileSidebarOpen(false)}
+          />
+        </div>
         
+        
+
         <CreatorEditor 
           activeQuestion={engine.activeQuestion}
           updateActiveQuestion={engine.updateActiveQuestion}
