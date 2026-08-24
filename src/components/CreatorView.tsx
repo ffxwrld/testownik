@@ -38,8 +38,16 @@ export const CreatorView: FC<CreatorViewProps> = ({
     <div className="h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 overflow-hidden font-sans">
       <CreatorHeader 
         onQuit={onQuit} 
-        onSaveClick={() => engine.setShowSavePrompt(true)} 
-        questionsCount={engine.questions.length} 
+        onSaveClick={() => {
+          if (engine.savePromptName.trim()) {
+            onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images);
+          } else {
+            engine.setShowSavePrompt(true);
+          }
+        }} 
+        questionsCount={engine.questions.length}
+        baseName={engine.savePromptName}
+        setBaseName={engine.setSavePromptName}
       />
       
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">

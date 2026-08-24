@@ -1,4 +1,7 @@
-import { FC, useEffect, useState, useRef } from 'react';
+with open('src/components/creator/CreatorHeader.tsx', 'r') as f:
+    content = f.read()
+
+new_header = """import { FC, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button';
 
@@ -62,3 +65,7 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({ onQuit, onSaveClick, que
     </header>
   );
 };
+"""
+
+with open('src/components/creator/CreatorHeader.tsx', 'w') as f:
+    f.write(new_header)

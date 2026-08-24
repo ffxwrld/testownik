@@ -353,7 +353,7 @@ export const HomeView: FC<HomeViewProps> = ({
               <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-4">
                 {t('home.step2')}
               </h2>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {REPEAT_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
