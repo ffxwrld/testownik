@@ -59,7 +59,7 @@ export const TestView: FC<TestViewProps> = ({
         onQuitConfirm={onQuit}
       />
 
-      <main className="flex-1 flex items-start py-8 pb-16 w-full">
+      <main className="flex-1 flex items-start py-8 pb-40 md:pb-16 w-full">
         <div className="w-full max-w-5xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 items-stretch md:items-center pb-12">
           <QuestionCard
             questionKey={engine.questionKey}
