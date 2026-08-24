@@ -27,3 +27,4 @@ release
 
 # Agent files
 .agents/
+skills-lock.json
