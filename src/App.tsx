@@ -252,25 +252,18 @@ const App: FC = () => {
     session?.phase === 'summary' && phase === 'test' ? 'summary' : phase;
 
   const pageVariants = {
-    initial: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
+    initial: { opacity: 0 },
     animate: { 
-      opacity: 1, 
-      transform: 'scale(1)', 
-      filter: 'blur(0px)',
-      transitionEnd: {
-        transform: 'none',
-        filter: 'none'
-      }
+      opacity: 1,
+      transition: { duration: 0.25, ease: [0.23, 1, 0.32, 1] as const }
     },
-    exit: { opacity: 0, transform: 'scale(0.98)', filter: 'blur(4px)' },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.15, ease: [0.32, 0, 0.67, 0] as const }
+    }
   };
 
-  const pageTransition = {
-    type: 'spring' as const,
-    stiffness: 400,
-    damping: 30,
-    mass: 0.8
-  };
+  const pageTransition = {}; // not needed when transitions are in variants
 
   const content = (() => {
     if (displayPhase === 'test' && session && currentSessionId) {
