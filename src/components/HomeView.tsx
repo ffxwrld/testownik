@@ -21,6 +21,9 @@ interface HomeViewProps {
   onRestartSession: (sessionId: string, newRepeatMode?: number) => void;
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
+  onOpenProfile?: () => void;
+  onOpenFriends?: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
 
@@ -36,6 +39,9 @@ export const HomeView: FC<HomeViewProps> = ({
   onRestartSession,
   onEnterCreator,
   onEditInCreator,
+  onOpenProfile,
+  onOpenFriends,
+  onOpenLeaderboard,
 }) => {
   const { t } = useTranslation();
   const REPEAT_OPTIONS = useMemo(() => [
@@ -150,20 +156,46 @@ export const HomeView: FC<HomeViewProps> = ({
       </button>
 
       <div className="w-full max-w-2xl space-y-5">
-        <div className="flex items-center justify-center gap-5 pb-6 pt-2">
-          <div className="relative inline-flex items-center justify-center">
-            {/* Ambient glow behind the logo */}
-            <div className="absolute inset-0 bg-primary-500/30 blur-2xl rounded-full scale-[1.5] pointer-events-none"></div>
-            
-            <img 
-              src={logo} 
-              alt="Testownik Logo" 
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain relative z-10 drop-shadow-2xl"
-            />
+        <div className="flex flex-col md:flex-row items-center justify-between pb-6 pt-2 gap-4">
+          <div className="flex items-center gap-5">
+            <div className="relative inline-flex items-center justify-center">
+              {/* Ambient glow behind the logo */}
+              <div className="absolute inset-0 bg-primary-500/30 blur-2xl rounded-full scale-[1.5] pointer-events-none"></div>
+              
+              <img 
+                src={logo} 
+                alt="Testownik Logo" 
+                className="w-14 h-14 sm:w-16 sm:h-16 object-contain relative z-10 drop-shadow-2xl"
+              />
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tighter bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400 text-transparent bg-clip-text pb-1">
+              {t('home.title')}
+            </h1>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tighter bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400 text-transparent bg-clip-text pb-1">
-            {t('home.title')}
-          </h1>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={onOpenLeaderboard}
+              title="Ranking"
+              className="p-2 rounded-full bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors"
+            >
+              🏆
+            </button>
+            <button 
+              onClick={onOpenFriends}
+              title="Znajomi"
+              className="p-2 rounded-full bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+            >
+              👥
+            </button>
+            <button 
+              onClick={onOpenProfile}
+              title="Twój Profil"
+              className="p-2 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+            >
+              👤
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 relative overflow-x-auto hide-scrollbar w-full">

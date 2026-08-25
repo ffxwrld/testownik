@@ -14,13 +14,19 @@ import { TestView } from './components/TestView';
 import { SummaryView } from './components/SummaryView';
 import { CreatorView, type EditingQuestion, } from './components/CreatorView';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AuthGuard } from './components/auth/AuthGuard';
+import { ProfileView } from './components/social/ProfileView';
+import { FriendsList } from './components/social/FriendsList';
+import { LeaderboardView } from './components/social/LeaderboardView';
+import { useSync } from './hooks/useSync';
+
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThemePicker } from './components/ThemePicker';
 import { FormatInfoModal } from './components/FormatInfoModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 
-type AppPhase = 'home' | 'test' | 'summary' | 'creator';
+type AppPhase = 'home' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
@@ -45,6 +51,7 @@ import { Toaster, toast } from 'sonner';
 
 const App: FC = () => {
   const { t } = useTranslation();
+  const { triggerSync } = useSync();
   const [phase, setPhase] = useState<AppPhase>('home');
   const [session, setSession] = useState<SessionState | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -209,7 +216,7 @@ const App: FC = () => {
   const handleSessionUpdate = useCallback((updated: SessionState) => {
     setSession(updated);
     if (updated.phase === 'summary') {
-      setPhase('summary');
+      setPhase('summary'); triggerSync();
     }
   }, []);
 
@@ -308,6 +315,33 @@ const App: FC = () => {
         </motion.div>
       );
     }
+    if (displayPhase === 'profile') {
+      return (
+        <motion.div key="profile" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
+          <AuthGuard onCancel={() => setPhase('home')}>
+            <ProfileView onBack={() => setPhase('home')} />
+          </AuthGuard>
+        </motion.div>
+      );
+    }
+    if (displayPhase === 'friends') {
+      return (
+        <motion.div key="friends" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
+          <AuthGuard onCancel={() => setPhase('home')}>
+            <FriendsList onBack={() => setPhase('home')} />
+          </AuthGuard>
+        </motion.div>
+      );
+    }
+    if (displayPhase === 'leaderboard') {
+      return (
+        <motion.div key="leaderboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
+          <AuthGuard onCancel={() => setPhase('home')}>
+            <LeaderboardView onBack={() => setPhase('home')} />
+          </AuthGuard>
+        </motion.div>
+      );
+    }
     return (
       <motion.div key="home" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
         <HomeView
@@ -326,6 +360,9 @@ const App: FC = () => {
             setPhase('creator');
           }}
           onEditInCreator={handleEditInCreator}
+          onOpenProfile={() => setPhase('profile')}
+          onOpenFriends={() => setPhase('friends')}
+          onOpenLeaderboard={() => setPhase('leaderboard')}
         />
       </motion.div>
     );
