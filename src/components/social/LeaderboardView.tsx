@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLeaderboard } from '../../hooks/useLeaderboard';
 import { LeaderboardCategory } from '../../models/social';
 import { Card } from '../ui/Card';
@@ -72,14 +73,22 @@ export const LeaderboardView: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 bg-white dark:bg-zinc-900 shadow-sm rounded-xl"></div>)}
             </div>
           ) : entries.length > 0 ? (
-            entries.map((entry) => {
+            <AnimatePresence mode="popLayout">
+            {entries.map((entry) => {
               const initial = entry.username.charAt(0).toUpperCase();
               const hue = entry.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
               const isMe = entry.user_id === user?.id;
 
               return (
+                <motion.div
+                  layout
+                  key={entry.user_id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                >
                 <Card 
-                  key={entry.user_id} 
                   className={`flex items-center justify-between p-4 bg-white dark:bg-zinc-900 shadow-sm border ${
                     isMe ? 'border-primary-500 shadow-md shadow-primary-500/10' : 'border-zinc-200 dark:border-zinc-800'
                   }`}
@@ -109,8 +118,10 @@ export const LeaderboardView: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                     {formatValue(entry.value, activeCategory)}
                   </div>
                 </Card>
+                </motion.div>
               );
-            })
+            })}
+            </AnimatePresence>
           ) : (
             <div className="text-center text-zinc-400 dark:text-zinc-500 py-12 bg-white dark:bg-zinc-900 shadow-sm/50 rounded-xl border border-zinc-200 dark:border-zinc-800/50">
               <svg className="w-12 h-12 mx-auto text-zinc-400 dark:text-zinc-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

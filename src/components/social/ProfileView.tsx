@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useSync } from '../../hooks/useSync';
@@ -87,23 +88,40 @@ export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-3 gap-4"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.05 }
+            }
+          }}
+        >
           <StatCard title="Punkty XP" value={stats ? stats.total_xp : '-'} icon="🏆" />
           <StatCard title="Ukończone Sesje" value={stats ? stats.total_sessions : '-'} icon="📚" />
           <StatCard title="Obecny Streak" value={stats ? `${stats.current_streak} dni` : '-'} icon="🔥" />
           <StatCard title="Rozwiązane Pytania" value={stats ? stats.total_questions : '-'} icon="🎯" />
           <StatCard title="Poprawne (1. raz)" value={stats ? stats.total_correct_first : '-'} icon="✨" />
           <StatCard title="Czas nauki" value={stats ? `${Math.round(stats.total_study_seconds / 60)} min` : '-'} icon="⏱️" />
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 };
 
 const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: string }> = ({ title, value, icon }) => (
-  <div className="bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex flex-col items-center justify-center text-center">
+  <motion.div 
+    variants={{
+      hidden: { opacity: 0, y: 10, scale: 0.95 },
+      visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] } }
+    }}
+    className="bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex flex-col items-center justify-center text-center"
+  >
     <span className="text-2xl mb-2">{icon}</span>
     <span className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{title}</span>
     <span className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{value}</span>
-  </div>
+  </motion.div>
 );

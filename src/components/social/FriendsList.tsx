@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFriends } from '../../hooks/useFriends';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -31,7 +32,16 @@ export const FriendsList: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const hue = friend.profile.username.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 360;
 
     return (
-      <Card key={friend.friendshipId} className="flex items-center justify-between mb-2 bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-800">
+      <motion.div 
+        key={friend.friendshipId} 
+        layout 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+        className="mb-2 block"
+      >
+        <Card className="flex items-center justify-between bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm" style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}>
             {initial}
@@ -61,6 +71,7 @@ export const FriendsList: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           )}
         </div>
       </Card>
+      </motion.div>
     );
   };
 
@@ -118,11 +129,13 @@ export const FriendsList: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </div>
           ) : friends.length > 0 ? (
             <div className="space-y-1">
+              <AnimatePresence mode="popLayout">
               {friends.sort((a, b) => {
                 if (a.status === 'pending' && b.status !== 'pending') return -1;
                 if (b.status === 'pending' && a.status !== 'pending') return 1;
                 return 0;
               }).map(renderFriendCard)}
+              </AnimatePresence>
             </div>
           ) : (
             <div className="text-center text-zinc-400 dark:text-zinc-500 py-8">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../../hooks/useProfile';
 import { z } from 'zod';
 import { CreateProfileSchema } from '../../lib/validation';
@@ -68,11 +69,20 @@ export const SetupProfileView: React.FC<{ onComplete: () => void }> = ({ onCompl
           </button>
         </form>
 
+        <AnimatePresence>
         {error && (
-          <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
     </div>
   );

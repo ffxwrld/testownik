@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 
 export const LoginView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
@@ -56,9 +57,16 @@ export const LoginView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </button>
         </div>
 
-        {step === 'email' ? (
-          <>
-            <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+        <AnimatePresence mode="wait">
+          {step === 'email' ? (
+            <motion.div
+              key="email"
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <p className="text-zinc-500 dark:text-zinc-400 mb-6">
               Wpisz swój adres e-mail, aby otrzymać jednorazowy 6-cyfrowy kod logowania.
             </p>
 
@@ -86,10 +94,16 @@ export const LoginView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 {loading ? 'Wysyłanie...' : 'Wyślij kod'}
               </button>
             </form>
-          </>
-        ) : (
-          <>
-            <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+            </motion.div>
+          ) : (
+            <motion.div
+              key="code"
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <p className="text-zinc-500 dark:text-zinc-400 mb-6">
               Wpisz 6-cyfrowy kod, który wysłaliśmy na adres <strong>{email}</strong>.
             </p>
 
@@ -128,20 +142,39 @@ export const LoginView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 Użyj innego adresu e-mail
               </button>
             </form>
-          </>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        <AnimatePresence>
         {message && (
-          <div className="mt-4 p-3 bg-emerald-900/30 border border-emerald-800 rounded-lg text-emerald-400 text-sm">
-            {message}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-3 bg-emerald-900/30 border border-emerald-800 rounded-lg text-emerald-400 text-sm">
+              {message}
+            </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <AnimatePresence>
         {error && (
-          <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
     </div>
   );
