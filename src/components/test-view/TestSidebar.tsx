@@ -37,7 +37,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
         {Array.from({ length: requiredStreak }, (_, i) => (
           <div
             key={i}
-            className={`w-2.5 h-2.5 rounded-full transition duration-300 ${
+            className={`w-2.5 h-2.5 rounded-full transition duration-200 ${
               i < consecutiveCorrect
                 ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50 scale-110'
                 : 'bg-zinc-300 dark:bg-zinc-600'
@@ -54,7 +54,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
   return (
     <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4">
       {requiredStreak > 1 && (
-        <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 px-5 py-4 flex flex-col items-center shadow-sm mb-4 md:mb-0">
+        <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 px-5 py-4 flex flex-col items-center shadow-sm mb-4 md:mb-0">
           <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-medium uppercase tracking-wide">
             {t('test.streakTitle')}
           </p>
@@ -84,7 +84,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
                     variant="primary"
                     size="lg"
                     disabled={!canConfirm || isTransitioning}
-                    className={`w-full rounded-2xl transition shadow-xl shadow-primary-600/20 ${
+                    className={`w-full rounded-xl transition shadow-xl shadow-primary-600/20 ${
                       selectedIndices.length === 0 ? 'opacity-60' : ''
                     }`}
                   >
@@ -115,7 +115,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
                     variant="primary"
                     size="lg"
                     disabled={isTransitioning}
-                    className="w-full rounded-2xl shadow-xl shadow-primary-600/20"
+                    className="w-full rounded-xl shadow-xl shadow-primary-600/20"
                   >
                     {t('test.nextBtn')}
                   </Button>

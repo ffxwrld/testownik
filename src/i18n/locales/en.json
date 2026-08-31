@@ -201,5 +201,75 @@
       "exampleTitle": "Example file:",
       "button": "Question Format"
     }
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "cancel": "Cancel",
+    "emailPrompt": "Enter your email address to receive a one-time 6-digit login code.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "your@email.com",
+    "sendCode": "Send code",
+    "sending": "Sending...",
+    "codePrompt": "Enter the 6-digit code we sent to <1>{{email}}</1>.",
+    "codeLabel": "One-time code (OTP)",
+    "codePlaceholder": "------",
+    "verifyCode": "Log in",
+    "verifying": "Verifying...",
+    "useOtherEmail": "Use a different email address",
+    "codeSent": "Code sent! Check your inbox and enter it below.",
+    "setupTitle": "Choose a username",
+    "setupDesc": "Before you start, pick a unique username.",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. test_master",
+    "usernameRules": "3 to 20 characters, only letters, numbers, and underscores (_).",
+    "saveProfile": "Save profile",
+    "saving": "Saving..."
+  },
+  "social": {
+    "profile": {
+      "title": "My Profile",
+      "joined": "Joined: {{date}}",
+      "syncBtn": "Sync",
+      "syncingBtn": "Syncing...",
+      "logoutBtn": "Logout",
+      "xp": "XP Points",
+      "sessions": "Completed Sessions",
+      "streak": "Current Streak",
+      "days": "{{count}} days",
+      "questions": "Questions Solved",
+      "correct": "Correct (1st try)",
+      "time": "Study Time",
+      "minutes": "{{count}} min"
+    },
+    "friends": {
+      "title": "Friends",
+      "searchPlaceholder": "Search friends (min. 3 chars)...",
+      "searching": "Searching...",
+      "noResults": "No users found.",
+      "addBtn": "Invite",
+      "cancelBtn": "Cancel",
+      "acceptBtn": "Accept",
+      "rejectBtn": "Reject",
+      "removeBtn": "Remove",
+      "pending": "Pending invitations",
+      "list": "Your friends",
+      "noFriends": "You don't have any friends yet. Search for them above!",
+      "addedToast": "Invitation sent",
+      "acceptedToast": "Invitation accepted",
+      "removedToast": "Friend removed",
+      "rejectedToast": "Invitation rejected",
+      "canceledToast": "Invitation canceled"
+    },
+    "leaderboard": {
+      "title": "Friends Leaderboard",
+      "xpTab": "XP Points",
+      "accTab": "Accuracy",
+      "sessTab": "Sessions",
+      "streakTab": "Streak",
+      "timeTab": "Time",
+      "emptyTitle": "No friends yet",
+      "emptyDesc": "Add friends to compete with them on the leaderboard!",
+      "accuracyVal": "{{val}}%"
+    }
   }
 }

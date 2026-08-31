@@ -1,0 +1,6 @@
+#!/bin/bash
+sed -i '' 's|import { motion } from '"'"'framer-motion'"'"';|import { motion } from '"'"'framer-motion'"'"';\nimport { Link, useLocation } from '"'"'wouter'"'"';|g' src/components/layout/MainLayout.tsx
+sed -i '' 's|interface MainLayoutProps {|interface MainLayoutProps {|g' src/components/layout/MainLayout.tsx
+sed -i '' 's|  currentPhase: MainLayoutPhase;|  currentPhase?: MainLayoutPhase;|g' src/components/layout/MainLayout.tsx
+sed -i '' 's|  onNavigate: (phase: MainLayoutPhase) => void;|  onNavigate?: (phase: MainLayoutPhase) => void;|g' src/components/layout/MainLayout.tsx
+sed -i '' 's|export const MainLayout: FC<MainLayoutProps> = ({ children, currentPhase, onNavigate }) => {|export const MainLayout: FC<MainLayoutProps> = ({ children }) => {\n  const [location] = useLocation();\n  const currentPhase = location === '"'"'/'"'"' ? '"'"'dashboard'"'"' : location === '"'"'/nauka'"'"' ? '"'"'learn'"'"' : location === '"'"'/ranking'"'"' ? '"'"'leaderboard'"'"' : location === '"'"'/kreator'"'"' ? '"'"'creator'"'"' : location === '"'"'/znajomi'"'"' ? '"'"'friends'"'"' : location === '"'"'/profil'"'"' ? '"'"'profile'"'"' : '"'"'dashboard'"'"';|g' src/components/layout/MainLayout.tsx

@@ -20,6 +20,7 @@ export interface UserStats {
   current_streak: number;
   longest_streak: number;
   last_study_date: string | null;
+  streak_freezes: number;
 }
 
 export interface Friendship {

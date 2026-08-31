@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../../hooks/useProfile';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { CreateProfileSchema } from '../../lib/validation';
 
 export const SetupProfileView: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const { t } = useTranslation();
   const { createProfile } = useProfile();
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,9 +26,9 @@ export const SetupProfileView: React.FC<{ onComplete: () => void }> = ({ onCompl
       onComplete();
     } catch (err: any) {
       if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
+        setError(err.issues[0].message); toast.error(err.issues[0].message);
       } else {
-        setError(err.message || 'Wystąpił błąd podczas tworzenia profilu.');
+        setError(err.message || 'Error'); toast.error(err.message || 'Error');
       }
     } finally {
       setLoading(false);
@@ -65,7 +68,7 @@ export const SetupProfileView: React.FC<{ onComplete: () => void }> = ({ onCompl
             disabled={loading}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Zapisywanie...' : 'Zapisz profil'}
+            {loading ? t('auth.saving') : t('auth.saveProfile')}
           </button>
         </form>
 

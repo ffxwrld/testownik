@@ -171,6 +171,7 @@ function generateSessionId(): string {
 export async function saveSession(session: SessionState, sessionId?: string): Promise<string> {
   try {
     const id = sessionId || generateSessionId();
+    session.updatedAt = new Date().toISOString();
     const sessions = await loadAllSessions();
     sessions[id] = session;
     await saveAllSessions(sessions);
@@ -263,11 +264,12 @@ export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
         id,
         baseName: session.baseName || 'Baza pytań',
         createdAt: session.startedAt,
+        updatedAt: session.updatedAt || session.startedAt,
         totalQuestions: session.questions.length,
         completedQuestions: session.done.length,
         currentPhase: session.phase as 'test' | 'summary',
       }))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   } catch {
     return [];
   }

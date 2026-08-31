@@ -6,6 +6,8 @@ import { MarkdownRenderer } from '../MarkdownRenderer';
 import { QuestionRenderer } from '../QuestionRenderer';
 import { PreviousQuestionData } from '../../hooks/useTestEngine';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface PreviousQuestionModalProps {
   previousQuestion: PreviousQuestionData;
   sessionId: string;
@@ -20,11 +22,19 @@ export const PreviousQuestionModal: FC<PreviousQuestionModalProps> = ({
   const { t } = useTranslation();
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+    <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
         className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-700 w-full max-w-xl max-h-[80vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
@@ -112,8 +122,9 @@ export const PreviousQuestionModal: FC<PreviousQuestionModalProps> = ({
             );
           })}
         </div>
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>
+    </AnimatePresence>,
     document.body
   );
 };

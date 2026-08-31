@@ -1,36 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import useSWR from 'swr';
 import { getLeaderboard } from '../utils/leaderboard';
 import { LeaderboardCategory, LeaderboardEntry } from '../models/social';
 import { useAuth } from './useAuth';
 
 export function useLeaderboard(category: LeaderboardCategory) {
   const { user } = useAuth();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchLeaderboard = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await getLeaderboard(category);
-      setEntries(data);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, category]);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  const {
+    data: entries = [],
+    error,
+    isLoading,
+    mutate
+  } = useSWR<LeaderboardEntry[]>(
+    user ? ['leaderboard', category] : null,
+    ([, cat]) => getLeaderboard(cat as LeaderboardCategory),
+    { refreshInterval: 60000 }
+  );
 
   return {
     entries,
-    loading,
-    error,
-    refreshLeaderboard: fetchLeaderboard
+    loading: isLoading,
+    error: error ? error.message : null,
+    refreshLeaderboard: mutate
   };
 }

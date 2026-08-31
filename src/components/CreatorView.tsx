@@ -12,18 +12,19 @@ interface CreatorViewProps {
   onQuit: () => void;
   initialQuestions?: EditingQuestion[];
   initialBaseName?: string;
-  initialImages?: Record<string, Blob>;
-  onSaveToTestownik: (questions: EditingQuestion[], baseName: string, images: Record<string, Blob>) => void;
+  initialImageNames?: string[];
+  sourceSessionId?: string;
+  onSaveToTestownik: (questions: EditingQuestion[], baseName: string, newImages: Record<string, Blob>, existingImages: string[], sourceSessionId?: string) => void;
 }
 
 export const CreatorView: FC<CreatorViewProps> = ({ 
-  onQuit, initialQuestions, initialBaseName, initialImages, onSaveToTestownik 
+  onQuit, initialQuestions, initialBaseName, initialImageNames, sourceSessionId, onSaveToTestownik 
 }) => {
   const { t } = useTranslation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   const engine = useCreatorEngine(
-    initialQuestions, initialBaseName, initialImages
+    initialQuestions, initialBaseName, initialImageNames, sourceSessionId
   );
 
   // Protection against page reload (F5, Cmd+R) / tab close
@@ -42,7 +43,7 @@ export const CreatorView: FC<CreatorViewProps> = ({
         onQuit={onQuit} 
         onSaveClick={() => {
           if (engine.savePromptName.trim()) {
-            onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images);
+            onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images, Array.from(engine.existingImages), engine.sourceSessionId);
           } else {
             engine.setShowSavePrompt(true);
           }
@@ -69,7 +70,7 @@ export const CreatorView: FC<CreatorViewProps> = ({
 
         {/* Sidebar Container */}
         <div className={`
-          fixed inset-y-0 left-0 z-50 w-[85%] max-w-sm bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out flex flex-col
+          fixed inset-y-0 left-0 z-50 w-[85%] max-w-sm bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-200 ease-out flex flex-col
           md:relative md:flex md:w-80 md:h-full md:border-r md:border-zinc-200 md:dark:border-zinc-800 md:shadow-none md:translate-x-0
           ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
@@ -138,7 +139,7 @@ export const CreatorView: FC<CreatorViewProps> = ({
               onChange={e => engine.setSavePromptName(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && engine.savePromptName.trim()) {
-                  onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images);
+                  onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images, Array.from(engine.existingImages), engine.sourceSessionId);
                   engine.setShowSavePrompt(false);
                 }
                 if (e.key === 'Escape') engine.setShowSavePrompt(false);
@@ -151,7 +152,7 @@ export const CreatorView: FC<CreatorViewProps> = ({
               </Button>
               <Button variant="primary" onClick={() => {
                 if (engine.savePromptName.trim()) {
-                  onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images);
+                  onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images, Array.from(engine.existingImages), engine.sourceSessionId);
                   engine.setShowSavePrompt(false);
                 }
               }} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">

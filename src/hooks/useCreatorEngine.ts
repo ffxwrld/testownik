@@ -22,7 +22,8 @@ export function generateId() {
 export function useCreatorEngine(
   initialQuestions?: EditingQuestion[],
   initialBaseName?: string,
-  initialImages?: Record<string, Blob>,
+  initialImageNames?: string[],
+  sourceSessionId?: string
   
 ) {
   const { t } = useTranslation();
@@ -44,7 +45,9 @@ export function useCreatorEngine(
   const [savePromptName, setSavePromptName] = useState(initialBaseName || t('creator.defaultNewName'));
   const [searchQuery, setSearchQuery] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
-  const [images, setImages] = useState<Record<string, Blob>>(initialImages || {});
+  const [images, setImages] = useState<Record<string, Blob>>({});
+  const [existingImages, setExistingImages] = useState<Set<string>>(new Set(initialImageNames || []));
+  const [deletedImages, setDeletedImages] = useState<Set<string>>(new Set());
   
   const activeQuestion = questions.find(q => q.id === activeId) || questions[0];
 
@@ -54,10 +57,14 @@ export function useCreatorEngine(
     const match = regex.exec(activeQuestion.text || '');
     if (match) {
       const tagFileName = match[1].trim().toLowerCase();
-      const foundKey = Object.keys(images).find(k => k.toLowerCase() === tagFileName);
+      let foundKey = Object.keys(images).find(k => k.toLowerCase() === tagFileName);
+      if (!foundKey) {
+        foundKey = Array.from(existingImages).find(k => k.toLowerCase() === tagFileName);
+      }
       if (foundKey) return foundKey;
     }
-    return Object.keys(images).find(k => {
+    const allKeys = [...Object.keys(images), ...Array.from(existingImages)];
+    return allKeys.find(k => {
       const nameWithoutExt = k.replace(/\.[^/.]+$/, "");
       return nameWithoutExt.toLowerCase() === (activeQuestion.filename || '').toLowerCase();
     });
@@ -66,16 +73,38 @@ export function useCreatorEngine(
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!activeImageKey || !images[activeImageKey]) {
+    if (!activeImageKey) {
       setActiveImageUrl(null);
       return;
     }
-    const url = URL.createObjectURL(images[activeImageKey]);
-    setActiveImageUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [activeImageKey, images]);
+    let isMounted = true;
+    let url: string | null = null;
+    
+    if (images[activeImageKey]) {
+      url = URL.createObjectURL(images[activeImageKey]);
+      setActiveImageUrl(url);
+    } else if (existingImages.has(activeImageKey) && sourceSessionId) {
+       import('../utils/db').then(({ getSessionImage }) => {
+          getSessionImage(sourceSessionId, activeImageKey).then(blob => {
+             if (blob && isMounted) {
+                url = URL.createObjectURL(blob);
+                setActiveImageUrl(url);
+             }
+          });
+       });
+    } else {
+      setActiveImageUrl(null);
+    }
+    
+    return () => {
+      isMounted = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [activeImageKey, images, existingImages, sourceSessionId]);
 
   const handleImageUpload = (file: File) => {
+    // If it overwrites an existing image, we don't necessarily delete it from existingImages,
+    // because new images override them anyway when rendering, but to be safe:
     if (!activeQuestion || !file.type.startsWith('image/')) return;
     let newKey = activeImageKey;
     if (!newKey) {
@@ -99,6 +128,12 @@ export function useCreatorEngine(
     setImages(prev => {
       const next = { ...prev };
       delete next[activeImageKey];
+      return next;
+    });
+    setDeletedImages(prev => new Set(prev).add(activeImageKey));
+    setExistingImages(prev => {
+      const next = new Set(prev);
+      next.delete(activeImageKey);
       return next;
     });
     const regex = new RegExp(`\\[img\\]${activeImageKey}\\[\\/img\\]\\s*`, 'gi');
@@ -246,7 +281,7 @@ export function useCreatorEngine(
     savePromptName, setSavePromptName,
     searchQuery, setSearchQuery,
     fullscreenImage, setFullscreenImage,
-    images, setImages,
+    images, setImages, existingImages, deletedImages, sourceSessionId,
     activeImageKey, activeImageUrl,
     handleImageUpload, handleImageDelete,
     handleAddQuestion, handleDeleteQuestion, handleDuplicateQuestion,

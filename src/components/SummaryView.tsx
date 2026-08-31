@@ -1,3 +1,4 @@
+import { Trophy } from 'lucide-react';
 import { useState, useMemo, FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -77,7 +78,10 @@ export const SummaryView: FC<SummaryViewProps> = ({
               initial={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
               animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
               exit={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
-              transition={{ type: "spring", bounce: 0.3, duration: 0.5 }}
+              transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="beer-title"
               className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-zinc-200 dark:border-zinc-800"
               onClick={e => e.stopPropagation()}
             >
@@ -94,7 +98,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
             <p className="text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
               {t('summary.beerModalDesc')}
             </p>
-            <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full">
+            <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full" autoFocus>
               {t('summary.beerModalBtn')}
             </Button>
           </motion.div>
@@ -129,8 +133,8 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="text-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Card className="text-center md:col-span-1">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -143,7 +147,18 @@ export const SummaryView: FC<SummaryViewProps> = ({
             <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">{t('summary.timeSub')}</p>
           </Card>
 
-          <Card className="text-center">
+          <Card className="text-center md:col-span-1 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
+            <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-500 mb-2">
+              <Trophy className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Zdobyte XP</span>
+            </div>
+            <p className="text-3xl font-bold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
+              +{session.totalFirstCorrect * 10 + 5}
+            </p>
+            <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">Zostaną dodane po synchronizacji</p>
+          </Card>
+
+          <Card className="text-center col-span-2 md:col-span-1">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

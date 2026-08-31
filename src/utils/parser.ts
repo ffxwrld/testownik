@@ -126,6 +126,12 @@ export interface ParsedZipResult {
 }
 
 export async function parseZipFile(file: File): Promise<ParsedZipResult> {
+  
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB limit for the ZIP itself
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('Plik paczki jest zbyt duży (maksymalnie 50MB).');
+  }
+
   const zip = new JSZip();
   const loaded = await zip.loadAsync(file);
 
@@ -145,6 +151,12 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
   });
 
   // Sort for deterministic natural ordering
+  
+  const MAX_FILES = 2000;
+  if (txtFiles.length + imgFiles.length > MAX_FILES) {
+    throw new Error(`Paczka zawiera zbyt wiele plików (maksymalnie ${MAX_FILES}).`);
+  }
+
   txtFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
   let commonPrefix = '';

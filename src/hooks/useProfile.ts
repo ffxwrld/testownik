@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { UserProfile, CreateProfileInput } from '../models/social';
@@ -6,51 +6,36 @@ import { CreateProfileSchema } from '../lib/validation';
 
 export function useProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-
-    fetchProfile(user.id);
-  }, [user]);
 
   const fetchProfile = async (userId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, created_at, updated_at')
+      .eq('id', userId)
+      .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Record not found - user needs to create profile
-          setProfile(null);
-        } else {
-          throw error;
-        }
-      } else {
-        setProfile(data as UserProfile);
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
       }
-    } catch (err: any) {
-      console.error('Failed to fetch profile', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      throw error;
     }
+    return data as UserProfile;
   };
+
+  const {
+    data: profile = null,
+    error,
+    isLoading,
+    mutate
+  } = useSWR<UserProfile | null>(
+    user ? ['profile', user.id] : null,
+    ([, userId]) => fetchProfile(userId as string)
+  );
 
   const createProfile = async (input: CreateProfileInput) => {
     if (!user) throw new Error('Not authenticated');
     
-    // Zod validation at boundary
     const parsed = CreateProfileSchema.parse(input);
 
     const { data, error: insertError } = await supabase
@@ -63,21 +48,21 @@ export function useProfile() {
       .single();
 
     if (insertError) {
-      if (insertError.code === '23505') { // Unique violation
+      if (insertError.code === '23505') {
         throw new Error('Ta nazwa użytkownika jest już zajęta.');
       }
       throw insertError;
     }
 
-    setProfile(data as UserProfile);
+    await mutate(data as UserProfile);
     return data;
   };
 
   return {
     profile,
-    loading,
-    error,
+    loading: isLoading,
+    error: error ? error.message : null,
     createProfile,
-    refreshProfile: () => user && fetchProfile(user.id)
+    refreshProfile: mutate
   };
 }

@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Trophy, BookOpen, Flame, Target, Sparkles, Clock, Snowflake } from 'lucide-react';
+
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useSync } from '../../hooks/useSync';
@@ -8,16 +12,17 @@ import { UserStats } from '../../models/social';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
-export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+export const ProfileView: React.FC = () => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
-  const { triggerSync } = useSync();
+  const { triggerSync, buyStreakFreeze } = useSync();
   const [syncing, setSyncing] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
 
   const loadStats = async () => {
     if (!user) return;
-    const { data } = await supabase.from('user_stats').select('*').eq('user_id', user.id).single();
+    const { data } = await supabase.from('user_stats').select('user_id, total_xp, total_sessions, total_questions, total_correct_first, total_study_seconds, current_streak, longest_streak, last_study_date').eq('user_id', user.id).single();
     if (data) setStats(data as UserStats);
   };
 
@@ -30,6 +35,7 @@ export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     await triggerSync();
     await loadStats();
     setSyncing(false);
+    toast.success("Synchronizacja zakończona");
   };
 
   if (!profile) return null;
@@ -40,18 +46,10 @@ export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const avatarStyle = { backgroundColor: `hsl(${hue}, 70%, 50%)` };
 
   return (
-    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center overflow-y-auto">
+    <div className="flex-1 bg-transparent text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center">
       <div className="w-full max-w-2xl">
-        <div className="flex items-center justify-between mb-8">
-          <button 
-            onClick={onBack}
-            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Powrót
-          </button>
+        <div className="flex items-center justify-between mb-8 mt-2">
+          <h1 className="text-3xl font-bold tracking-tight">Twój Profil</h1>
           <Button variant="danger" onClick={signOut}>Wyloguj się</Button>
         </div>
 
@@ -64,7 +62,7 @@ export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               {initial}
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{profile.username}</h1>
+              <h2 className="text-3xl font-bold">{profile.username}</h2>
               <p className="text-zinc-500 dark:text-zinc-400">{user?.email}</p>
               <div className="mt-2 text-sm text-zinc-400 dark:text-zinc-500">
                 Dołączył(a): {new Date(profile.created_at).toLocaleDateString('pl-PL')}
@@ -100,19 +98,51 @@ export const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             }
           }}
         >
-          <StatCard title="Punkty XP" value={stats ? stats.total_xp : '-'} icon="🏆" />
-          <StatCard title="Ukończone Sesje" value={stats ? stats.total_sessions : '-'} icon="📚" />
-          <StatCard title="Obecny Streak" value={stats ? `${stats.current_streak} dni` : '-'} icon="🔥" />
-          <StatCard title="Rozwiązane Pytania" value={stats ? stats.total_questions : '-'} icon="🎯" />
-          <StatCard title="Poprawne (1. raz)" value={stats ? stats.total_correct_first : '-'} icon="✨" />
-          <StatCard title="Czas nauki" value={stats ? `${Math.round(stats.total_study_seconds / 60)} min` : '-'} icon="⏱️" />
+          <StatCard title={t('social.profile.xp')} value={stats ? stats.total_xp : '-'} icon={<Trophy className="w-6 h-6 text-yellow-500" strokeWidth={1.5} />} />
+          <StatCard title={t('social.profile.sessions')} value={stats ? stats.total_sessions : '-'} icon={<BookOpen className="w-6 h-6 text-blue-500" strokeWidth={1.5} />} />
+          <StatCard title={t('social.profile.streak')} value={stats ? t('social.profile.days', { count: stats.current_streak }) : '-'} icon={<Flame className="w-6 h-6 text-orange-500" strokeWidth={1.5} fill="currentColor" />} />
+          <StatCard title={t('social.profile.questions')} value={stats ? stats.total_questions : '-'} icon={<Target className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />} />
+          <StatCard title={t('social.profile.correct')} value={stats ? stats.total_correct_first : '-'} icon={<Sparkles className="w-6 h-6 text-purple-500" strokeWidth={1.5} />} />
+          <StatCard title={t('social.profile.time')} value={stats ? t('social.profile.minutes', { count: Math.round(stats.total_study_seconds / 60) }) : '-'} icon={<Clock className="w-6 h-6 text-sky-500" strokeWidth={1.5} />} />
+          <StatCard title="Zamrożenia" value={stats ? stats.streak_freezes : '-'} icon={<Snowflake className="w-6 h-6 text-cyan-500" strokeWidth={1.5} />} />
         </motion.div>
+
+        {stats && (
+          <div className="mt-8 flex justify-center">
+            <Card className="bg-white dark:bg-zinc-900 border-primary-100 dark:border-primary-900 shadow-sm p-5 text-center">
+              <h2 className="text-lg font-bold mb-2 flex items-center justify-center gap-2">
+                <Snowflake className="w-6 h-6 text-cyan-500" /> Zamrożenie Serii
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 max-w-sm">
+                Kup zamrożenie serii, aby uchronić swój streak przed wyzerowaniem w razie 1 dnia nieobecności.
+                Koszt: <span className="font-bold text-amber-500">1000 XP</span>
+              </p>
+              <Button 
+                variant="primary" 
+                disabled={stats.total_xp < 1000 || syncing}
+                onClick={async () => {
+                  setSyncing(true);
+                  const res = await buyStreakFreeze();
+                  if (res.success) {
+                    toast.success("Zakupiono zamrożenie!");
+                    loadStats();
+                  } else {
+                    toast.error(res.error?.message || "Błąd zakupu");
+                  }
+                  setSyncing(false);
+                }}
+              >
+                Kup zamrożenie
+              </Button>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: string }> = ({ title, value, icon }) => (
+const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.ReactNode }> = ({ title, value, icon }) => (
   <motion.div 
     variants={{
       hidden: { opacity: 0, y: 10, scale: 0.95 },
@@ -120,7 +150,7 @@ const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: string }
     }}
     className="bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex flex-col items-center justify-center text-center"
   >
-    <span className="text-2xl mb-2">{icon}</span>
+    <span className="text-zinc-400 dark:text-zinc-500 mb-3">{icon}</span>
     <span className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{title}</span>
     <span className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{value}</span>
   </motion.div>

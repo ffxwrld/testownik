@@ -59,3 +59,34 @@ export async function getAllSessionImages(
     return {};
   }
 }
+
+export async function getSessionImageNames(sessionId: string): Promise<string[]> {
+  try {
+    const allKeys = await keys();
+    const prefix = `${sessionId}_`;
+    return allKeys
+      .filter(key => typeof key === 'string' && key.startsWith(prefix))
+      .map(key => (key as string).substring(prefix.length));
+  } catch (err) {
+    console.error('Failed to get session image names:', err);
+    return [];
+  }
+}
+
+export async function copySessionImages(
+  sourceSessionId: string,
+  targetSessionId: string,
+  imageNamesToCopy: string[]
+): Promise<void> {
+  try {
+    const promises = imageNamesToCopy.map(async (fileName) => {
+      const blob = await get<Blob>(`${sourceSessionId}_${fileName}`);
+      if (blob) {
+        await set(`${targetSessionId}_${fileName}`, blob);
+      }
+    });
+    await Promise.all(promises);
+  } catch (err) {
+    console.error('Failed to copy session images:', err);
+  }
+}

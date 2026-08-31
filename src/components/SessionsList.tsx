@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, type ReactNode, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ interface SessionsListProps {
   onRename: (sessionId: string, newName: string) => void;
   onRestart: (sessionId: string, newRepeatMode?: number) => void;
   onEditInCreator: (sessionId: string) => void;
+  prependItem?: ReactNode;
 }
 
 export const SessionsList: FC<SessionsListProps> = ({
@@ -22,6 +23,7 @@ export const SessionsList: FC<SessionsListProps> = ({
   onRename,
   onRestart,
   onEditInCreator,
+  prependItem,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -41,29 +43,17 @@ export const SessionsList: FC<SessionsListProps> = ({
     setEditingId(null);
   };
 
-  if (sessions.length === 0) {
-    return (
-      <div className="text-center py-10 space-y-2">
-        <div className="text-4xl">📚</div>
-        <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
-          {t('sessionsList.emptyState')}
-        </p>
-        <p className="text-zinc-400 dark:text-zinc-600 text-xs">
-          {t('sessionsList.emptyStateSub')}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {prependItem}
       <AnimatePresence mode="popLayout" initial={false}>
-      {sessions.map((session) => {
+
+      {sessions.map((session, index) => {
         const progress = session.totalQuestions > 0
           ? Math.round((session.completedQuestions / session.totalQuestions) * 100)
           : 0;
         const isCompleted = session.currentPhase === 'summary';
-        const date = new Date(session.createdAt);
+        const date = new Date(session.updatedAt);
         const dateStr = date.toLocaleDateString('pl-PL');
         const timeStr = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
         const isEditing = editingId === session.id;
@@ -73,8 +63,8 @@ export const SessionsList: FC<SessionsListProps> = ({
             layout
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15, ease: [0.32, 0, 0.67, 0] } }}
+            transition={{ type: 'spring' as const, bounce: 0.2, duration: 0.4, delay: typeof window !== 'undefined' && window.innerWidth > 768 ? index * 0.05 : 0 }}
             key={session.id}
             className={`p-4 bg-white dark:bg-zinc-800 rounded-xl border transition-shadow hover:shadow-md ${
               isCompleted
@@ -144,26 +134,35 @@ export const SessionsList: FC<SessionsListProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition ${
-                    isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                />
+            <div className="flex flex-col gap-2 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-1">
+                <span className={`text-sm font-bold flex-shrink-0 ${
+                  isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'
+                }`}>
+                  {isCompleted ? 'Opanowano na 100%' : 'Stopień opanowania'}
+                </span>
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 text-right">
+                  {session.completedQuestions} z {session.totalQuestions} pytań
+                </span>
               </div>
-              <span className={`text-xs font-bold tabular-nums flex-shrink-0 ${
-                isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'
-              }`}>
-                {progress}%
-              </span>
-              <span className="text-xs text-zinc-400 dark:text-zinc-500 flex-shrink-0">
-                {session.completedQuestions}/{session.totalQuestions} {t('sessionsList.questions')}
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden shadow-inner">
+                  <div
+                    className={`h-full rounded-full transition duration-200 ${
+                      isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${
+                  isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary-600 dark:text-primary-400'
+                }`}>
+                  {progress}%
+                </span>
+              </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {isCompleted ? (
                 <>
                   <Button
@@ -196,9 +195,11 @@ export const SessionsList: FC<SessionsListProps> = ({
                         onDelete(session.id);
                       }
                     }}
-                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-200 dark:border-red-900/40"
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-200 dark:border-red-900/40" title={t('sessionsList.delete')}
                   >
-                    {t('sessionsList.delete')}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
                   </button>
                 </>
               ) : (
@@ -242,9 +243,11 @@ export const SessionsList: FC<SessionsListProps> = ({
                         onDelete(session.id);
                       }
                     }}
-                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-200 dark:border-red-900/40"
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-200 dark:border-red-900/40" title={t('sessionsList.delete')}
                   >
-                    {t('sessionsList.delete')}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
                   </button>
                 </>
               )}
@@ -255,16 +258,26 @@ export const SessionsList: FC<SessionsListProps> = ({
       </AnimatePresence>
 
       {restartingId && createPortal(
-
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn"
+        <AnimatePresence>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 md:bg-black/60 md:backdrop-blur-sm p-4"
           onClick={() => setRestartingId(null)}
         >
-          <div 
-            className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-sm p-6 border border-zinc-200 dark:border-zinc-800 animate-slideDown"
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restart-title"
+            className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+            <h3 id="restart-title" className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
               {t('sessionsList.restartModalTitle')}
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
@@ -292,6 +305,7 @@ export const SessionsList: FC<SessionsListProps> = ({
                 variant="ghost"
                 className="flex-1"
                 onClick={() => setRestartingId(null)}
+                autoFocus
               >
                 {t('sessionsList.cancel')}
               </Button>
@@ -306,9 +320,11 @@ export const SessionsList: FC<SessionsListProps> = ({
                 {t('sessionsList.restartBtn')}
               </Button>
             </div>
-          </div>
-        </div>
-      , document.body)}
+          </motion.div>
+        </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

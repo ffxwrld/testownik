@@ -1,0 +1,47 @@
+--- src/App.tsx
++++ src/App.tsx
+@@ -19,6 +19,7 @@
+ import { FriendsView } from './components/social/FriendsView';
+ import { MainLayout } from './components/layout/MainLayout';
+ import { useSync } from './hooks/useSync';
++import { useLocation } from 'wouter';
+ 
+ import { DarkModeToggle } from './components/DarkModeToggle';
+ import { ThemePicker } from './components/ThemePicker';
+@@ -53,7 +54,23 @@
+ const App: FC = () => {
+   const { t } = useTranslation();
+   const { triggerSync } = useSync();
+-  const [phase, setPhase] = useState<AppPhase>('dashboard');
++  const [location, setLocation] = useLocation();
++  const getPhaseFromLocation = (loc: string): AppPhase => {
++    if (loc === '/nauka') return 'learn';
++    if (loc === '/test') return 'test';
++    if (loc === '/podsumowanie') return 'summary';
++    if (loc === '/kreator') return 'creator';
++    if (loc === '/profil') return 'profile';
++    if (loc === '/znajomi') return 'friends';
++    if (loc === '/ranking') return 'leaderboard';
++    return 'dashboard';
++  };
++  const displayPhase = getPhaseFromLocation(location);
++  const setPhase = (phase: AppPhase) => {
++    const paths: Record<AppPhase, string> = { dashboard: '/', learn: '/nauka', test: '/test', summary: '/podsumowanie', creator: '/kreator', profile: '/profil', friends: '/znajomi', leaderboard: '/ranking' };
++    setLocation(paths[phase]);
++  };
++
+   const [session, setSession] = useState<SessionState | null>(null);
+   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+   const [homeTab, setHomeTab] = useState<'new'|'saved'>('new');
+@@ -176,14 +193,12 @@
+     }
+   }, [session, currentSessionId, displayPhase]);
+ 
+-  const displayPhase = session?.phase === 'test' ? 'test' 
+-    : session?.phase === 'summary' ? 'summary' 
+-    : phase;
++  // session phase overriding is no longer needed since we navigate strictly.
+ 
+   const pageVariants = {
+     initial: { opacity: 0, y: 10, scale: 0.98 },
+     animate: { opacity: 1, y: 0, scale: 1 },

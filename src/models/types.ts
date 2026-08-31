@@ -38,16 +38,19 @@ export interface SessionState {
   totalFirstAttempts: number;
   totalFirstCorrect: number;
   startedAt: string;
+  updatedAt?: string;
   phase: 'test' | 'summary';
   currentQuestionIndex: number;
   shuffledAnswerOrder: number[];
   baseName: string;
+  synced?: boolean;
 }
 
 export interface SavedSessionMetadata {
   id: string;
   baseName: string;
   createdAt: string;
+  updatedAt: string;
   totalQuestions: number;
   completedQuestions: number;
   currentPhase: 'test' | 'summary';

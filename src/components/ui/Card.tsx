@@ -25,7 +25,7 @@ export const Card: FC<CardProps> = ({
   return (
     <div
       className={cn(
-        'rounded-2xl border',
+        'rounded-xl border',
         glass
           ? 'bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-white/20 dark:border-zinc-700/50'
           : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700/60',

@@ -7,7 +7,7 @@ export async function searchUsers(usernameQuery: string): Promise<UserProfile[]>
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, username, avatar_url')
     .ilike('username', `%${usernameQuery}%`)
     .neq('id', session.user.id)
     .limit(10);
@@ -74,8 +74,8 @@ export async function getFriends(): Promise<FriendData[]> {
       status,
       requester_id,
       addressee_id,
-      requester:profiles!requester_id(*),
-      addressee:profiles!addressee_id(*)
+      requester:profiles!requester_id(id, username, avatar_url),
+      addressee:profiles!addressee_id(id, username, avatar_url)
     `)
     .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
 

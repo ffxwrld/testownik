@@ -9,15 +9,20 @@ import {
   getCurrentSessionId,
   renameSession,
 } from './utils/session';
-import { HomeView } from './components/HomeView';
-import { TestView } from './components/TestView';
-import { SummaryView } from './components/SummaryView';
-import { CreatorView, type EditingQuestion, } from './components/CreatorView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthGuard } from './components/auth/AuthGuard';
-import { ProfileView } from './components/social/ProfileView';
-import { FriendsList } from './components/social/FriendsList';
-import { LeaderboardView } from './components/social/LeaderboardView';
+import { lazy, Suspense } from 'react';
+import type { EditingQuestion } from './components/CreatorView';
+
+const DashboardView = lazy(() => import('./components/DashboardView').then(m => ({ default: m.DashboardView })));
+const HomeView = lazy(() => import('./components/LearnView').then(m => ({ default: m.LearnView })));
+const TestView = lazy(() => import('./components/TestView').then(m => ({ default: m.TestView })));
+const SummaryView = lazy(() => import('./components/SummaryView').then(m => ({ default: m.SummaryView })));
+const CreatorView = lazy(() => import('./components/CreatorView').then(m => ({ default: m.CreatorView })));
+const ProfileView = lazy(() => import('./components/social/ProfileView').then(m => ({ default: m.ProfileView })));
+const LeaderboardView = lazy(() => import('./components/social/LeaderboardView').then(m => ({ default: m.LeaderboardView })));
+const FriendsView = lazy(() => import('./components/social/FriendsView').then(m => ({ default: m.FriendsView })));
+import { MainLayout } from './components/layout/MainLayout';
 import { useSync } from './hooks/useSync';
 
 import { DarkModeToggle } from './components/DarkModeToggle';
@@ -25,8 +30,9 @@ import { ThemePicker } from './components/ThemePicker';
 import { FormatInfoModal } from './components/FormatInfoModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'wouter';
 
-type AppPhase = 'home' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard';
+export type AppPhase = 'dashboard' | 'learn' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
@@ -52,13 +58,36 @@ import { Toaster, toast } from 'sonner';
 const App: FC = () => {
   const { t } = useTranslation();
   const { triggerSync } = useSync();
-  const [phase, setPhase] = useState<AppPhase>('home');
+
+  const [location, setLocation] = useLocation();
+  const getPhaseFromLocation = (loc: string): AppPhase => {
+    if (loc === '/nauka') return 'learn';
+    if (loc === '/test') return 'test';
+    if (loc === '/podsumowanie') return 'summary';
+    if (loc === '/kreator') return 'creator';
+    if (loc === '/profil') return 'profile';
+    if (loc === '/znajomi') return 'friends';
+    if (loc === '/ranking') return 'leaderboard';
+    return 'dashboard';
+  };
+  let displayPhase = getPhaseFromLocation(location);
+
+  const setPhase = (newPhase: AppPhase) => {
+    const paths: Record<AppPhase, string> = { 
+      dashboard: '/', learn: '/nauka', test: '/test', 
+      summary: '/podsumowanie', creator: '/kreator', 
+      profile: '/profil', friends: '/znajomi', leaderboard: '/ranking' 
+    };
+    setLocation(paths[newPhase]);
+  };
+
   const [session, setSession] = useState<SessionState | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [homeTab, setHomeTab] = useState<'new'|'saved'>('new');
   const [creatorInitialQuestions, setCreatorInitialQuestions] = useState<EditingQuestion[] | null>(null);
   const [creatorInitialBaseName, setCreatorInitialBaseName] = useState<string | null>(null);
-  const [creatorInitialImages, setCreatorInitialImages] = useState<Record<string, Blob> | null>(null);
+  const [creatorInitialImages, setCreatorInitialImages] = useState<string[] | null>(null);
+  const [creatorSourceSessionId, setCreatorSourceSessionId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(() => {
     if (typeof window === 'undefined') return 1;
     const stored = localStorage.getItem('testownik_zoom');
@@ -168,7 +197,7 @@ const App: FC = () => {
     if (sessionId === currentSessionId) {
       setCurrentSessionId(null);
       setSession(null);
-      setPhase('home');
+      setPhase('learn');
     }
   }, [currentSessionId]);
 
@@ -178,25 +207,29 @@ const App: FC = () => {
     
     const editingQuestions = mapQuestionsToEditingFormat(saved.questions);
     
-    const { getAllSessionImages } = await import('./utils/db');
-    const images = await getAllSessionImages(sessionId);
+    const { getSessionImageNames } = await import('./utils/db');
+    const imageNames = await getSessionImageNames(sessionId);
     
     setCreatorInitialQuestions(editingQuestions);
     setCreatorInitialBaseName(saved.baseName);
-    setCreatorInitialImages(images);
+    setCreatorInitialImages(imageNames as any);
+    setCreatorSourceSessionId(sessionId);
     setPhase('creator');
   }, []);
 
-  const handleSaveToTestownik = useCallback(async (editingQuestions: EditingQuestion[], baseName: string, images: Record<string, Blob> = {}) => {
+  const handleSaveToTestownik = useCallback(async (editingQuestions: EditingQuestion[], baseName: string, newImages: Record<string, Blob> = {}, existingImages: string[] = [], sourceSessionId?: string) => {
     try {
       const questions = mapEditingFormatToQuestions(editingQuestions);
       
       const newSession = buildInitialSession(questions, 1, baseName);
       const sessionId = await saveSession(newSession);
       
-      if (Object.keys(images).length > 0) {
-        const { saveSessionImages } = await import('./utils/db');
-        await saveSessionImages(sessionId, images);
+      const { saveSessionImages, copySessionImages } = await import('./utils/db');
+      if (sourceSessionId && existingImages.length > 0) {
+         await copySessionImages(sourceSessionId, sessionId, existingImages);
+      }
+      if (Object.keys(newImages).length > 0) {
+        await saveSessionImages(sessionId, newImages);
       }
 
       setCurrentSessionId(sessionId);
@@ -205,8 +238,9 @@ const App: FC = () => {
       setCreatorInitialQuestions(null);
       setCreatorInitialBaseName(null);
       setCreatorInitialImages(null);
+                setCreatorSourceSessionId(null);
       setHomeTab('saved');
-      setPhase('home');
+      setPhase('learn');
     } catch (err: any) {
       console.error(err);
       toast.error('Wystąpił błąd podczas zapisywania: ' + err.message);
@@ -221,13 +255,13 @@ const App: FC = () => {
   }, []);
 
   const handleQuit = useCallback(() => {
-    setPhase('home');
+    setPhase('learn');
   }, []);
 
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);
     setSession(null);
-    setPhase('home');
+    setPhase('learn');
   }, []);
 
   const handleRestartSession = useCallback(async (sessionId: string, newRepeatMode?: number) => {
@@ -248,17 +282,20 @@ const App: FC = () => {
     }
   }, [currentSessionId, session]);
 
-  const displayPhase: AppPhase =
-    session?.phase === 'summary' && phase === 'test' ? 'summary' : phase;
+  if (session?.phase === 'summary' && displayPhase === 'test') {
+    displayPhase = 'summary';
+  }
 
   const pageVariants = {
-    initial: { opacity: 0 },
+    initial: { opacity: 0, scale: 0.98 },
     animate: { 
-      opacity: 1,
-      transition: { duration: 0.25, ease: [0.23, 1, 0.32, 1] as const }
+      opacity: 1, 
+      scale: 1,
+      transition: { type: 'spring' as const, bounce: 0, duration: 0.4 }
     },
     exit: { 
-      opacity: 0,
+      opacity: 0, 
+      scale: 0.98,
       transition: { duration: 0.15, ease: [0.32, 0, 0.67, 0] as const }
     }
   };
@@ -270,7 +307,7 @@ const App: FC = () => {
       return (
         <motion.div key="test" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
           <TestView
-          onOpenSettings={() => setShowMobileSettings(true)}
+            onOpenSettings={() => setShowMobileSettings(true)}
             session={session}
             sessionId={currentSessionId}
             onSessionUpdate={handleSessionUpdate}
@@ -298,71 +335,101 @@ const App: FC = () => {
               setCreatorInitialQuestions(null);
               setCreatorInitialBaseName(null);
               setCreatorInitialImages(null);
-              setPhase('home');
+                setCreatorSourceSessionId(null);
+              setPhase('learn');
             }}
             initialQuestions={creatorInitialQuestions || undefined}
             initialBaseName={creatorInitialBaseName || undefined}
-            initialImages={creatorInitialImages || undefined}
+            initialImageNames={creatorInitialImages || undefined} sourceSessionId={creatorSourceSessionId || undefined}
             onSaveToTestownik={handleSaveToTestownik}
           />
         </motion.div>
       );
     }
-    if (displayPhase === 'profile') {
+    
+    // Social and Home views use the persistent MainLayout
+    if (['dashboard', 'learn', 'profile', 'friends', 'leaderboard'].includes(displayPhase)) {
       return (
-        <motion.div key="profile" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
-          <AuthGuard onCancel={() => setPhase('home')}>
-            <ProfileView onBack={() => setPhase('home')} />
-          </AuthGuard>
+        <motion.div key="main-layout" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col w-full h-full">
+          <MainLayout 
+             
+            onNavigate={(p) => {
+              if (p === 'settings') {
+                setShowMobileSettings(true);
+              } else if (p === 'creator') {
+                setCreatorInitialQuestions(null);
+                setCreatorInitialBaseName(null);
+                setCreatorInitialImages(null);
+                setCreatorSourceSessionId(null);
+                setPhase('creator');
+              } else {
+                setPhase(p as any);
+              }
+            }}
+          >
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div></div>}>
+            <AnimatePresence mode="wait">
+              {displayPhase === 'dashboard' && (
+                <motion.div key="dashboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <DashboardView 
+                    onStartSession={(id) => handleResumeSession(id)}
+                    
+                  />
+                </motion.div>
+              )}
+              {displayPhase === 'learn' && (
+                <motion.div key="learn" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <HomeView
+                    onOpenSettings={() => setShowMobileSettings(true)}
+                    activeTab={homeTab}
+                    onTabChange={setHomeTab}
+                    onStartSession={handleStartSession}
+                    onResumeSession={handleResumeSession}
+                    onDeleteSession={handleDeleteSession}
+                    onRenameSession={handleRenameSession}
+                    onRestartSession={handleRestartSession}
+                    onEnterCreator={() => {
+                      setCreatorInitialQuestions(null);
+                      setCreatorInitialBaseName(null);
+                      setCreatorInitialImages(null);
+                setCreatorSourceSessionId(null);
+                      setPhase('creator');
+                    }}
+                    onEditInCreator={handleEditInCreator}
+                  />
+                </motion.div>
+              )}
+              {displayPhase === 'profile' && (
+                <motion.div key="profile" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <AuthGuard onCancel={() => setPhase('dashboard')}>
+                    <ProfileView />
+                  </AuthGuard>
+                </motion.div>
+              )}
+              {displayPhase === 'leaderboard' && (
+                <motion.div key="leaderboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <AuthGuard onCancel={() => setPhase('dashboard')}>
+                    <LeaderboardView />
+                  </AuthGuard>
+                </motion.div>
+              )}
+              {displayPhase === 'friends' && (
+                <motion.div key="friends" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <AuthGuard onCancel={() => setPhase('dashboard')}>
+                    <FriendsView />
+                  </AuthGuard>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            </Suspense>
+          </MainLayout>
         </motion.div>
       );
     }
-    if (displayPhase === 'friends') {
-      return (
-        <motion.div key="friends" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
-          <AuthGuard onCancel={() => setPhase('home')}>
-            <FriendsList onBack={() => setPhase('home')} />
-          </AuthGuard>
-        </motion.div>
-      );
-    }
-    if (displayPhase === 'leaderboard') {
-      return (
-        <motion.div key="leaderboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
-          <AuthGuard onCancel={() => setPhase('home')}>
-            <LeaderboardView onBack={() => setPhase('home')} />
-          </AuthGuard>
-        </motion.div>
-      );
-    }
-    return (
-      <motion.div key="home" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
-        <HomeView
-          onOpenSettings={() => setShowMobileSettings(true)}
-          activeTab={homeTab}
-          onTabChange={setHomeTab}
-          onStartSession={handleStartSession}
-          onResumeSession={handleResumeSession}
-          onDeleteSession={handleDeleteSession}
-          onRenameSession={handleRenameSession}
-          onRestartSession={handleRestartSession}
-          onEnterCreator={() => {
-            setCreatorInitialQuestions(null);
-            setCreatorInitialBaseName(null);
-            setCreatorInitialImages(null);
-            setPhase('creator');
-          }}
-          onEditInCreator={handleEditInCreator}
-          onOpenProfile={() => setPhase('profile')}
-          onOpenFriends={() => setPhase('friends')}
-          onOpenLeaderboard={() => setPhase('leaderboard')}
-        />
-      </motion.div>
-    );
   })();
 
   return (
-    <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+    <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}>
       <div 
         className={`flex-1 flex flex-col pb-0 md:pb-[40px] ${displayPhase === 'creator' ? 'min-h-0' : ''}`}
       >
@@ -372,7 +439,7 @@ const App: FC = () => {
       </div>
 
       <footer
-        className="hidden md:flex fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl saturate-150 border-t border-zinc-200/50 dark:border-zinc-800/50"
+        className="hidden md:flex fixed bottom-0 left-0 md:left-64 right-0 z-50 items-center justify-between bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl saturate-150 border-t border-zinc-200/50 dark:border-zinc-800/50"
         style={{ height: `${FOOTER_HEIGHT_PX}px` }}
       >
         <div className="flex items-center pl-5">
@@ -484,9 +551,11 @@ const App: FC = () => {
 
 
 
-      {showFormatInfo && (
-        <FormatInfoModal onClose={() => setShowFormatInfo(false)} />
-      )}
+      <AnimatePresence>
+        {showFormatInfo && (
+          <FormatInfoModal onClose={() => setShowFormatInfo(false)} />
+        )}
+      </AnimatePresence>
       <Toaster position="bottom-right" richColors theme="system" />
     </div>
   );

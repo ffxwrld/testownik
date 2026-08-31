@@ -206,5 +206,75 @@
       "exampleTitle": "Przykład pliku:",
       "button": "Format pytań"
     }
+  },
+  "auth": {
+    "loginTitle": "Logowanie",
+    "cancel": "Anuluj",
+    "emailPrompt": "Wpisz swój adres e-mail, aby otrzymać jednorazowy 6-cyfrowy kod logowania.",
+    "emailLabel": "Adres e-mail",
+    "emailPlaceholder": "twoj@email.com",
+    "sendCode": "Wyślij kod",
+    "sending": "Wysyłanie...",
+    "codePrompt": "Wpisz 6-cyfrowy kod, który wysłaliśmy na adres <1>{{email}}</1>.",
+    "codeLabel": "Kod jednorazowy (OTP)",
+    "codePlaceholder": "------",
+    "verifyCode": "Zaloguj się",
+    "verifying": "Weryfikacja...",
+    "useOtherEmail": "Użyj innego adresu e-mail",
+    "codeSent": "Kod wysłany! Sprawdź swoją skrzynkę e-mail i wpisz go poniżej.",
+    "setupTitle": "Wybierz nazwę",
+    "setupDesc": "Zanim zaczniesz, wybierz unikalną nazwę użytkownika.",
+    "usernameLabel": "Nazwa użytkownika",
+    "usernamePlaceholder": "np. mistrz_testow",
+    "usernameRules": "Od 3 do 20 znaków, tylko litery, cyfry i podkreślenia (_).",
+    "saveProfile": "Zapisz profil",
+    "saving": "Zapisywanie..."
+  },
+  "social": {
+    "profile": {
+      "title": "Mój Profil",
+      "joined": "Dołączył: {{date}}",
+      "syncBtn": "Synchronizuj",
+      "syncingBtn": "Synchronizowanie...",
+      "logoutBtn": "Wyloguj",
+      "xp": "Punkty XP",
+      "sessions": "Ukończone Sesje",
+      "streak": "Obecny Streak",
+      "days": "{{count}} dni",
+      "questions": "Rozwiązane Pytania",
+      "correct": "Poprawne (1. raz)",
+      "time": "Czas nauki",
+      "minutes": "{{count}} min"
+    },
+    "friends": {
+      "title": "Znajomi",
+      "searchPlaceholder": "Szukaj znajomych (min. 3 znaki)...",
+      "searching": "Szukanie...",
+      "noResults": "Nie znaleziono użytkowników.",
+      "addBtn": "Zaproś",
+      "cancelBtn": "Anuluj",
+      "acceptBtn": "Akceptuj",
+      "rejectBtn": "Odrzuć",
+      "removeBtn": "Usuń",
+      "pending": "Oczekujące zaproszenia",
+      "list": "Twoi znajomi",
+      "noFriends": "Nie masz jeszcze znajomych. Poszukaj ich używając wyszukiwarki powyżej!",
+      "addedToast": "Zaproszenie wysłane",
+      "acceptedToast": "Zaproszenie zaakceptowane",
+      "removedToast": "Usunięto znajomego",
+      "rejectedToast": "Odrzucono zaproszenie",
+      "canceledToast": "Cofnięto zaproszenie"
+    },
+    "leaderboard": {
+      "title": "Ranking Znajomych",
+      "xpTab": "Punkty XP",
+      "accTab": "Poprawność",
+      "sessTab": "Sesje",
+      "streakTab": "Streak",
+      "timeTab": "Czas",
+      "emptyTitle": "Brak znajomych",
+      "emptyDesc": "Dodaj znajomych, aby rywalizować z nimi w rankingu!",
+      "accuracyVal": "{{val}}%"
+    }
   }
 }

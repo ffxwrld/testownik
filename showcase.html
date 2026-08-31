@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koncepcje Widoku Nauki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: {
+                            50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7',
+                            300: '#d4d4d8', 400: '#a1a1aa', 500: '#71717a',
+                            600: '#52525b', 700: '#3f3f46', 800: '#27272a',
+                            900: '#18181b', 950: '#09090b',
+                        },
+                        indigo: {
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #09090b; color: #fafafa; }
+        .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+    </style>
+</head>
+<body class="p-8 md:p-12 min-h-screen flex flex-col gap-24 max-w-5xl mx-auto">
+
+    <!-- Wstęp -->
+    <div>
+        <h1 class="text-3xl font-bold mb-2">Showcase: Opcje połączenia "Nauki" i "Kreatora"</h1>
+        <p class="text-zinc-400">Poniżej 3 wizualne propozycje jak można połączyć widok listy testów z dodawaniem nowego testu, zachowując styl Apple/Emil.</p>
+    </div>
+
+    <!-- Opcja 1 -->
+    <section>
+        <h2 class="text-xl font-bold mb-1 text-indigo-400">Opcja 1: Pierwszy kafelek w siatce</h2>
+        <p class="text-sm text-zinc-500 mb-6">Przycisk tworzenia udaje jeden z elementów listy materiałów (jak w Google Docs).</p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
+            <!-- Kafelek DODAJ -->
+            <div class="h-40 border-2 border-dashed border-indigo-500/50 bg-indigo-500/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-500/20 transition-colors group">
+                <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
+                    +
+                </div>
+                <span class="font-bold text-indigo-400 text-sm">Utwórz nową paczkę</span>
+            </div>
+            
+            <!-- Standardowy kafelek 1 -->
+            <div class="h-40 border border-zinc-800 bg-zinc-900 rounded-2xl p-5 flex flex-col soft-shadow">
+                <span class="text-xs font-bold text-zinc-500 tracking-wider mb-2">PACZKA</span>
+                <h3 class="font-bold text-zinc-100">Pytania demonstracyjne</h3>
+                <p class="text-xs text-zinc-500 mt-1">15 pytań • Ostatnio: dziś</p>
+                <div class="mt-auto h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 w-full"></div>
+                </div>
+            </div>
+
+            <!-- Standardowy kafelek 2 -->
+            <div class="h-40 border border-zinc-800 bg-zinc-900 rounded-2xl p-5 flex flex-col soft-shadow">
+                <span class="text-xs font-bold text-zinc-500 tracking-wider mb-2">PACZKA</span>
+                <h3 class="font-bold text-zinc-100">Cisco Final Exam</h3>
+                <p class="text-xs text-zinc-500 mt-1">102 pytania • 2 dni temu</p>
+                <div class="mt-auto h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 w-1/4"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-zinc-800/50">
+
+    <!-- Opcja 2 -->
+    <section>
+        <h2 class="text-xl font-bold mb-1 text-indigo-400">Opcja 2: Sekcja Hero + Lista pod spodem</h2>
+        <p class="text-sm text-zinc-500 mb-6">Szeroki panel u góry mocno zachęcający do tworzenia, a pod nim tradycyjna lista.</p>
+        
+        <div class="bg-[#0f0f13] border border-zinc-800 rounded-3xl p-6 soft-shadow">
+            <!-- Hero Card -->
+            <div class="w-full bg-gradient-to-br from-indigo-900/40 to-[#0f0f13] border border-indigo-500/20 rounded-2xl p-8 mb-8 flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Rozpocznij naukę</h3>
+                    <p class="text-sm text-indigo-200/70 mb-5">Utwórz nową paczkę ręcznie lub wygeneruj ją w sekundę przy użyciu AI.</p>
+                    <button class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition-colors shadow-lg shadow-indigo-900/50">
+                        + Nowa paczka pytań
+                    </button>
+                </div>
+                <div class="hidden md:flex text-6xl opacity-50 drop-shadow-xl">✨</div>
+            </div>
+
+            <!-- Lista -->
+            <h4 class="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4 px-2">Twoje testy</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div class="border border-zinc-800 bg-zinc-900 rounded-2xl p-4 flex justify-between items-center hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                    <div>
+                        <h3 class="font-bold text-zinc-100 text-sm">Pytania demonstracyjne</h3>
+                        <p class="text-xs text-zinc-500 mt-1">15 pytań</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-xs">▶</div>
+                 </div>
+                 <div class="border border-zinc-800 bg-zinc-900 rounded-2xl p-4 flex justify-between items-center hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                    <div>
+                        <h3 class="font-bold text-zinc-100 text-sm">Cisco Final Exam</h3>
+                        <p class="text-xs text-zinc-500 mt-1">102 pytania</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-xs">▶</div>
+                 </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-zinc-800/50">
+
+    <!-- Opcja 3 -->
+    <section>
+        <h2 class="text-xl font-bold mb-1 text-indigo-400">Opcja 3: Segmented Control (Zakładki Apple)</h2>
+        <p class="text-sm text-zinc-500 mb-6">Elegancki przełącznik na górze ekranu, całkowicie odseparowujący oba widoki.</p>
+        
+        <div class="bg-[#0f0f13] border border-zinc-800 rounded-3xl p-6 soft-shadow flex flex-col items-center">
+            
+            <!-- Toggle -->
+            <div class="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl mb-8">
+                <button class="bg-zinc-700 text-white shadow-sm px-6 py-2 rounded-lg text-sm font-bold transition-all">
+                    Moje testy
+                </button>
+                <button class="text-zinc-500 hover:text-zinc-300 px-6 py-2 rounded-lg text-sm font-bold transition-all">
+                    Kreator AI
+                </button>
+            </div>
+
+            <!-- Content Area (Active Tab) -->
+            <div class="w-full grid grid-cols-2 gap-4">
+                 <div class="border border-zinc-800 bg-zinc-900 rounded-2xl p-5">
+                    <h3 class="font-bold text-zinc-100">Pytania demonstracyjne</h3>
+                 </div>
+                 <div class="border border-zinc-800 bg-zinc-900 rounded-2xl p-5">
+                    <h3 class="font-bold text-zinc-100">Cisco Final Exam</h3>
+                 </div>
+            </div>
+
+        </div>
+    </section>
+
+</body>
+</html>

@@ -53,7 +53,9 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
         if (localImages) {
           const key = Object.keys(localImages).find(k => k.toLowerCase() === fileName.toLowerCase());
           if (key) blob = localImages[key];
-        } else if (sessionId) {
+        } 
+
+        if (!blob && sessionId) {
           blob = await getSessionImage(sessionId, fileName);
           
           // Case sensitivity fallback

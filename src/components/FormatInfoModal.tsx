@@ -6,6 +6,8 @@ interface FormatInfoModalProps {
   onClose: () => void;
 }
 
+import { motion } from 'framer-motion';
+
 export const FormatInfoModal: FC<FormatInfoModalProps> = ({ onClose }) => {
   const { t } = useTranslation();
 
@@ -18,16 +20,26 @@ export const FormatInfoModal: FC<FormatInfoModalProps> = ({ onClose }) => {
   }, [onClose]);
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={onClose}
     >
-      <div 
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="format-info-title"
         className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+          <h2 id="format-info-title" className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
             {t('components.formatInfo.title')}
           </h2>
           <button
@@ -92,11 +104,11 @@ Wrocław`}
         </div>
         
         <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end bg-zinc-50 dark:bg-zinc-900/50">
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={onClose} autoFocus>
             {t('components.formatInfo.close')}
           </Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

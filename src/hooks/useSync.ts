@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { syncStatsToServer } from '../utils/sync';
+import { syncStatsToServer, buyStreakFreeze } from '../utils/sync';
 import { useAuth } from './useAuth';
 
 export function useSync() {
@@ -23,6 +23,7 @@ export function useSync() {
   }, [user]);
 
   return {
-    triggerSync: syncStatsToServer
+    triggerSync: syncStatsToServer,
+    buyStreakFreeze
   };
 }

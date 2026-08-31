@@ -30,6 +30,17 @@
   --theme-800: var(--color-blue-800);
   --theme-900: var(--color-blue-900);
   --theme-950: var(--color-blue-950);
+  
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transform: none !important;
+    translate: none !important;
+  }
 }
 
 html[data-theme="violet"] {
@@ -226,11 +237,20 @@ button:disabled {
 }
 
 @layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
   .hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@layer base {
+  html, body {
+    touch-action: manipulation;
   }
 }
