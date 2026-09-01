@@ -25,6 +25,8 @@ export const useMultiplayer = () => {
   // Zwraca plik pobrany przez gościa
   const [receivedFile, setReceivedFile] = useState<Blob | null>(null);
   const [raceStarted, setRaceStarted] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const addLog = useCallback((msg: string) => setDebugLogs(p => [...p, msg].slice(-10)), []);
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
@@ -50,10 +52,10 @@ export const useMultiplayer = () => {
         });
       },
       onConnectionStateChange: (state) => {
-        console.log(`[WebRTC] Connection with ${peerId}: ${state}`);
+        addLog(`WebRTC State [${peerId}]: ${state}`);
       },
       onDataChannel: () => {
-        console.log(`[WebRTC] Data channel established with ${peerId}`);
+        addLog(`Data Channel Open [${peerId}]`);
       }
     });
 
@@ -91,7 +93,7 @@ export const useMultiplayer = () => {
     setRoomCode(code);
     
     const channel = supabase.channel(`room:${code}`, {
-      config: { presence: { key: profile.id } }
+      config: { presence: { key: profile.id }, broadcast: { ack: true } }
     });
     channelRef.current = channel;
 
@@ -119,19 +121,21 @@ export const useMultiplayer = () => {
         if (hostMode) {
           newPlayers.forEach(async (p) => {
             if (p.userId !== profile.id && !peersRef.current.has(p.userId)) {
+              addLog(`Init WebRTC for peer: ${p.userId}`);
               const manager = initWebRTCForPeer(p.userId);
               const offer = await manager.createOffer();
               channel.send({
                 type: 'broadcast',
                 event: 'signaling',
                 payload: { target: p.userId, sender: profile.id, type: 'offer', offer }
-              });
+              }).then(res => addLog(`Send Offer Status: ${res === 'ok' ? 'OK' : JSON.stringify(res)}`));
             }
           });
         }
       })
       .on('broadcast', { event: 'signaling' }, async ({ payload }: { payload: any }) => {
         if (payload.target !== profile.id) return;
+        addLog(`Received Signaling: ${payload.type} from ${payload.sender}`);
         const manager = initWebRTCForPeer(payload.sender);
         if (payload.type === 'offer') {
           const answer = await manager.handleOffer(payload.offer);
@@ -139,7 +143,7 @@ export const useMultiplayer = () => {
             type: 'broadcast',
             event: 'signaling',
             payload: { target: payload.sender, sender: profile.id, type: 'answer', answer }
-          });
+          }).then(res => addLog(`Send Answer Status: ${res === 'ok' ? 'OK' : JSON.stringify(res)}`));
         } else if (payload.type === 'answer') {
           await manager.handleAnswer(payload.answer);
         } else if (payload.type === 'ice-candidate') {
@@ -196,9 +200,21 @@ export const useMultiplayer = () => {
 
   const sendFileToAll = useCallback((file: File | Blob) => {
     if (!isHost) return;
-    peersRef.current.forEach(manager => {
-      // Wyślij plik do każdego peera
-      manager.sendFile(file).catch(err => console.error('P2P Send error', err));
+    if (peersRef.current.size === 0) {
+      alert("Błąd: Lista połączeń (peersRef) jest pusta! WebRTC nie zostało poprawnie zainicjowane z gośćmi.");
+      return;
+    }
+    
+    peersRef.current.forEach((manager, peerId) => {
+      setPlayers(prev => prev.map(p => p.userId === peerId ? { ...p, status: 'downloading', progress: 0 } : p));
+      
+      manager.sendFile(file, {}, (percent) => {
+        setPlayers(prev => prev.map(p => p.userId === peerId ? { ...p, progress: percent, status: percent === 100 ? 'ready' : 'downloading' } : p));
+      }).catch(err => {
+        alert("Błąd WebRTC P2P: " + (err.message || err));
+        console.error('P2P Send error', err);
+        setPlayers(prev => prev.map(p => p.userId === peerId ? { ...p, status: 'joined' } : p));
+      });
     });
   }, [isHost]);
 
@@ -212,6 +228,7 @@ export const useMultiplayer = () => {
     startRace,
     raceStarted,
     broadcastTestProgress,
-    receivedFile
+    receivedFile,
+    debugLogs
   };
 };

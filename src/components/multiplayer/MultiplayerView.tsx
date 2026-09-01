@@ -17,7 +17,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   const [joinCode, setJoinCode] = useState('');
   const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
   
-  const { roomCode, isHost, players, joinRoom, cleanup, sendFileToAll, receivedFile, startRace, raceStarted } = useMultiplayerContext();
+  const { roomCode, isHost, players, joinRoom, cleanup, sendFileToAll, receivedFile, startRace, raceStarted, debugLogs } = useMultiplayerContext();
 
   useEffect(() => {
     if (view === 'host_select') {
@@ -119,6 +119,13 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                   </div>
                 ))}
               </div>
+              
+              {/* DEBUG CONSOLE */}
+              <div className="mt-8 p-4 bg-black/90 text-green-400 font-mono text-xs rounded-xl overflow-y-auto h-32 flex flex-col">
+                <div className="font-bold text-white mb-2">DEBUG P2P:</div>
+                {(!debugLogs || debugLogs.length === 0) ? "Oczekiwanie na akcje..." : debugLogs.map((l: string, i: number) => <div key={i}>{l}</div>)}
+              </div>
+              
               <div className="mt-8 flex justify-end">
                 <button 
                   disabled={!selectedSessionId}

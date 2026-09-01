@@ -8,6 +8,7 @@ export type PeerConnectionCallbacks = {
 
 export class WebRTCManager {
   private pc: RTCPeerConnection;
+  private iceCandidateQueue: RTCIceCandidateInit[] = [];
   private dataChannel: RTCDataChannel | null = null;
   private receiveBuffer: Uint8Array[] = [];
   private receivedBytes = 0;
@@ -45,19 +46,40 @@ export class WebRTCManager {
     return offer;
   }
 
+  private async processIceQueue() {
+    for (const candidate of this.iceCandidateQueue) {
+      try {
+        await this.pc.addIceCandidate(candidate);
+      } catch (e) {
+        console.error('Failed to add queued ICE candidate', e);
+      }
+    }
+    this.iceCandidateQueue = [];
+  }
+
   public async handleOffer(offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     await this.pc.setRemoteDescription(offer);
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
+    await this.processIceQueue();
     return answer;
   }
 
   public async handleAnswer(answer: RTCSessionDescriptionInit) {
     await this.pc.setRemoteDescription(answer);
+    await this.processIceQueue();
   }
 
   public async handleIceCandidate(candidate: RTCIceCandidateInit) {
-    await this.pc.addIceCandidate(candidate);
+    if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
+      try {
+        await this.pc.addIceCandidate(candidate);
+      } catch (e) {
+        console.error('Failed to add ICE candidate', e);
+      }
+    } else {
+      this.iceCandidateQueue.push(candidate);
+    }
   }
 
   private setupDataChannel(channel: RTCDataChannel) {
@@ -100,8 +122,29 @@ export class WebRTCManager {
   }
 
   public async sendFile(file: File | Blob, metadata: any = {}, onProgress?: (p: number) => void) {
-    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      throw new Error('Data channel is not open');
+    if (!this.dataChannel) {
+      throw new Error('Data channel is not created');
+    }
+
+    if (this.dataChannel.readyState !== 'open') {
+      console.log('Waiting for data channel to open...');
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Data channel timeout')), 15000);
+        
+        const prevOnOpen = this.dataChannel!.onopen;
+        this.dataChannel!.onopen = (e) => {
+          clearTimeout(timeout);
+          if (prevOnOpen) prevOnOpen.call(this.dataChannel!, e);
+          resolve();
+        };
+        
+        const prevOnError = this.dataChannel!.onerror;
+        this.dataChannel!.onerror = (e) => {
+          clearTimeout(timeout);
+          if (prevOnError) prevOnError.call(this.dataChannel!, e);
+          reject(new Error('Data channel error'));
+        };
+      });
     }
 
     // Send metadata first
