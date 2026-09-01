@@ -218,3 +218,52 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
 
   return { questions, images };
 }
+
+import { SessionState } from '../models/types';
+import { getAllSessionImages } from './db';
+import { saveSession } from './session';
+
+export async function exportSessionToZip(sessionId: string, session: SessionState): Promise<Blob> {
+  const zip = new JSZip();
+  // Add metadata
+  zip.file('meta.json', JSON.stringify(session));
+  
+  // Add images
+  const images = await getAllSessionImages(sessionId);
+  for (const [imageName, blob] of Object.entries(images)) {
+    zip.file(imageName, blob);
+  }
+  
+  return await zip.generateAsync({ type: 'blob' });
+}
+
+export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: string, session: SessionState }> {
+  const zip = await JSZip.loadAsync(zipBlob);
+  
+  const metaFile = zip.file('meta.json');
+  if (!metaFile) throw new Error('Nieprawidłowy plik trybu wieloosobowego (brak meta.json)');
+  
+  const metaContent = await metaFile.async('string');
+  const session: SessionState = JSON.parse(metaContent);
+  
+  // Generate a new Session ID for this imported session (so it doesn't collide if they already have it)
+  const newSessionId = crypto.randomUUID();
+  session.synced = false; // reset synced flag
+  
+  const images: Record<string, Blob> = {};
+  
+  for (const [path, file] of Object.entries(zip.files)) {
+    if (!file.dir && path !== 'meta.json') {
+      const blob = await file.async('blob');
+      images[path] = blob;
+    }
+  }
+  
+  // We can't import 'saveSessionImages' directly here if it causes circular deps, 
+  // but let's assume we can call db.ts
+  const { saveSessionImages } = await import('./db');
+  await saveSessionImages(newSessionId, images);
+  
+  await saveSession(session, newSessionId);
+  return { sessionId: newSessionId, session };
+}

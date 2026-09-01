@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Zap, Trophy, PenTool, Users, Settings } from 'lucide-react';
+import { LineChart, LayoutDashboard, Zap, Trophy, PenTool, Users, Settings, Gamepad2 } from 'lucide-react';
 
 import { useLocation } from 'wouter';
 import logo from '../../assets/logo.png';
@@ -17,7 +17,7 @@ interface MainLayoutProps {
 
 export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
   const [location] = useLocation();
-  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/ranking' ? 'leaderboard' : location === '/kreator' ? 'creator' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : 'dashboard';
+  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/ranking' ? 'leaderboard' : location === '/kreator' ? 'creator' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : location === '/progress' ? 'progress' : location === '/multiplayer' ? 'multiplayer' : 'dashboard';
   const { t } = useTranslation();
   const { profile } = useProfile();
   const { stats } = useUserStats();
@@ -26,8 +26,10 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
 
   const mainTabs = [
     { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('layout.nav.dashboard', 'Pulpit') },
+    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: 'Graj' },
     { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('layout.nav.learn', 'Nauka') },
     { id: 'leaderboard', icon: <Trophy className="w-5 h-5" />, label: t('layout.nav.leaderboard', 'Ranking') },
+    { id: 'progress', icon: <LineChart className="w-5 h-5" />, label: 'Postępy' },
     { id: 'creator', icon: <PenTool className="w-5 h-5" />, label: t('layout.nav.creator', 'Kreator') },
   ];
 
@@ -69,7 +71,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
     <div className="flex flex-col md:flex-row h-full w-full bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-[#09090b] dark:to-[#09090b]">
       
       {/* Sidebar for Desktop — fixed to left edge */}
-      <nav className="hidden md:flex flex-col w-64 fixed top-0 left-0 bottom-0 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-[#0f0f13]/80 backdrop-blur-xl p-4 pb-14 z-30">
+      <nav className="hidden md:flex flex-col w-64 fixed top-0 left-0 bottom-0 border-r border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-xl p-4 pb-14 z-30">
         
         {/* Scrollable top area */}
         <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col pb-4">
@@ -118,7 +120,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
       </main>
 
       {/* Mobile bottom bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-white/80 dark:bg-[#0f0f13]/80 bg-white/90 dark:bg-[#0f0f13]/90 backdrop-blur-md border-t border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-around z-40 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-white/90 dark:bg-[#0f0f13]/90 backdrop-blur-md border-t border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-around z-40 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
         {allMobileTabs.map(tab => {
           const isActive = currentPhase === tab.id;
           return (

@@ -2,21 +2,24 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
 import { useProfile } from '../hooks/useProfile';
+import { useActivity } from '../hooks/useActivity';
 import { useUserStats, calculateLevel } from '../hooks/useUserStats';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { getAllSessionMetadata } from '../utils/session';
 import { SavedSessionMetadata } from '../models/types';
-import { Play, Flame, Target } from 'lucide-react';
+import { Play, Flame, Target, RotateCcw } from 'lucide-react';
 
 interface DashboardViewProps {
   onStartSession: (sessionId: string) => void;
+  onResetSession: (sessionId: string) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, onResetSession }) => {
   const [] = useLocation();
   const { profile } = useProfile();
+  const { activity } = useActivity();
   const { stats } = useUserStats();
-  const { entries: friendsLeaderboard } = useLeaderboard('xp');
+  const { entries: friendsLeaderboard } = useLeaderboard('all_time');
 
   const levelInfo = stats ? calculateLevel(stats.total_xp) : { level: 1, currentLevelXp: 0, nextLevelXp: 1250, progress: 0, xpToNextLevel: 1250 };
   
@@ -148,13 +151,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession }) 
             </div>
           </div>
           <div className="w-full md:w-auto">
-            <button 
-              onClick={() => onStartSession(recentSessions[0].id)}
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-primary-600/20 transition active:scale-[0.97]"
-            >
-              <Play className="w-5 h-5 fill-current" />
-              Kontynuuj naukę
-            </button>
+            {recentSessions[0].currentPhase === 'summary' || recentSessions[0].completedQuestions >= recentSessions[0].totalQuestions ? (
+              <button 
+                onClick={() => onResetSession(recentSessions[0].id)}
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-zinc-800/20 transition active:scale-[0.97]"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Zacznij od nowa
+              </button>
+            ) : (
+              <button 
+                onClick={() => onStartSession(recentSessions[0].id)}
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-primary-600/20 transition active:scale-[0.97]"
+              >
+                <Play className="w-5 h-5 fill-current" />
+                Kontynuuj naukę
+              </button>
+            )}
           </div>
         </motion.div>
       )}
@@ -171,10 +184,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession }) 
               {(() => {
                 const activeDates = new Set<string>();
                 const today = new Date();
+                
+                // Use the globally synced activity logs!
+                activity.forEach(a => {
+                  if (a.study_seconds > 0) {
+                    activeDates.add(a.log_date);
+                  }
+                });
+                
+                // Fallback for immediate UI feedback (if sync hasn't occurred yet, check local session updates today)
                 savedSessions.forEach(s => {
                   const d = new Date(s.updatedAt);
                   const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-                  if (diffDays < 7 && diffDays >= 0) {
+                  if (diffDays === 0) { // only trust local for "today" to avoid ghost days
                     activeDates.add(d.toISOString().slice(0, 10));
                   }
                 });

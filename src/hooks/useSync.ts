@@ -16,9 +16,15 @@ export function useSync() {
       syncStatsToServer();
     };
 
+    // Auto-sync every 60 seconds (for incremental minutes logging)
+    const syncInterval = setInterval(() => {
+      syncStatsToServer();
+    }, 60000);
+
     window.addEventListener('online', handleOnline);
     return () => {
       window.removeEventListener('online', handleOnline);
+      clearInterval(syncInterval);
     };
   }, [user]);
 

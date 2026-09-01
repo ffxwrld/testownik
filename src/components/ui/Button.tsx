@@ -29,7 +29,7 @@ const sizes = {
 };
 
 const base =
-  'inline-flex items-center justify-center font-semibold rounded-lg transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]';
+  'inline-flex items-center justify-center font-semibold rounded-lg transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]';
 
 export const Button: FC<ButtonProps> = ({
   variant = 'primary',

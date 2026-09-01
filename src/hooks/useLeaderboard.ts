@@ -1,9 +1,9 @@
 import useSWR from 'swr';
-import { getLeaderboard } from '../utils/leaderboard';
-import { LeaderboardCategory, LeaderboardEntry } from '../models/social';
+import { getLeaderboard, LeaderboardTimeRange } from '../utils/leaderboard';
+import { LeaderboardEntry } from '../models/social';
 import { useAuth } from './useAuth';
 
-export function useLeaderboard(category: LeaderboardCategory) {
+export function useLeaderboard(timeRange: LeaderboardTimeRange) {
   const { user } = useAuth();
 
   const {
@@ -12,8 +12,8 @@ export function useLeaderboard(category: LeaderboardCategory) {
     isLoading,
     mutate
   } = useSWR<LeaderboardEntry[]>(
-    user ? ['leaderboard', category] : null,
-    ([, cat]) => getLeaderboard(cat as LeaderboardCategory),
+    user ? ['leaderboard_v2', timeRange] : null,
+    ([, range]) => getLeaderboard(range as LeaderboardTimeRange),
     { refreshInterval: 60000 }
   );
 

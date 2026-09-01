@@ -44,6 +44,9 @@ export interface SessionState {
   shuffledAnswerOrder: number[];
   baseName: string;
   synced?: boolean;
+  syncedSeconds?: number;
+  syncedCorrect?: number;
+  syncedAnswers?: number;
 }
 
 export interface SavedSessionMetadata {

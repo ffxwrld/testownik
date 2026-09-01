@@ -36,6 +36,7 @@ export function useTestEngine({
   setShowingPrevious,
 }: UseTestEngineProps) {
   const [elapsed, setElapsed] = useState(session.elapsedSeconds);
+  const [isAfk, setIsAfk] = useState(false);
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [questionKey, setQuestionKey] = useState(0);
@@ -52,6 +53,7 @@ export function useTestEngine({
   sessionRef.current = session;
   const elapsedRef = useRef(elapsed);
   elapsedRef.current = elapsed;
+  const lastActivityRef = useRef(Date.now());
   const processedSessionRef = useRef<SessionState | null>(null);
 
   useEffect(() => {
@@ -80,6 +82,31 @@ export function useTestEngine({
       saveSession(updated, sessionId).catch(console.error);
     };
   }, [sessionId]);
+
+
+  // Track activity to prevent AFK
+  useEffect(() => {
+    const updateActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    // Update activity on mount
+    updateActivity();
+
+    window.addEventListener('mousemove', updateActivity);
+    window.addEventListener('keydown', updateActivity);
+    window.addEventListener('touchstart', updateActivity);
+    window.addEventListener('scroll', updateActivity);
+    window.addEventListener('click', updateActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', updateActivity);
+      window.removeEventListener('keydown', updateActivity);
+      window.removeEventListener('touchstart', updateActivity);
+      window.removeEventListener('scroll', updateActivity);
+      window.removeEventListener('click', updateActivity);
+    };
+  }, []);
 
   const currentItem = session.queue[session.currentQuestionIndex];
   const currentQuestion = getQuestionForQueueItem(session.questions, currentItem);
@@ -261,6 +288,8 @@ export function useTestEngine({
 
   return {
     elapsed,
+    isAfk,
+    setIsAfk,
     feedback,
     isTransitioning,
     questionKey,

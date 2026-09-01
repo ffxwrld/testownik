@@ -22,22 +22,24 @@ const CreatorView = lazy(() => import('./components/CreatorView').then(m => ({ d
 const ProfileView = lazy(() => import('./components/social/ProfileView').then(m => ({ default: m.ProfileView })));
 const LeaderboardView = lazy(() => import('./components/social/LeaderboardView').then(m => ({ default: m.LeaderboardView })));
 const FriendsView = lazy(() => import('./components/social/FriendsView').then(m => ({ default: m.FriendsView })));
+const ProgressView = lazy(() => import('./components/ProgressView').then(m => ({ default: m.ProgressView })));
+const MultiplayerView = lazy(() => import('./components/multiplayer/MultiplayerView').then(m => ({ default: m.MultiplayerView })));
 import { MainLayout } from './components/layout/MainLayout';
 import { useSync } from './hooks/useSync';
 
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThemePicker } from './components/ThemePicker';
 import { FormatInfoModal } from './components/FormatInfoModal';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 
-export type AppPhase = 'dashboard' | 'learn' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard';
+export type AppPhase = 'dashboard' | 'learn' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard' | 'progress' | 'multiplayer';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
-const FOOTER_HEIGHT_PX = 40;
 
 function applyZoom(level: number): number {
   const clamped = Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level)) * 10) / 10;
@@ -66,6 +68,8 @@ const App: FC = () => {
     if (loc === '/podsumowanie') return 'summary';
     if (loc === '/kreator') return 'creator';
     if (loc === '/profil') return 'profile';
+    if (loc === '/progress') return 'progress';
+    if (loc === '/multiplayer') return 'multiplayer';
     if (loc === '/znajomi') return 'friends';
     if (loc === '/ranking') return 'leaderboard';
     return 'dashboard';
@@ -76,7 +80,7 @@ const App: FC = () => {
     const paths: Record<AppPhase, string> = { 
       dashboard: '/', learn: '/nauka', test: '/test', 
       summary: '/podsumowanie', creator: '/kreator', 
-      profile: '/profil', friends: '/znajomi', leaderboard: '/ranking' 
+      profile: '/profil', friends: '/znajomi', leaderboard: '/ranking', progress: '/progress', multiplayer: '/multiplayer' 
     };
     setLocation(paths[newPhase]);
   };
@@ -95,6 +99,7 @@ const App: FC = () => {
   });
 
   const [showFormatInfo, setShowFormatInfo] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
 
   useEffect(() => {
@@ -183,6 +188,37 @@ const App: FC = () => {
     },
     []
   );
+
+  
+  const handleResetSession = async (id: string) => {
+    const session = await loadSession(id);
+    if (!session) return;
+    
+    const resetSession = {
+      ...session,
+      queue: session.questions.map(q => ({
+        questionId: q.id,
+        requiredCorrectStreak: session.repeatMode,
+        consecutiveCorrect: 0,
+        wrongCount: 0,
+        firstAnswerWrong: false
+      })),
+      done: [],
+      doneStats: [],
+      elapsedSeconds: 0,
+      totalFirstAttempts: 0,
+      totalFirstCorrect: 0,
+      phase: 'test' as const,
+      currentQuestionIndex: 0,
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    await import('./utils/session').then(m => m.saveSession(resetSession, id));
+    setSession(resetSession);
+    setCurrentSessionId(id);
+    setPhase('test');
+  };
 
   const handleResumeSession = useCallback(async (sessionId: string) => {
     const saved = await loadSession(sessionId);
@@ -348,7 +384,7 @@ const App: FC = () => {
     }
     
     // Social and Home views use the persistent MainLayout
-    if (['dashboard', 'learn', 'profile', 'friends', 'leaderboard'].includes(displayPhase)) {
+    if (['dashboard', 'learn', 'profile', 'friends', 'leaderboard', 'progress', 'multiplayer'].includes(displayPhase)) {
       return (
         <motion.div key="main-layout" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col w-full h-full">
           <MainLayout 
@@ -373,7 +409,7 @@ const App: FC = () => {
                 <motion.div key="dashboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
                   <DashboardView 
                     onStartSession={(id) => handleResumeSession(id)}
-                    
+                    onResetSession={(id) => handleResetSession(id)}
                   />
                 </motion.div>
               )}
@@ -397,6 +433,20 @@ const App: FC = () => {
                     }}
                     onEditInCreator={handleEditInCreator}
                   />
+                </motion.div>
+              )}
+                            {displayPhase === 'progress' && (
+                <motion.div key="progress" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <AuthGuard onCancel={() => setPhase('dashboard')}>
+                    <ProgressView />
+                  </AuthGuard>
+                </motion.div>
+              )}
+                            {displayPhase === 'multiplayer' && (
+                <motion.div key="multiplayer" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+                  <AuthGuard onCancel={() => setPhase('dashboard')}>
+                    <MultiplayerView onStartSession={(id) => handleResumeSession(id)} />
+                  </AuthGuard>
                 </motion.div>
               )}
               {displayPhase === 'profile' && (
@@ -438,54 +488,7 @@ const App: FC = () => {
         </AnimatePresence>
       </div>
 
-      <footer
-        className="hidden md:flex fixed bottom-0 left-0 md:left-64 right-0 z-50 items-center justify-between bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl saturate-150 border-t border-zinc-200/50 dark:border-zinc-800/50"
-        style={{ height: `${FOOTER_HEIGHT_PX}px` }}
-      >
-        <div className="flex items-center pl-5">
-          <a
-            href="https://github.com/ffxwrld"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors duration-150 font-mono"
-          >
-            by fifi
-          </a>
-        </div>
-
-        <div className="flex items-center gap-2 pr-3">
-          <button
-            onClick={() => setShowFormatInfo(true)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-          >
-            {t('components.formatInfo.button')}
-          </button>
-          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
-          <LanguageSwitcher />
-          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
-          <ThemePicker />
-          <DarkModeToggle />
-          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
-          <button
-            onClick={() => setZoomLevel(prev => applyZoom(prev - ZOOM_STEP))}
-            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 text-base leading-none select-none"
-          >
-            −
-          </button>
-          <button
-            onClick={() => setZoomLevel(applyZoom(1))}
-            className="px-1.5 h-6 flex items-center justify-center rounded-md text-xs text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 font-mono tabular-nums min-w-[2.8rem]"
-          >
-            {Math.round(zoomLevel * 100)}%
-          </button>
-          <button
-            onClick={() => setZoomLevel(prev => applyZoom(prev + ZOOM_STEP))}
-            className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition duration-150 text-base leading-none select-none"
-          >
-            +
-          </button>
-        </div>
-      </footer>
+      
       
 
       {/* Mobile Settings Modal */}
@@ -495,7 +498,7 @@ const App: FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 sm:p-6"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 sm:p-6"
             onClick={() => setShowMobileSettings(false)}
           >
             <motion.div
@@ -543,6 +546,47 @@ const App: FC = () => {
                   <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tryb ciemny</span>
                   <DarkModeToggle />
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Skala interfejsu</span>
+                  <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setZoomLevel(prev => applyZoom(prev - ZOOM_STEP))}
+                      className="w-8 h-8 flex items-center justify-center rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-white dark:hover:bg-zinc-700 transition shadow-sm"
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={() => setZoomLevel(applyZoom(1))}
+                      className="px-2 h-8 flex items-center justify-center rounded-md text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-white dark:hover:bg-zinc-700 transition font-mono tabular-nums shadow-sm min-w-[3.5rem]"
+                    >
+                      {Math.round(zoomLevel * 100)}%
+                    </button>
+                    <button
+                      onClick={() => setZoomLevel(prev => applyZoom(prev + ZOOM_STEP))}
+                      className="w-8 h-8 flex items-center justify-center rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-white dark:hover:bg-zinc-700 transition shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center gap-3">
+                <button
+                  onClick={() => setShowPrivacyPolicy(true)}
+                  className="text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                >
+                  Polityka Prywatności
+                </button>
+                <a
+                  href="https://github.com/ffxwrld"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-zinc-300 dark:text-zinc-600 hover:text-primary-500 transition-colors duration-150 font-mono"
+                >
+                  by fifi
+                </a>
               </div>
             </motion.div>
           </motion.div>
@@ -554,6 +598,12 @@ const App: FC = () => {
       <AnimatePresence>
         {showFormatInfo && (
           <FormatInfoModal onClose={() => setShowFormatInfo(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPrivacyPolicy && (
+          <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
         )}
       </AnimatePresence>
       <Toaster position="bottom-right" richColors theme="system" />
