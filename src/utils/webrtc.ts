@@ -49,7 +49,23 @@ export class WebRTCManager {
     this.setupDataChannel(this.dataChannel);
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
-    return offer;
+    
+    // Zbieramy kandydatów ICE przez maksymalnie 1.5 sekundy, żeby wbudować ich w Offer (omijamy rate-limity Supabase)
+    await new Promise<void>((resolve) => {
+      if (this.pc.iceGatheringState === 'complete') {
+        resolve();
+      } else {
+        const timeout = setTimeout(resolve, 1500);
+        this.pc.onicegatheringstatechange = () => {
+          if (this.pc.iceGatheringState === 'complete') {
+            clearTimeout(timeout);
+            resolve();
+          }
+        };
+      }
+    });
+
+    return this.pc.localDescription!;
   }
 
   private async processIceQueue() {
@@ -67,8 +83,24 @@ export class WebRTCManager {
     await this.pc.setRemoteDescription(offer);
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
+    
+    // Zbieramy kandydatów ICE przez maksymalnie 1.5 sekundy, żeby wbudować ich w Answer
+    await new Promise<void>((resolve) => {
+      if (this.pc.iceGatheringState === 'complete') {
+        resolve();
+      } else {
+        const timeout = setTimeout(resolve, 1500);
+        this.pc.onicegatheringstatechange = () => {
+          if (this.pc.iceGatheringState === 'complete') {
+            clearTimeout(timeout);
+            resolve();
+          }
+        };
+      }
+    });
+
     await this.processIceQueue();
-    return answer;
+    return this.pc.localDescription!;
   }
 
   public async handleAnswer(answer: RTCSessionDescriptionInit) {
