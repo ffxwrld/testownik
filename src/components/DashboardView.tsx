@@ -288,7 +288,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
                 const hue = entry.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
                 return (
                   <div key={entry.user_id} className="flex items-center gap-3 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                    <span className="w-5 text-center text-xs font-bold text-zinc-500">{entry.rank}</span>
+                    <span className="w-5 text-center text-sm font-bold text-zinc-500">
+                      {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`}
+                    </span>
                     <div 
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                       style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}

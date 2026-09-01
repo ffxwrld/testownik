@@ -17,7 +17,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   const [joinCode, setJoinCode] = useState('');
   const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
   
-  const { roomCode, isHost, players, joinRoom, cleanup, sendFileToAll, receivedFile, startRace, raceStarted, debugLogs } = useMultiplayerContext();
+  const { roomCode, isHost, players, joinRoom, cleanup, sendFileToAll, receivedFile, startRace, raceStarted} = useMultiplayerContext();
 
   useEffect(() => {
     if (view === 'host_select') {
@@ -51,6 +51,11 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     }
   }, [raceStarted, isHost, selectedSessionId, importedSessionId, onStartSession]);
 
+  const handleLeaveLobby = () => {
+    cleanup();
+    setView('menu');
+  };
+
   const handleHost = async () => {
     if (!selectedSessionId) return;
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -69,7 +74,27 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     if (!selectedSessionId) return;
     const session = await loadSession(selectedSessionId);
     if (!session) return;
-    const blob = await exportSessionToZip(selectedSessionId, session);
+    
+    // Zresetuj postęp paczki zanim wyślesz ją znajomym
+    const cleanSession = {
+      ...session,
+      phase: 'test' as const,
+      currentQuestionIndex: 0,
+      done: [],
+      doneStats: [],
+      totalFirstAttempts: 0,
+      totalFirstCorrect: 0,
+      elapsedSeconds: 0,
+      queue: session.questions.map(q => ({
+        questionId: q.id,
+        requiredCorrectStreak: session.repeatMode > 1 ? session.repeatMode : 1,
+        consecutiveCorrect: 0,
+        wrongCount: 0,
+        firstAnswerWrong: false
+      }))
+    };
+    
+    const blob = await exportSessionToZip(selectedSessionId, cleanSession);
     sendFileToAll(blob);
   };
 
@@ -120,12 +145,6 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 ))}
               </div>
               
-              {/* DEBUG CONSOLE */}
-              <div className="mt-8 p-4 bg-black/90 text-green-400 font-mono text-xs rounded-xl overflow-y-auto h-32 flex flex-col">
-                <div className="font-bold text-white mb-2">DEBUG P2P:</div>
-                {(!debugLogs || debugLogs.length === 0) ? "Oczekiwanie na akcje..." : debugLogs.map((l: string, i: number) => <div key={i}>{l}</div>)}
-              </div>
-              
               <div className="mt-8 flex justify-end">
                 <button 
                   disabled={!selectedSessionId}
@@ -163,7 +182,12 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
           )}
 
           {view === 'lobby' && (
-            <motion.div key="lobby" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-8">
+            <motion.div key="lobby" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-8 relative">
+              <div className="absolute -top-12 left-0">
+                 <button onClick={handleLeaveLobby} className="text-zinc-500 hover:text-red-500 font-semibold text-sm transition-colors flex items-center gap-1">
+                    &larr; Opuść pokój
+                 </button>
+              </div>
               <div className="mb-12">
                 <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-2">Kod Pokoju</p>
                 <div className="inline-flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800 px-8 py-4 rounded-3xl cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition shadow-inner" onClick={() => navigator.clipboard.writeText(roomCode || '')}>

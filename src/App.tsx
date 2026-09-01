@@ -11,19 +11,19 @@ import {
 } from './utils/session';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthGuard } from './components/auth/AuthGuard';
-import { lazy, Suspense } from 'react';
+
 import type { EditingQuestion } from './components/CreatorView';
 
-const DashboardView = lazy(() => import('./components/DashboardView').then(m => ({ default: m.DashboardView })));
-const HomeView = lazy(() => import('./components/LearnView').then(m => ({ default: m.LearnView })));
-const TestView = lazy(() => import('./components/TestView').then(m => ({ default: m.TestView })));
-const SummaryView = lazy(() => import('./components/SummaryView').then(m => ({ default: m.SummaryView })));
-const CreatorView = lazy(() => import('./components/CreatorView').then(m => ({ default: m.CreatorView })));
-const ProfileView = lazy(() => import('./components/social/ProfileView').then(m => ({ default: m.ProfileView })));
-const LeaderboardView = lazy(() => import('./components/social/LeaderboardView').then(m => ({ default: m.LeaderboardView })));
-const FriendsView = lazy(() => import('./components/social/FriendsView').then(m => ({ default: m.FriendsView })));
-const ProgressView = lazy(() => import('./components/ProgressView').then(m => ({ default: m.ProgressView })));
-const MultiplayerView = lazy(() => import('./components/multiplayer/MultiplayerView').then(m => ({ default: m.MultiplayerView })));
+import { DashboardView } from './components/DashboardView';
+import { LearnView as HomeView } from './components/LearnView';
+import { TestView } from './components/TestView';
+import { SummaryView } from './components/SummaryView';
+import { CreatorView } from './components/CreatorView';
+import { ProfileView } from './components/social/ProfileView';
+import { LeaderboardView } from './components/social/LeaderboardView';
+import { FriendsView } from './components/social/FriendsView';
+import { ProgressView } from './components/ProgressView';
+import { MultiplayerView } from './components/multiplayer/MultiplayerView';
 import { MainLayout } from './components/layout/MainLayout';
 import { useSync } from './hooks/useSync';
 
@@ -56,10 +56,12 @@ function applyZoom(level: number): number {
 }
 
 import { Toaster, toast } from 'sonner';
+import { useMultiplayerContext } from './contexts/MultiplayerContext';
 
 const App: FC = () => {
   const { t } = useTranslation();
   const { triggerSync } = useSync();
+  const { broadcastTestProgress, roomCode, resetRace } = useMultiplayerContext();
 
   const [location, setLocation] = useLocation();
   const getPhaseFromLocation = (loc: string): AppPhase => {
@@ -286,9 +288,13 @@ const App: FC = () => {
   const handleSessionUpdate = useCallback((updated: SessionState) => {
     setSession(updated);
     if (updated.phase === 'summary') {
-      setPhase('summary'); triggerSync();
+      setPhase('summary'); 
+      triggerSync();
+      if (roomCode) {
+        broadcastTestProgress(100);
+      }
     }
-  }, []);
+  }, [roomCode, broadcastTestProgress]);
 
   const handleQuit = useCallback(() => {
     setPhase('learn');
@@ -297,8 +303,13 @@ const App: FC = () => {
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);
     setSession(null);
-    setPhase('learn');
-  }, []);
+    if (roomCode) {
+      resetRace();
+      setPhase('multiplayer');
+    } else {
+      setPhase('learn');
+    }
+  }, [roomCode, resetRace]);
 
   const handleRestartSession = useCallback(async (sessionId: string, newRepeatMode?: number) => {
     const saved = await loadSession(sessionId);
@@ -403,7 +414,7 @@ const App: FC = () => {
               }
             }}
           >
-            <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div></div>}>
+            
             <AnimatePresence mode="wait">
               {displayPhase === 'dashboard' && (
                 <motion.div key="dashboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
@@ -471,7 +482,7 @@ const App: FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            </Suspense>
+            
           </MainLayout>
         </motion.div>
       );

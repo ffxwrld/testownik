@@ -179,6 +179,12 @@ export const useMultiplayer = () => {
   }, [profile, cleanup]);
 
   
+  const resetRace = useCallback(() => {
+    setRaceStarted(false);
+    setReceivedFile(null);
+    setPlayers(prev => prev.map(p => ({ ...p, progress: 0, status: 'joined' })));
+  }, []);
+
   const startRace = useCallback(() => {
     if (!isHost) return;
     channelRef.current?.send({
@@ -226,6 +232,7 @@ export const useMultiplayer = () => {
     cleanup,
     sendFileToAll,
     startRace,
+    resetRace,
     raceStarted,
     broadcastTestProgress,
     receivedFile,

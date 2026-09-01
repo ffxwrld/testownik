@@ -22,7 +22,7 @@ export const LeaderboardView: React.FC = () => {
   const { entries, loading: lbLoading, error: lbError } = useLeaderboard(activeRange);
 
   const top3 = entries.slice(0, 3);
-  const rest = entries.slice(3);
+  const rest = entries;
 
   const renderPodiumPlace = (entry: LeaderboardEntry | undefined, place: number) => {
     if (!entry) return <div className="w-24 opacity-0" />; // Spacer
@@ -134,8 +134,8 @@ export const LeaderboardView: React.FC = () => {
                           ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' 
                           : 'bg-white dark:bg-zinc-900'
                       }`}>
-                        <div className="w-6 text-center font-bold text-zinc-400 dark:text-zinc-500">
-                          {entry.rank}
+                        <div className="w-8 text-center text-lg font-bold text-zinc-400 dark:text-zinc-500 flex-shrink-0">
+                          {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`}
                         </div>
                         {entry.avatar_url ? (
                           <img src={entry.avatar_url} alt={entry.username} className="w-10 h-10 rounded-full object-cover" />
