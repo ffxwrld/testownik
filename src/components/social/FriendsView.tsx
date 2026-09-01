@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useFriends } from '../../hooks/useFriends';
-import { Friendship } from '../../models/social';
+import { FriendData } from '../../utils/friends';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -27,7 +27,7 @@ export const FriendsView: React.FC = () => {
     }
   };
 
-  const renderFriendCard = (friend: Friendship) => {
+  const renderFriendCard = (friend: FriendData) => {
     const isPending = friend.status === 'pending';
     const isIncoming = isPending && !friend.isRequester;
     const isOutgoing = isPending && friend.isRequester;
