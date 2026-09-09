@@ -76,7 +76,7 @@ export const TestView: FC<TestViewProps> = ({
             <div className="text-5xl mb-4">😴</div>
             <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">Hej, jesteś tam?</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Czas nauki został wstrzymany ze względu na brak aktywności przez dłuższą chwilę.</p>
-            <Button onClick={() => engine.setIsAfk(false)} variant="primary" className="w-full py-3">
+            <Button onClick={() => engine.dismissAfk()} variant="primary" className="w-full py-3">
               Wracam do nauki
             </Button>
           </motion.div>

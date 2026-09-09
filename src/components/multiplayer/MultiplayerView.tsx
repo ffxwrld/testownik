@@ -136,7 +136,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 {savedSessions.map(s => (
                   <div 
                     key={s.id} 
-                    className={`p-5 cursor-pointer rounded-2xl shadow-sm border-2 transition-all ${selectedSessionId === s.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'}`}
+                    className={`p-5 cursor-pointer rounded-2xl shadow-sm border-2 transition-colors duration-200 ${selectedSessionId === s.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'}`}
                     onClick={() => setSelectedSessionId(s.id)}
                   >
                     <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white">{s.baseName}</h3>

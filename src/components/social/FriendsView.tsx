@@ -7,7 +7,11 @@ import { FriendData } from '../../utils/friends';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
-export const FriendsView: React.FC = () => {
+interface FriendsViewProps {
+  embedded?: boolean;
+}
+
+export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) => {
   const { t } = useTranslation();
   const { friends, loading, error, respondToRequest, removeFriend, searchUsers, sendRequest } = useFriends();
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,11 +83,15 @@ export const FriendsView: React.FC = () => {
   const pendingIncoming = friends.filter(f => f.status === 'pending' && !f.isRequester);
 
   return (
-    <div className="flex-1 bg-transparent text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center">
-      <div className="w-full max-w-2xl">
-        <div className="flex items-center justify-between mb-8 mt-2">
+    <div className={embedded ? "w-full" : "flex-1 bg-transparent text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center"}>
+      <div className={embedded ? "" : "w-full max-w-2xl"}>
+        <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-8 mt-2'}`}>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Znajomi</h1>
+            {embedded ? (
+              <h2 className="text-xl font-bold">Znajomi</h2>
+            ) : (
+              <h1 className="text-3xl font-bold tracking-tight">Znajomi</h1>
+            )}
             {pendingIncoming.length > 0 && (
               <p className="text-sm text-amber-500 font-medium mt-1">
                 {pendingIncoming.length} oczekując{pendingIncoming.length === 1 ? 'e' : 'ych'} zaproszeni{pendingIncoming.length === 1 ? 'e' : 'a'}

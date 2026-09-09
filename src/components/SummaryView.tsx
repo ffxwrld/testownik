@@ -108,8 +108,17 @@ export const SummaryView: FC<SummaryViewProps> = ({
       )}
       </AnimatePresence>
 
-      <motion.div initial={{ opacity: 0, transform: "translateY(20px)", filter: "blur(4px)" }} animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }} transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }} className="w-full max-w-2xl space-y-6">
-
+      <motion.div initial={{ opacity: 0, transform: "translateY(20px)", filter: "blur(4px)" }} animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }} transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }} className="w-full max-w-2xl space-y-6 relative">
+        {accuracy === 100 && (
+          <div className="absolute inset-0 z-0 pointer-events-none rounded-[2rem] overflow-hidden -mx-6 -my-6 px-6 py-6">
+            <motion.div
+              initial={{ x: '-100%', opacity: 0 }}
+              animate={{ x: '100%', opacity: [0, 0.3, 0] }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+              className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-emerald-400/10 to-transparent skew-x-[-20deg]"
+            />
+          </div>
+        )}
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="relative w-20 h-20">
@@ -135,7 +144,40 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* 3 Elite Milestones */}
+        {(accuracy === 100 || (session.elapsedSeconds / totalQuestions) < 5 || totalQuestions >= 100) && (
+          <div className="relative z-10 flex flex-wrap justify-center gap-3 mt-8">
+            {accuracy === 100 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/10 border border-amber-200 dark:border-amber-800/50 px-4 py-2 rounded-full shadow-sm">
+                <span className="text-xl">🏆</span>
+                <div>
+                  <div className="text-sm font-bold text-amber-900 dark:text-amber-100">Nieskazitelny</div>
+                  <div className="text-[10px] uppercase tracking-wider text-amber-700/70 dark:text-amber-400/70 font-semibold">100% poprawności</div>
+                </div>
+              </div>
+            )}
+            {(session.elapsedSeconds / totalQuestions) < 5 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-blue-900/10 border border-blue-200 dark:border-blue-800/50 px-4 py-2 rounded-full shadow-sm">
+                <span className="text-xl">⚡️</span>
+                <div>
+                  <div className="text-sm font-bold text-blue-900 dark:text-blue-100">Sprinter</div>
+                  <div className="text-[10px] uppercase tracking-wider text-blue-700/70 dark:text-blue-400/70 font-semibold">&lt; 5s na pytanie</div>
+                </div>
+              </div>
+            )}
+            {totalQuestions >= 100 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/40 dark:to-purple-900/10 border border-purple-200 dark:border-purple-800/50 px-4 py-2 rounded-full shadow-sm">
+                <span className="text-xl">🏔️</span>
+                <div>
+                  <div className="text-sm font-bold text-purple-900 dark:text-purple-100">Wytrwały</div>
+                  <div className="text-[10px] uppercase tracking-wider text-purple-700/70 dark:text-purple-400/70 font-semibold">100+ pytań w sesji</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 gap-4">
           <Card className="text-center md:col-span-1">
             <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -65,6 +65,11 @@ export function useTestEngine({
   useEffect(() => {
     if (!sessionId) return;
     timerRef.current = setInterval(() => {
+      if (Date.now() - lastActivityRef.current > 60000) {
+        setIsAfk(true);
+        return;
+      }
+
       setElapsed(prev => {
         const next = prev + 1;
         if (next % 5 === 0) {
@@ -286,10 +291,15 @@ export function useTestEngine({
 
   const canConfirm = feedback === null && !isTransitioning;
 
+  const dismissAfk = () => {
+    lastActivityRef.current = Date.now();
+    setIsAfk(false);
+  };
+
   return {
     elapsed,
     isAfk,
-    setIsAfk,
+    dismissAfk,
     feedback,
     isTransitioning,
     questionKey,

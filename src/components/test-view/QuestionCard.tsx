@@ -7,6 +7,7 @@ import { Card } from '../ui/Card';
 import { MarkdownRenderer } from '../MarkdownRenderer';
 import { QuestionRenderer } from '../QuestionRenderer';
 import { Question, AnswerFeedback } from '../../models/types';
+import { QuestionNoteEditor } from './QuestionNoteEditor';
 
 interface QuestionCardProps {
   questionKey: number;
@@ -196,6 +197,12 @@ export const QuestionCard: FC<QuestionCardProps> = ({
                   </motion.button>
                 );
               })}
+            </div>
+            
+            {/* Notatki osobiste (tylko po zatwierdzeniu odpowiedzi, by nie dekoncentrować, albo zawsze?) */}
+            {/* Emil rule: always there, but subtle */}
+            <div className="px-6 pb-4">
+              <QuestionNoteEditor sessionId={sessionId} questionId={currentQuestion.id} />
             </div>
 
             {/* Keyboard hint */}

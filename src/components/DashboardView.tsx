@@ -279,7 +279,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Ranking</h2>
-              <Link href="/ranking" className="text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
+              <Link href="/statystyki" className="text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
                 Pełny &gt;
               </Link>
             </div>

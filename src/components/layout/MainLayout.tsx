@@ -1,14 +1,14 @@
 import { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { LineChart, LayoutDashboard, Zap, Trophy, PenTool, Users, Settings, Gamepad2 } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Zap, Users, Gamepad2 } from 'lucide-react';
 
 import { useLocation } from 'wouter';
 import logo from '../../assets/logo.png';
 import { useProfile } from '../../hooks/useProfile';
 import { useUserStats, calculateLevel } from '../../hooks/useUserStats';
 
-export type MainLayoutPhase = 'dashboard' | 'learn' | 'leaderboard' | 'creator' | 'friends' | 'settings' | 'profile';
+export type MainLayoutPhase = 'dashboard' | 'learn' | 'stats' | 'friends' | 'settings' | 'profile';
 
 interface MainLayoutProps {
   onNavigate?: (phase: string) => void;
@@ -17,7 +17,7 @@ interface MainLayoutProps {
 
 export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
   const [location] = useLocation();
-  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/ranking' ? 'leaderboard' : location === '/kreator' ? 'creator' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : location === '/progress' ? 'progress' : location === '/multiplayer' ? 'multiplayer' : 'dashboard';
+  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/statystyki' ? 'stats' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : location === '/multiplayer' ? 'multiplayer' : 'dashboard';
   const { t } = useTranslation();
   const { profile } = useProfile();
   const { stats } = useUserStats();
@@ -28,18 +28,17 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
     { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('layout.nav.dashboard', 'Pulpit') },
     { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: 'Graj' },
     { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('layout.nav.learn', 'Nauka') },
-    { id: 'leaderboard', icon: <Trophy className="w-5 h-5" />, label: t('layout.nav.leaderboard', 'Ranking') },
-    { id: 'progress', icon: <LineChart className="w-5 h-5" />, label: 'Postępy' },
-    { id: 'creator', icon: <PenTool className="w-5 h-5" />, label: t('layout.nav.creator', 'Kreator') },
+    { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: 'Statystyki' },
   ];
 
   const bottomTabs = [
-    { id: 'friends', icon: <Users className="w-5 h-5" />, label: t('layout.nav.friends', 'Znajomi') },
-    { id: 'settings', icon: <Settings className="w-5 h-5" />, label: t('layout.nav.settings', 'Ustawienia') },
+    { id: 'friends', icon: <Users className="w-5 h-5" />, label: 'Znajomi' }
   ];
 
-  const allMobileTabs = [...mainTabs, bottomTabs[0]]; // 5 tabs for mobile bottom bar
-
+  const allMobileTabs = [
+    ...mainTabs,
+    bottomTabs[0]
+  ];
 
   const renderTab = (tab: { id: string; icon: React.ReactNode; label: string }) => {
     const isActive = currentPhase === tab.id;
@@ -91,14 +90,20 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
           <div className="flex flex-col gap-1.5">
             {bottomTabs.map(renderTab)}
           </div>
-
           {/* User Profile Mini Snippet */}
           {profile && (
             <div 
-              className="mt-4 flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition cursor-pointer shrink-0"
+              className={`mt-2 flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition cursor-pointer shrink-0 ${
+                currentPhase === 'profile' 
+                  ? 'bg-zinc-100 dark:bg-zinc-800/80 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50' 
+                  : 'border border-transparent'
+              }`}
               onClick={() => onNavigate?.('profile')}
             >
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-inner shrink-0">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner shrink-0"
+                style={{ backgroundColor: `hsl(${profile.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)` }}
+              >
                 {profile.username.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col overflow-hidden">
@@ -143,6 +148,25 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
           )
         })}
       </nav>
+
+      {/* Mobile Floating Profile Avatar (Apple Design Style) */}
+      {profile && currentPhase !== 'profile' && (
+        <motion.div 
+          className="md:hidden fixed top-[max(1rem,env(safe-area-inset-top))] right-4 z-50"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        >
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onNavigate?.('profile')}
+            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg border-2 border-white dark:border-zinc-800 bg-zinc-800"
+            style={{ backgroundColor: `hsl(${profile.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)` }}
+          >
+            {profile.username.charAt(0).toUpperCase()}
+          </motion.button>
+        </motion.div>
+      )}
     </div>
   );
 };

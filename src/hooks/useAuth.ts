@@ -52,6 +52,12 @@ export function useAuth() {
     return data;
   };
 
+  const deleteAccount = async () => {
+    const { error } = await supabase.rpc('delete_user');
+    if (error) throw error;
+    await signOut();
+  };
+
   return {
     session,
     user,
@@ -60,5 +66,6 @@ export function useAuth() {
     verifyOtp,
     signInAnonymously,
     signOut,
+    deleteAccount,
   };
 }

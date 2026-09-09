@@ -8,7 +8,11 @@ import { LeaderboardTimeRange } from '../../utils/leaderboard';
 import { Card } from '../ui/Card';
 import { useAuth } from '../../hooks/useAuth';
 
-export const LeaderboardView: React.FC = () => {
+interface LeaderboardViewProps {
+  showHeader?: boolean;
+}
+
+export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = true }) => {
   
   const { user } = useAuth();
 
@@ -77,9 +81,11 @@ export const LeaderboardView: React.FC = () => {
   return (
     <div className="flex-1 bg-transparent text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center">
       <div className="w-full max-w-2xl">
-        <div className="flex items-center justify-between mb-8 mt-2">
-          <h1 className="text-3xl font-bold tracking-tight">Ranking XP</h1>
-        </div>
+        {showHeader && (
+          <div className="flex items-center justify-between mb-8 mt-2">
+            <h1 className="text-3xl font-bold tracking-tight">Ranking XP</h1>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 mb-10">
           {timeRanges.map(r => (

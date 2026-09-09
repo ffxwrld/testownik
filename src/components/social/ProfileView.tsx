@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, BookOpen, Flame, Target, Sparkles, Clock, Snowflake } from 'lucide-react';
+import { Trophy, BookOpen, Flame, Target, Sparkles, Clock, Snowflake, Trash2, AlertTriangle } from 'lucide-react';
 
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -12,13 +12,20 @@ import { UserStats } from '../../models/social';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
-export const ProfileView: React.FC = () => {
+import { Settings } from 'lucide-react';
+
+interface ProfileViewProps {
+  onOpenSettings?: () => void;
+}
+
+export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings }) => {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const { profile } = useProfile();
   const { triggerSync, buyStreakFreeze } = useSync();
   const [syncing, setSyncing] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadStats = async () => {
     if (!user) return;
@@ -29,6 +36,20 @@ export const ProfileView: React.FC = () => {
   useEffect(() => {
     loadStats();
   }, [user]);
+
+  
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Czy na pewno chcesz usunąć swoje konto? Bezpowrotnie stracisz wszystkie swoje statystyki, postępy i znajomych. Tej operacji nie można cofnąć!")) {
+      setIsDeleting(true);
+      try {
+        await deleteAccount();
+        toast.success("Konto zostało pomyślnie usunięte.");
+      } catch (err: any) {
+        toast.error("Błąd podczas usuwania konta: " + (err.message || "Upewnij się, że masz połączenie z internetem."));
+        setIsDeleting(false);
+      }
+    }
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -50,7 +71,19 @@ export const ProfileView: React.FC = () => {
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-between mb-8 mt-2">
           <h1 className="text-3xl font-bold tracking-tight">Twój Profil</h1>
-          <Button variant="danger" onClick={signOut}>Wyloguj się</Button>
+          <div className="flex items-center gap-3">
+            <Button variant="danger" onClick={signOut}>Wyloguj się</Button>
+            {onOpenSettings && (
+              <motion.button 
+                whileTap={{ scale: 0.92 }}
+                onClick={onOpenSettings}
+                className="p-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl transition-colors"
+                title="Ustawienia aplikacji"
+              >
+                <Settings className="w-5 h-5" />
+              </motion.button>
+            )}
+          </div>
         </div>
 
         <Card className="mb-6 bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-800">
@@ -137,8 +170,40 @@ export const ProfileView: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* DANGER ZONE */}
+        <div className="mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800 w-full">
+          <h2 className="text-xl font-bold text-red-600 dark:text-red-500 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6" />
+            Strefa niebezpieczna
+          </h2>
+          <Card className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h3 className="text-lg font-bold text-red-900 dark:text-red-400 mb-1">Usuń konto</h3>
+              <p className="text-sm text-red-700/80 dark:text-red-400/80 max-w-md">
+                Trwale usunie Twoje konto, statystyki, wszystkie wyniki oraz usunie Cię z list znajomych. Tej operacji nie można cofnąć.
+              </p>
+            </div>
+            <Button 
+              variant="danger" 
+              className="flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              {isDeleting ? 'Usuwanie...' : 'Usuń konto na zawsze'}
+            </Button>
+          </Card>
+        </div>
       </div>
     </div>
+
   );
 };
 

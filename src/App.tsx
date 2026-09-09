@@ -20,11 +20,12 @@ import { TestView } from './components/TestView';
 import { SummaryView } from './components/SummaryView';
 import { CreatorView } from './components/CreatorView';
 import { ProfileView } from './components/social/ProfileView';
-import { LeaderboardView } from './components/social/LeaderboardView';
+import { StatsView } from './components/StatsView';
 import { FriendsView } from './components/social/FriendsView';
-import { ProgressView } from './components/ProgressView';
 import { MultiplayerView } from './components/multiplayer/MultiplayerView';
 import { MainLayout } from './components/layout/MainLayout';
+import { CommandPalette } from './components/common/CommandPalette';
+import { FlashcardsView } from './components/FlashcardsView';
 import { useSync } from './hooks/useSync';
 
 import { DarkModeToggle } from './components/DarkModeToggle';
@@ -35,7 +36,7 @@ import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 
-export type AppPhase = 'dashboard' | 'learn' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'leaderboard' | 'progress' | 'multiplayer';
+export type AppPhase = 'dashboard' | 'learn' | 'test' | 'summary' | 'creator' | 'profile' | 'friends' | 'stats' | 'multiplayer' | 'flashcards';
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.5;
@@ -67,22 +68,22 @@ const App: FC = () => {
   const getPhaseFromLocation = (loc: string): AppPhase => {
     if (loc === '/nauka') return 'learn';
     if (loc === '/test') return 'test';
+    if (loc === '/fiszki') return 'flashcards';
     if (loc === '/podsumowanie') return 'summary';
     if (loc === '/kreator') return 'creator';
     if (loc === '/profil') return 'profile';
-    if (loc === '/progress') return 'progress';
+    if (loc === '/statystyki') return 'stats';
     if (loc === '/multiplayer') return 'multiplayer';
     if (loc === '/znajomi') return 'friends';
-    if (loc === '/ranking') return 'leaderboard';
     return 'dashboard';
   };
   let displayPhase = getPhaseFromLocation(location);
 
   const setPhase = (newPhase: AppPhase) => {
     const paths: Record<AppPhase, string> = { 
-      dashboard: '/', learn: '/nauka', test: '/test', 
+      dashboard: '/', learn: '/nauka', test: '/test', flashcards: '/fiszki',
       summary: '/podsumowanie', creator: '/kreator', 
-      profile: '/profil', friends: '/znajomi', leaderboard: '/ranking', progress: '/progress', multiplayer: '/multiplayer' 
+      profile: '/profil', friends: '/znajomi', stats: '/statystyki', multiplayer: '/multiplayer' 
     };
     setLocation(paths[newPhase]);
   };
@@ -322,8 +323,8 @@ const App: FC = () => {
     setPhase('test');
   }, []);
 
-  const handleRenameSession = useCallback((sessionId: string, newName: string) => {
-    renameSession(sessionId, newName);
+  const handleRenameSession = useCallback(async (sessionId: string, newName: string) => {
+    await renameSession(sessionId, newName);
     if (sessionId === currentSessionId && session) {
       setSession({ ...session, baseName: newName });
     }
@@ -374,6 +375,18 @@ const App: FC = () => {
         </motion.div>
       );
     }
+    if (displayPhase === 'flashcards' && session) {
+      return (
+        <motion.div key="flashcards" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col w-full h-full min-h-0 bg-zinc-50 dark:bg-black">
+          <FlashcardsView 
+            session={session} 
+            sessionId={currentSessionId!}
+            onExit={() => setPhase('learn')} 
+          />
+        </motion.div>
+      );
+    }
+    
     if (displayPhase === 'creator') {
       return (
         <motion.div key="creator" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col min-h-0">
@@ -395,7 +408,7 @@ const App: FC = () => {
     }
     
     // Social and Home views use the persistent MainLayout
-    if (['dashboard', 'learn', 'profile', 'friends', 'leaderboard', 'progress', 'multiplayer'].includes(displayPhase)) {
+    if (['dashboard', 'learn', 'profile', 'friends', 'stats', 'multiplayer'].includes(displayPhase)) {
       return (
         <motion.div key="main-layout" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col w-full h-full">
           <MainLayout 
@@ -403,12 +416,6 @@ const App: FC = () => {
             onNavigate={(p) => {
               if (p === 'settings') {
                 setShowMobileSettings(true);
-              } else if (p === 'creator') {
-                setCreatorInitialQuestions(null);
-                setCreatorInitialBaseName(null);
-                setCreatorInitialImages(null);
-                setCreatorSourceSessionId(null);
-                setPhase('creator');
               } else {
                 setPhase(p as any);
               }
@@ -435,6 +442,14 @@ const App: FC = () => {
                     onDeleteSession={handleDeleteSession}
                     onRenameSession={handleRenameSession}
                     onRestartSession={handleRestartSession}
+                    onFlashcards={async (id) => {
+                      const loaded = await loadSession(id);
+                      if (loaded) {
+                        setSession(loaded);
+                        setCurrentSessionId(id);
+                        setPhase('flashcards');
+                      }
+                    }}
                     onEnterCreator={() => {
                       setCreatorInitialQuestions(null);
                       setCreatorInitialBaseName(null);
@@ -446,10 +461,10 @@ const App: FC = () => {
                   />
                 </motion.div>
               )}
-                            {displayPhase === 'progress' && (
-                <motion.div key="progress" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
+              {displayPhase === 'stats' && (
+                <motion.div key="stats" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
                   <AuthGuard onCancel={() => setPhase('dashboard')}>
-                    <ProgressView />
+                    <StatsView />
                   </AuthGuard>
                 </motion.div>
               )}
@@ -463,17 +478,12 @@ const App: FC = () => {
               {displayPhase === 'profile' && (
                 <motion.div key="profile" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
                   <AuthGuard onCancel={() => setPhase('dashboard')}>
-                    <ProfileView />
+                    <ProfileView onOpenSettings={() => setShowMobileSettings(true)} />
                   </AuthGuard>
                 </motion.div>
               )}
-              {displayPhase === 'leaderboard' && (
-                <motion.div key="leaderboard" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
-                  <AuthGuard onCancel={() => setPhase('dashboard')}>
-                    <LeaderboardView />
-                  </AuthGuard>
-                </motion.div>
-              )}
+
+
               {displayPhase === 'friends' && (
                 <motion.div key="friends" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col h-full">
                   <AuthGuard onCancel={() => setPhase('dashboard')}>
@@ -617,6 +627,7 @@ const App: FC = () => {
           <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
         )}
       </AnimatePresence>
+      <CommandPalette />
       <Toaster position="bottom-right" richColors theme="system" />
     </div>
   );

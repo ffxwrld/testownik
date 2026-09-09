@@ -4,7 +4,11 @@ import { useActivity } from '../hooks/useActivity';
 import { Clock, CheckCircle2, TrendingUp, Target, CalendarDays } from 'lucide-react';
 import { Card } from './ui/Card';
 
-export const ProgressView: React.FC = () => {
+interface ProgressViewProps {
+  showHeader?: boolean;
+}
+
+export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true }) => {
   const { activity } = useActivity();
   
   const last7Days = useMemo(() => {
@@ -15,7 +19,10 @@ export const ProgressView: React.FC = () => {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const dateString = d.toISOString().split('T')[0];
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
       const dayLabel = ['Nd', 'Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob'][d.getDay()];
       
       const dayData = activity.find(a => a.log_date === dateString);
@@ -62,9 +69,11 @@ export const ProgressView: React.FC = () => {
     <div className="flex-1 overflow-y-auto hide-scrollbar bg-transparent">
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
         
-        <div className="flex items-center justify-between mb-8 mt-2">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Postępy</h1>
-        </div>
+        {showHeader && (
+          <div className="flex items-center justify-between mb-8 mt-2">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Postępy</h1>
+          </div>
+        )}
 
         <motion.div 
           className="space-y-6"
@@ -177,7 +186,7 @@ export const ProgressView: React.FC = () => {
                           >
                             {/* Tooltip rides on top of the bar */}
                             {day.studySeconds > 0 && (
-                              <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:-translate-y-1 pointer-events-none z-10 flex flex-col items-center">
+                              <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-200 ease-out group-hover:-translate-y-1 pointer-events-none z-10 flex flex-col items-center">
                                 <div className="bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] sm:text-xs font-bold py-1 px-2 sm:py-1.5 sm:px-3 rounded-lg shadow-lg whitespace-nowrap">
                                   {Math.round(day.studySeconds / 60)} min
                                 </div>

@@ -7,7 +7,9 @@ import { buildDemoQuestions } from '../utils/demo';
 import { Question, SavedSessionMetadata } from '../models/types';
 import { getAllSessionMetadata } from '../utils/session';
 import { Button } from './ui/Button';
+import { PenTool } from 'lucide-react';
 import { SessionsList } from './SessionsList';
+import { ImportModal } from './common/ImportModal';
 
 interface LearnViewProps {
   onOpenSettings?: () => void;
@@ -16,10 +18,11 @@ interface LearnViewProps {
   onStartSession: (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob>) => void;
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
-  onRenameSession: (sessionId: string, newName: string) => void;
+  onRenameSession: (sessionId: string, newName: string) => void | Promise<void>;
   onRestartSession: (sessionId: string, newRepeatMode?: number) => void;
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
+  onFlashcards: (sessionId: string) => void;
 }
 
 export const LearnView: FC<LearnViewProps> = ({
@@ -29,7 +32,9 @@ export const LearnView: FC<LearnViewProps> = ({
   onDeleteSession,
   onRenameSession,
   onRestartSession,
+  onEnterCreator,
   onEditInCreator,
+  onFlashcards
 }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,32 +128,63 @@ export const LearnView: FC<LearnViewProps> = ({
     onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań', images);
   };
 
-  const CreateCard = (
-    <button 
-      type="button"
-      onClick={() => fileInputRef.current?.click()}
-      className={`w-full h-[148px] border-2 border-dashed ${isDragging ? 'border-primary-500 bg-primary-500/20' : 'border-primary-500/50 bg-primary-500/10'} rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-primary-500/20 transition-colors group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500`}
-    >
-      <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 text-2xl mb-3 group-hover:scale-110 transition-transform">
-        {isLoading ? (
-          <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        ) : '+'}
-      </div>
-      <span className="font-bold text-primary-700 dark:text-primary-400 text-sm">
-        {t('home.createNew', 'Utwórz nową paczkę')}
-      </span>
-      <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-1">
-        {t('home.dragOrClick', 'Przeciągnij plik .zip')}
-      </p>
-      {loadError && (
-        <div className="absolute -bottom-10 left-0 right-0 text-center text-xs text-red-500 font-semibold bg-red-100 dark:bg-red-900/40 py-1 rounded">
-          {loadError}
-        </div>
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [learningMode, setLearningMode] = useState<'test' | 'flashcards'>('test');
+
+  const PrependCards = (
+    <>
+      {learningMode === 'flashcards' && (
+        <button 
+          type="button"
+          onClick={() => setShowImportModal(true)}
+          className={`w-full h-[148px] border-2 border-dashed border-amber-500/50 bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-amber-500/20 transition-colors group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500`}
+        >
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 group-hover:scale-110 transition-transform">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+          </div>
+          <span className="font-bold text-amber-700 dark:text-amber-400 text-sm">
+            Utwórz Fiszki (Wklej)
+          </span>
+          <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+            Wklej z Quizleta, Excela, AI
+          </p>
+        </button>
       )}
-    </button>
+
+      {learningMode === 'test' && (
+        <button 
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={`w-full h-[148px] border-2 border-dashed ${isDragging ? 'border-primary-500 bg-primary-500/20' : 'border-primary-500/50 bg-primary-500/10'} rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-primary-500/20 transition-colors group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500`}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3 group-hover:scale-110 transition-transform">
+            {isLoading ? (
+              <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+            )}
+          </div>
+          <span className="font-bold text-primary-700 dark:text-primary-400 text-sm">
+            Importuj z dysku
+          </span>
+          <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-1">
+            Wybierz lub upuść plik .zip
+          </p>
+          {loadError && (
+            <div className="absolute -bottom-10 left-0 right-0 text-center text-xs text-red-500 font-semibold bg-red-100 dark:bg-red-900/40 py-1 rounded">
+              {loadError}
+            </div>
+          )}
+        </button>
+      )}
+    </>
   );
 
   return (
@@ -176,11 +212,11 @@ export const LearnView: FC<LearnViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-primary-500/10 backdrop-blur-[2px] border-4 border-dashed border-primary-500 m-4 rounded-3xl flex items-center justify-center pointer-events-none"
+            className="absolute inset-0 z-50 bg-primary-500/10 backdrop-blur-sm border-4 border-dashed border-primary-500 rounded-3xl m-4 flex flex-col items-center justify-center pointer-events-none"
           >
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center">
-              <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="bg-white dark:bg-zinc-900 p-8 rounded-full shadow-2xl flex flex-col items-center">
+              <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
               </div>
@@ -194,10 +230,43 @@ export const LearnView: FC<LearnViewProps> = ({
 
       <div className="w-full max-w-5xl space-y-6 pb-24">
         
-        <div className="flex justify-between items-end mb-8 px-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 px-2 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Twoje materiały do nauki</h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Wybierz test do rozwiązania lub dodaj nowy. <button onClick={handleLoadDemo} className="text-primary-500 hover:underline">Załaduj demo</button></p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Wybierz zbiór do nauki lub dodaj nowy. <button onClick={handleLoadDemo} className="text-primary-500 hover:underline">Załaduj demo</button></p>
+          </div>
+          
+          <div className="flex items-center gap-3 self-stretch md:self-auto">
+            <div className="flex bg-zinc-200/50 dark:bg-zinc-800/50 p-1 rounded-xl">
+              <button
+                onClick={() => setLearningMode('test')}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                  learningMode === 'test'
+                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+              >
+                Testy
+              </button>
+              <button
+                onClick={() => setLearningMode('flashcards')}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                  learningMode === 'flashcards'
+                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+              >
+                Fiszki
+              </button>
+            </div>
+            
+            <button
+              onClick={onEnterCreator}
+              className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-sm active:scale-[0.97]"
+            >
+              <PenTool className="w-4 h-4" />
+              Kreator
+            </button>
           </div>
         </div>
 
@@ -210,6 +279,7 @@ export const LearnView: FC<LearnViewProps> = ({
         />
 
         <SessionsList
+          mode={learningMode}
           sessions={savedSessions}
           onResume={onResumeSession}
           onDelete={handleDeleteAndRefresh}
@@ -221,7 +291,8 @@ export const LearnView: FC<LearnViewProps> = ({
             onRestartSession(sessionId, config);
           }}
           onEditInCreator={onEditInCreator}
-          prependItem={CreateCard}
+          onFlashcards={onFlashcards}
+          prependItem={PrependCards}
         />
 
       </div>
@@ -312,6 +383,16 @@ export const LearnView: FC<LearnViewProps> = ({
         </AnimatePresence>
       , document.body)}
 
+      <ImportModal 
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportComplete={(questions, name, images) => {
+          setQuestions(questions);
+          setBaseName(name);
+          setImages(images || {});
+          setShowConfigModal(true);
+        }}
+      />
     </div>
   );
 };
