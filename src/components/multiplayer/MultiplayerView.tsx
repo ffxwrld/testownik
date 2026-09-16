@@ -4,7 +4,8 @@ import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
 import { getAllSessionMetadata, loadSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
-import { Users, Play, Download, CheckCircle2, Copy } from 'lucide-react';
+import { Users, Play, Download, CheckCircle2, Copy, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { BackButton } from '../common/BackButton';
 
 interface MultiplayerViewProps {
@@ -18,7 +19,19 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   const [joinCode, setJoinCode] = useState('');
   const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
   
-  const { roomCode, isHost, players, joinRoom, cleanup, sendFileToAll, receivedFile, startRace, raceStarted} = useMultiplayerContext();
+  const { 
+    roomCode, 
+    isHost, 
+    isSendingPackage,
+    players, 
+    joinRoom, 
+    cleanup, 
+    sendFileToAll, 
+    markPlayerReady,
+    receivedFile, 
+    startRace, 
+    raceStarted 
+  } = useMultiplayerContext();
 
   useEffect(() => {
     if (view === 'host_select') {
@@ -26,19 +39,21 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     }
   }, [view]);
 
-  
   useEffect(() => {
     if (receivedFile && !isHost) {
-      console.log('Got file via P2P! Unzipping...');
+      console.log('Paczka pytań pobrana! Rozpakowywanie...');
+      toast.info('Rozpakowywanie bazy pytań...');
       importSessionFromZip(receivedFile).then(({ sessionId }) => {
-        // Zapiszmy otrzymany sessionId jako stan do odpalenia
-        console.log('Unzipped to session', sessionId);
+        console.log('Rozpakowano do sesji:', sessionId);
         setImportedSessionId(sessionId);
+        markPlayerReady();
+        toast.success('Baza pytań gotowa do wyścigu!');
       }).catch(err => {
-        console.error('Failed to import P2P session', err);
+        console.error('Błąd importu paczki:', err);
+        toast.error('Błąd importu bazy pytań: ' + ((err as Error).message || err));
       });
     }
-  }, [receivedFile, isHost]);
+  }, [receivedFile, isHost, markPlayerReady]);
 
 
   
@@ -72,31 +87,42 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   };
 
   const handleStartTransfer = async () => {
-    if (!selectedSessionId) return;
-    const session = await loadSession(selectedSessionId);
-    if (!session) return;
-    
-    // Zresetuj postęp paczki zanim wyślesz ją znajomym
-    const cleanSession = {
-      ...session,
-      phase: 'test' as const,
-      currentQuestionIndex: 0,
-      done: [],
-      doneStats: [],
-      totalFirstAttempts: 0,
-      totalFirstCorrect: 0,
-      elapsedSeconds: 0,
-      queue: session.questions.map(q => ({
-        questionId: q.id,
-        requiredCorrectStreak: session.repeatMode > 1 ? session.repeatMode : 1,
-        consecutiveCorrect: 0,
-        wrongCount: 0,
-        firstAnswerWrong: false
-      }))
-    };
-    
-    const blob = await exportSessionToZip(selectedSessionId, cleanSession);
-    sendFileToAll(blob);
+    if (!selectedSessionId) {
+      toast.error('Wybierz najpierw bazę pytań dla pokoju');
+      return;
+    }
+    try {
+      const session = await loadSession(selectedSessionId);
+      if (!session) {
+        toast.error('Nie udało się wczytać bazy pytań z pamięci');
+        return;
+      }
+      
+      // Zresetuj postęp paczki zanim wyślesz ją znajomym
+      const cleanSession = {
+        ...session,
+        phase: 'test' as const,
+        currentQuestionIndex: 0,
+        done: [],
+        doneStats: [],
+        totalFirstAttempts: 0,
+        totalFirstCorrect: 0,
+        elapsedSeconds: 0,
+        queue: session.questions.map(q => ({
+          questionId: q.id,
+          requiredCorrectStreak: session.repeatMode > 1 ? session.repeatMode : 1,
+          consecutiveCorrect: 0,
+          wrongCount: 0,
+          firstAnswerWrong: false
+        }))
+      };
+      
+      const blob = await exportSessionToZip(selectedSessionId, cleanSession);
+      await sendFileToAll(blob);
+    } catch (err) {
+      console.error('Błąd eksportu bazy pytań:', err);
+      toast.error('Błąd przygotowania bazy pytań: ' + ((err as Error).message || err));
+    }
   };
 
   return (
@@ -208,8 +234,13 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                       </button>
                     )}
                     {isHost && players.length > 1 && (
-                      <button onClick={handleStartTransfer} className="text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-2 rounded-lg font-bold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition">
-                        Wyślij paczkę
+                      <button 
+                        disabled={isSendingPackage}
+                        onClick={handleStartTransfer} 
+                        className="text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-2 rounded-lg font-bold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {isSendingPackage && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {isSendingPackage ? 'Wysyłanie...' : players.some(p => !p.isHost && p.status === 'ready') ? 'Wyślij ponownie' : 'Wyślij paczkę'}
                       </button>
                     )}
                   </div>

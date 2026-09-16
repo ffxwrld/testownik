@@ -52,7 +52,12 @@ Stan projektu: **v1.1.3** | Stabilny build | TypeScript 0 błędów | Testy: 48/
   - **Audio & FX**: Odblokowanie AudioContext gestem użytkownika (`pointerdown`/`keydown`), zbalansowana głośność buzzera błędu, synchronizacja wyciszenia zdarzeniem systemowym `testownik-sound-toggle`.
   - **Persystencja rekordów**: Stabilne przekazywanie statystyk do `arcadeStorage` przez `statsRef`.
 - [x] **Audyt trybu Multiplayer (`useMultiplayer` & `MultiplayerView`)**:
-  - Stabilność połączeń WebRTC P2P (room signaling, obsługa rozłączeń graczy, ICE timeout na eduroam/NAT zwiększony z 1.5s do 4s).
+  - **Niezawodne przesyłanie paczki pytań (Dual-Transport)**:
+    - Naprawa WebRTC P2P: bezpieczne pakiety 16 KB (zamiast 64 KB powodujących błędy SCTP), redukcja opóźnienia gatheringu z 4s do 1s, bezpieczne drenowanie bufora `bufferedAmountLowThreshold` z fallbackiem czasowym.
+    - Automatyczny relay Supabase Realtime: jeśli WebRTC nie nawiąże połączenia w 5s lub rzuci błąd (eduroam/NAT/firewall), paczka przesyłana jest natychmiast w porcjach base64 przez broadcast websocketowy.
+    - Handshake i renegocjacja: event `request_offer` od gościa po dołączeniu eliminuje wyścigi obecności, a czyszczenie rozłączonych peerów zapobiega zablokowaniu ponownego wysyłania.
+    - Eliminacja wyścigu gotowości: gość zgłasza `status: 'ready'` dopiero po zakończeniu asynchronicznego rozpakowywania (`importSessionFromZip`) i zapisu do bazy.
+    - Wizualny stan transferu: wskaźnik ładowania `Loader2` na przycisku, obsługa błędu w `toast`, możliwość ponownego wysłania paczki.
   - Likwidacja synchronicznych, blokujących `alert()` na rzecz powiadomień `toast` z `sonner`.
   - Naprawa desynchronizacji rewanżu (`rematchEventCount` automatycznie restartuje sesję i przełącza gości z `SummaryView` do `TestView`).
   - Synchronizacja toru wyścigu (`MultiplayerRaceTrack`) i ekranu podium (`MultiplayerPodium`) z obsługą graczy rozłączonych (status DNF).

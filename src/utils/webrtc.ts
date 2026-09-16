@@ -1,4 +1,4 @@
-export const CHUNK_SIZE = 64 * 1024; // 64KB
+export const CHUNK_SIZE = 16 * 1024; // 16KB for maximum cross-browser RTCDataChannel reliability
 
 export type PeerConnectionCallbacks = {
   onIceCandidate: (candidate: RTCIceCandidate) => void;
@@ -10,7 +10,7 @@ const TURN_URL = import.meta.env.VITE_TURN_URL || 'openrelay.metered.ca';
 const TURN_USER = import.meta.env.VITE_TURN_USERNAME || 'openrelayproject';
 const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL || 'openrelayproject';
 
-const ICE_GATHERING_TIMEOUT_MS = 4000;
+const ICE_GATHERING_TIMEOUT_MS = 1000;
 
 export class WebRTCManager {
   private pc: RTCPeerConnection;
@@ -48,6 +48,14 @@ export class WebRTCManager {
       this.setupDataChannel(event.channel);
       this.callbacks.onDataChannel(event.channel);
     };
+  }
+
+  public isConnected(): boolean {
+    return this.dataChannel !== null && this.dataChannel.readyState === 'open';
+  }
+
+  public getConnectionState(): RTCPeerConnectionState {
+    return this.pc.connectionState;
   }
 
   public async createOffer(): Promise<RTCSessionDescriptionInit> {
@@ -148,11 +156,11 @@ export class WebRTCManager {
         this.receivedBytes += event.data.byteLength;
         
         if (this.expectedSize > 0 && this.onProgress) {
-          const percent = Math.round((this.receivedBytes / this.expectedSize) * 100);
+          const percent = Math.min(100, Math.round((this.receivedBytes / this.expectedSize) * 100));
           this.onProgress(percent);
         }
 
-        if (this.receivedBytes === this.expectedSize) {
+        if (this.expectedSize > 0 && this.receivedBytes >= this.expectedSize) {
           const blob = new Blob(this.receiveBuffer as unknown as BlobPart[]);
           if (this.onFileReceived) {
             this.onFileReceived(blob, {});
@@ -165,7 +173,7 @@ export class WebRTCManager {
     };
   }
 
-  public async sendFile(file: File | Blob, metadata: Record<string, unknown> = {}, onProgress?: (p: number) => void) {
+  public async sendFile(file: File | Blob, metadata: Record<string, unknown> = {}, onProgress?: (p: number) => void): Promise<void> {
     if (!this.dataChannel) {
       throw new Error('Data channel is not created');
     }
@@ -173,7 +181,7 @@ export class WebRTCManager {
     if (this.dataChannel.readyState !== 'open') {
       console.log('Waiting for data channel to open...');
       await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Data channel timeout')), 15000);
+        const timeout = setTimeout(() => reject(new Error('Data channel timeout (5s)')), 5000);
         
         const prevOnOpen = this.dataChannel!.onopen;
         this.dataChannel!.onopen = (e) => {
@@ -197,36 +205,50 @@ export class WebRTCManager {
     const buffer = await file.arrayBuffer();
     let offset = 0;
 
-    const sendChunk = () => {
-      while (offset < buffer.byteLength) {
-        if (this.dataChannel!.bufferedAmount > this.dataChannel!.bufferedAmountLowThreshold) {
-          // Wait for buffer to drain
-          this.dataChannel!.onbufferedamountlow = () => {
-            this.dataChannel!.onbufferedamountlow = null;
-            sendChunk();
-          };
-          return;
-        }
-
-        const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
-        this.dataChannel!.send(chunk);
-        offset += chunk.byteLength;
-        
-        if (onProgress) {
-          onProgress(Math.round((offset / buffer.byteLength) * 100));
-        }
-      }
-    };
-
     if (this.dataChannel.bufferedAmountLowThreshold === 0) {
-        this.dataChannel.bufferedAmountLowThreshold = 65536; // 64KB
+      this.dataChannel.bufferedAmountLowThreshold = 32768; // 32KB
     }
-    
-    sendChunk();
+
+    await new Promise<void>((resolve, reject) => {
+      const sendChunk = () => {
+        try {
+          while (offset < buffer.byteLength) {
+            if (this.dataChannel!.bufferedAmount > (this.dataChannel!.bufferedAmountLowThreshold || 32768)) {
+              let drained = false;
+              const resume = () => {
+                if (drained) return;
+                drained = true;
+                this.dataChannel!.onbufferedamountlow = null;
+                sendChunk();
+              };
+              this.dataChannel!.onbufferedamountlow = resume;
+              setTimeout(resume, 100); // Safety fallback so buffer drain never deadlocks
+              return;
+            }
+
+            const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
+            this.dataChannel!.send(chunk);
+            offset += chunk.byteLength;
+            
+            if (onProgress) {
+              onProgress(Math.min(99, Math.round((offset / buffer.byteLength) * 100)));
+            }
+          }
+          if (onProgress) onProgress(100);
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      sendChunk();
+    });
   }
 
   public close() {
-    if (this.dataChannel) this.dataChannel.close();
-    this.pc.close();
+    if (this.dataChannel) {
+      try { this.dataChannel.close(); } catch { /* ignore */ }
+    }
+    try { this.pc.close(); } catch { /* ignore */ }
   }
 }
