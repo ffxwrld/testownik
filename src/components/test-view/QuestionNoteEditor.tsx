@@ -66,7 +66,7 @@ export const QuestionNoteEditor: React.FC<Props> = ({ sessionId, questionId }) =
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Wpisz własną notatkę do tego pytania (np. skojarzenie lub wyjaśnienie)..."
-                className="w-full min-h-[100px] p-4 text-sm bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-zinc-800 dark:text-zinc-200 resize-none placeholder:text-amber-700/30 dark:placeholder:text-amber-400/30"
+                className="w-full min-h-[100px] p-4 text-sm bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-amber-950 dark:text-amber-100 resize-none placeholder:text-amber-700/40 dark:placeholder:text-amber-400/40"
               />
             </div>
           </motion.div>

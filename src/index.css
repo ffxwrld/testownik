@@ -170,12 +170,25 @@ html.dark body {
 
 
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out both;
 }
 
 .animate-slideDown {
   animation: slideDown 0.2s ease-out both;
+}
+
+.animate-shimmer {
+  animation: shimmer 2.4s infinite ease-in-out;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -252,5 +265,51 @@ button:disabled {
 @layer base {
   html, body {
     touch-action: manipulation;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   KaTeX & Math responsiveness
+───────────────────────────────────────────────────────────────────────────── */
+
+.katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0.25rem;
+  margin: 0.75rem 0 !important;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.4);
+  border-radius: 9999px;
+}
+
+html.dark .katex-display::-webkit-scrollbar-thumb {
+  background: rgba(82, 82, 91, 0.5);
+}
+
+.katex {
+  font-size: 1.05em;
+  text-rendering: optimizeLegibility;
+}
+
+@media (max-width: 640px) {
+  .katex-display {
+    font-size: 0.95em;
+    padding: 0.35rem 0;
+  }
+  .katex {
+    font-size: 1em;
   }
 }

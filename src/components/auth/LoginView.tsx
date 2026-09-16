@@ -25,8 +25,10 @@ export const LoginView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setStep('code');
       setMessage(t('auth.codeSent'));
 try { toast.success(t('auth.codeSent')); } catch(e){}
-    } catch (err: any) {
-      setError(err.message || 'Error'); toast.error(err.message || 'Error');
+    } catch (err: unknown) {
+      const msg = (err as Error)?.message || 'Error';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -41,8 +43,10 @@ try { toast.success(t('auth.codeSent')); } catch(e){}
     try {
       await verifyOtp(email, code);
       // AuthGuard will automatically detect session change and dismiss this view
-    } catch (err: any) {
-      setError(err.message || 'Error'); toast.error(err.message || 'Error');
+    } catch (err: unknown) {
+      const msg = (err as Error)?.message || 'Error';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -111,9 +115,10 @@ try { toast.success(t('auth.codeSent')); } catch(e){}
                   setLoading(true);
                   try {
                     await signInAnonymously();
-                  } catch (err: any) {
-                    setError(err.message || 'Błąd tworzenia konta lokalnego');
-                    toast.error(err.message || 'Błąd tworzenia konta lokalnego');
+                  } catch (err: unknown) {
+                    const msg = (err as Error)?.message || 'Błąd tworzenia konta lokalnego';
+                    setError(msg);
+                    toast.error(msg);
                   } finally {
                     setLoading(false);
                   }

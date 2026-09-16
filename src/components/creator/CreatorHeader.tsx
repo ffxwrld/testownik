@@ -1,6 +1,7 @@
 import { FC, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button';
+import { BackButton } from '../common/BackButton';
 
 interface CreatorHeaderProps {
   onQuit: () => void;
@@ -23,12 +24,13 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({ onQuit, onSaveClick, que
   return (
     <header className="flex-shrink-0 h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between px-2 sm:px-4 lg:px-6 z-10 relative">
       <div className="flex items-center gap-1 sm:gap-4 flex-1">
-        <Button variant="ghost" size="sm" onClick={onQuit} className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 px-2 sm:px-3">
-          <svg className="w-5 h-5 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="hidden sm:inline">{t('creator.quit')}</span>
-        </Button>
+        <BackButton
+          onClick={onQuit}
+          label={t('creator.back')}
+          variant="ghost"
+          enableEscapeKey={false}
+          className="px-2 sm:px-3"
+        />
         
         <Button variant="ghost" size="sm" onClick={onToggleSidebar} className="md:hidden px-2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 relative">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -60,7 +62,7 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({ onQuit, onSaveClick, que
             <svg className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            <span className="hidden sm:inline">{t('creator.saveToTestownik')}</span>
+            <span className="hidden sm:inline">{t('creator.saveToApp')}</span>
           </div>
           <kbd className="hidden sm:inline-flex items-center justify-center h-5 px-1.5 ml-2 text-[10px] font-medium font-sans text-emerald-900 bg-emerald-400/50 rounded-md border border-emerald-400/30">
             {isMac ? '⌘' : 'Ctrl'} S

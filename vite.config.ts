@@ -23,6 +23,43 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('katex')) {
+              return 'vendor-katex';
+            }
+            if (id.includes('react-big-calendar') || id.includes('date-fns')) {
+              return 'vendor-calendar';
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-framer';
+            }
+            if (
+              id.includes('react-markdown') ||
+              id.includes('remark-math') ||
+              id.includes('rehype-katex') ||
+              id.includes('micromark') ||
+              id.includes('unist') ||
+              id.includes('mdast') ||
+              id.includes('hast')
+            ) {
+              return 'vendor-markdown';
+            }
+            if (id.includes('jszip')) {
+              return 'vendor-jszip';
+            }
+            if (id.includes('react') || id.includes('wouter') || id.includes('swr')) {
+              return 'vendor-react';
+            }
+          }
+        },
+      },
+    },
   },
   base: "./",
 });

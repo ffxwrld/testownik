@@ -1,38 +1,46 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { BarChart3, LayoutDashboard, Zap, Users, Gamepad2 } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Zap, Users, Gamepad2, Calendar } from 'lucide-react';
 
 import { useLocation } from 'wouter';
 import logo from '../../assets/logo.png';
 import { useProfile } from '../../hooks/useProfile';
 import { useUserStats, calculateLevel } from '../../hooks/useUserStats';
 
-export type MainLayoutPhase = 'dashboard' | 'learn' | 'stats' | 'friends' | 'settings' | 'profile';
+import { AppPhase } from '../../hooks/useAppOrchestrator';
+
+export type MainLayoutNavTarget = AppPhase | 'settings';
 
 interface MainLayoutProps {
-  onNavigate?: (phase: string) => void;
+  onNavigate?: (phase: MainLayoutNavTarget) => void;
   children: ReactNode;
 }
 
 export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
   const [location] = useLocation();
-  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/statystyki' ? 'stats' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : location === '/multiplayer' ? 'multiplayer' : 'dashboard';
+  const currentPhase = location === '/' ? 'dashboard' : location === '/nauka' ? 'learn' : location === '/statystyki' ? 'stats' : location === '/znajomi' ? 'friends' : location === '/profil' ? 'profile' : location === '/multiplayer' ? 'multiplayer' : location === '/harmonogram' ? 'schedule' : 'dashboard';
   const { t } = useTranslation();
   const { profile } = useProfile();
   const { stats } = useUserStats();
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentPhase]);
 
   const levelInfo = stats ? calculateLevel(stats.total_xp) : { level: 1, currentLevelXp: 0, nextLevelXp: 1250, progress: 0, xpToNextLevel: 1250 };
 
-  const mainTabs = [
-    { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('layout.nav.dashboard', 'Pulpit') },
-    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: 'Graj' },
-    { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('layout.nav.learn', 'Nauka') },
-    { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: 'Statystyki' },
+  const mainTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
+    { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
+    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: t('nav.games', 'Graj') },
+    { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
+    { id: 'schedule', icon: <Calendar className="w-5 h-5" />, label: t('nav.schedule', 'Harmonogram') },
+    { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: t('nav.stats', 'Statystyki') },
   ];
 
-  const bottomTabs = [
-    { id: 'friends', icon: <Users className="w-5 h-5" />, label: 'Znajomi' }
+  const bottomTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
+    { id: 'friends', icon: <Users className="w-5 h-5" />, label: t('nav.friends', 'Znajomi') }
   ];
 
   const allMobileTabs = [
@@ -40,7 +48,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
     bottomTabs[0]
   ];
 
-  const renderTab = (tab: { id: string; icon: React.ReactNode; label: string }) => {
+  const renderTab = (tab: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }) => {
     const isActive = currentPhase === tab.id;
     return (
       <motion.button
@@ -111,7 +119,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
                   {profile.username}
                 </span>
                 <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                  Poz. {levelInfo.level} • {stats?.total_xp || 0} XP
+                  {t('nav.level', 'Poz.')} {levelInfo.level} • {stats?.total_xp || 0} XP
                 </span>
               </div>
             </div>
@@ -120,7 +128,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
       </nav>
 
       {/* Main Content Area — offset by sidebar width on desktop */}
-      <main className="flex-1 md:ml-64 overflow-y-auto relative pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 hide-scrollbar h-full">
+      <main ref={mainRef} className="flex-1 md:ml-64 overflow-y-auto relative pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 hide-scrollbar h-full">
         {children}
       </main>
 

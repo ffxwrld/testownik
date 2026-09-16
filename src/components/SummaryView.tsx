@@ -1,7 +1,8 @@
 import { Trophy } from 'lucide-react';
-import { useState, useMemo, FC } from 'react';
+import { useState, useMemo, FC, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { SessionState } from '../models/types';
 import { getHardestQuestions, formatTime } from '../utils/session';
 import { Card } from './ui/Card';
@@ -10,11 +11,14 @@ import { Button } from './ui/Button';
 import { ProgressBar } from './ui/ProgressBar';
 import { QuestionRenderer } from './QuestionRenderer';
 import { useMultiplayerContext } from '../contexts/MultiplayerContext';
+import { BackButton } from './common/BackButton';
+import { MultiplayerPodium } from './multiplayer/MultiplayerPodium';
 
 interface SummaryViewProps {
   session: SessionState;
   sessionId: string;
   onNewTest: () => void;
+  onRestartSession?: (sessionId: string) => void;
 }
 
 const getAccuracyColor = (pct: number) => {
@@ -23,7 +27,7 @@ const getAccuracyColor = (pct: number) => {
   return 'red';
 };
 
-const getAccuracyLabel = (pct: number, t: any) => {
+const getAccuracyLabel = (pct: number, t: TFunction) => {
   if (pct >= 90) return { text: t('summary.labels.outstanding'), color: 'success' as const };
   if (pct >= 80) return { text: t('summary.labels.veryGood'), color: 'success' as const };
   if (pct >= 70) return { text: t('summary.labels.good'), color: 'info' as const };
@@ -35,11 +39,21 @@ export const SummaryView: FC<SummaryViewProps> = ({
   session,
   sessionId,
   onNewTest,
+  onRestartSession,
 }) => {
   const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const { roomCode, players } = useMultiplayerContext();
-  const [showBeerModal, setShowBeerModal] = useState(true);
+  const {
+    roomCode,
+    players,
+    broadcastTestProgress,
+    triggerRematch,
+    currentUserId,
+    isHost,
+  } = useMultiplayerContext();
+
+  const isMultiplayerGame = Boolean(roomCode && players.length > 1);
+  const [showBeerModal, setShowBeerModal] = useState(() => !isMultiplayerGame);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -64,8 +78,28 @@ export const SummaryView: FC<SummaryViewProps> = ({
 
   const totalErrors = session.doneStats.reduce((sum, s) => sum + s.wrongCount, 0);
 
+  // Broadcast completion and final stats to multiplayer peers
+  useEffect(() => {
+    if (roomCode) {
+      broadcastTestProgress(100, {
+        accuracy,
+        timeSeconds: session.elapsedSeconds,
+        finishedAt: Date.now(),
+      });
+    }
+  }, [roomCode, broadcastTestProgress, accuracy, session.elapsedSeconds]);
+
+  const handleRematch = () => {
+    triggerRematch();
+    if (onRestartSession) {
+      onRestartSession(sessionId);
+    } else {
+      onNewTest();
+    }
+  };
+
   return (
-    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex items-center justify-center p-6">
+    <div className="flex-1 bg-gradient-to-b from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 flex flex-col items-center p-4 sm:p-6 min-h-screen overflow-y-auto">
       
       <AnimatePresence>
         {showBeerModal && (
@@ -107,6 +141,26 @@ export const SummaryView: FC<SummaryViewProps> = ({
         </motion.div>
       )}
       </AnimatePresence>
+
+       <div className="w-full max-w-2xl flex items-center justify-between mb-4 z-10">
+         <BackButton
+           onClick={onNewTest}
+           label={roomCode ? 'Wróć do lobby' : (t('common.back', 'Wróć') || 'Wróć')}
+           enableEscapeKey={!showBeerModal}
+         />
+       </div>
+
+        {isMultiplayerGame && (
+          <div className="w-full max-w-3xl mb-8 z-10">
+            <MultiplayerPodium
+              players={players}
+              currentUserId={currentUserId}
+              isHost={isHost}
+              onRematch={handleRematch}
+              onBackToLobby={onNewTest}
+            />
+          </div>
+        )}
 
       <motion.div initial={{ opacity: 0, transform: "translateY(20px)", filter: "blur(4px)" }} animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }} transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }} className="w-full max-w-2xl space-y-6 relative">
         {accuracy === 100 && (
@@ -166,11 +220,11 @@ export const SummaryView: FC<SummaryViewProps> = ({
               </div>
             )}
             {totalQuestions >= 100 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/40 dark:to-purple-900/10 border border-purple-200 dark:border-purple-800/50 px-4 py-2 rounded-full shadow-sm">
+              <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 px-4 py-2 rounded-full shadow-xs">
                 <span className="text-xl">🏔️</span>
                 <div>
-                  <div className="text-sm font-bold text-purple-900 dark:text-purple-100">Wytrwały</div>
-                  <div className="text-[10px] uppercase tracking-wider text-purple-700/70 dark:text-purple-400/70 font-semibold">100+ pytań w sesji</div>
+                  <div className="text-sm font-bold text-indigo-950 dark:text-indigo-100">Wytrwały</div>
+                  <div className="text-[10px] uppercase tracking-wider text-indigo-700/70 dark:text-indigo-300/70 font-semibold">100+ pytań w sesji</div>
                 </div>
               </div>
             )}

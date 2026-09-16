@@ -38,7 +38,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, onCancel }) => {
   }
 
   if (!profile) {
-    return <SetupProfileView onComplete={() => {}} />;
+    return <SetupProfileView onComplete={() => {}} onCancel={onCancel} />;
   }
 
   return <>{children}</>;

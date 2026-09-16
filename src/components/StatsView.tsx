@@ -1,53 +1,60 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LineChart, Trophy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { BarChart3, LineChart, Trophy } from 'lucide-react';
 import { ProgressView } from './ProgressView';
 import { LeaderboardView } from './social/LeaderboardView';
+import { PageHeader } from './common/PageHeader';
+import { cn } from '../utils/cn';
 
 type StatsTab = 'progress' | 'ranking';
 
 export const StatsView: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<StatsTab>('progress');
 
   const tabs: { id: StatsTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'progress', label: 'Postępy', icon: <LineChart className="w-4 h-4" /> },
-    { id: 'ranking', label: 'Ranking', icon: <Trophy className="w-4 h-4" /> },
+    { id: 'progress', label: t('stats.tabs.progress'), icon: <LineChart className="w-4 h-4" /> },
+    { id: 'ranking', label: t('stats.tabs.ranking'), icon: <Trophy className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Tab switcher */}
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
-        <div className="flex items-center justify-between mb-2 mt-2">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Statystyki</h1>
-        </div>
-        <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl w-fit">
-          {tabs.map(tab => (
+    <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12">
+      {/* Header & Apple Segmented Control */}
+      <PageHeader
+        icon={<BarChart3 />}
+        title={t('stats.title')}
+        subtitle={t('stats.subtitle')}
+      >
+        <div className="flex p-1 rounded-2xl bg-zinc-200/60 dark:bg-zinc-800/60 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 w-fit self-start sm:self-auto">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors z-10 ${
+              className={cn(
+                "relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-200 z-10 active:scale-[0.98] cursor-pointer",
                 activeTab === tab.id
-                  ? 'text-zinc-900 dark:text-zinc-50'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-              }`}
+                  ? "text-zinc-900 dark:text-zinc-50 shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              )}
             >
               {activeTab === tab.id && (
                 <motion.div
-                  layoutId="stats-active-tab"
-                  className="absolute inset-0 bg-white dark:bg-zinc-700 rounded-lg shadow-sm -z-10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.35 }}
+                  layoutId="stats-segmented-pill"
+                  className="absolute inset-0 bg-white dark:bg-zinc-700/90 rounded-xl shadow-xs -z-10"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               {tab.icon}
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </PageHeader>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
+      <div>
         {activeTab === 'progress' && <ProgressView showHeader={false} />}
         {activeTab === 'ranking' && <LeaderboardView showHeader={false} />}
       </div>

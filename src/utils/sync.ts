@@ -93,9 +93,9 @@ export async function syncStatsToServer(): Promise<SyncResult | null> {
     
     lastSyncTime = Date.now();
     return { success: true, data: data as UserStats };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Sync] Failed:', err);
-    return { success: false, error: { code: 'NETWORK', message: err.message || 'Błąd sieci' } };
+    return { success: false, error: { code: 'NETWORK', message: (err as Error)?.message || 'Błąd sieci' } };
   } finally {
     syncInProgress = false;
   }
@@ -110,8 +110,8 @@ export async function buyStreakFreeze(): Promise<SyncResult> {
     const { data, error } = await supabase.rpc('buy_streak_freeze');
     if (error) throw error;
     return { success: true, data: data as UserStats };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Sync] Failed to buy freeze:', err);
-    return { success: false, error: { code: 'NETWORK', message: err.message || 'Błąd podczas zakupu' } };
+    return { success: false, error: { code: 'NETWORK', message: (err as Error)?.message || 'Błąd podczas zakupu' } };
   }
 }

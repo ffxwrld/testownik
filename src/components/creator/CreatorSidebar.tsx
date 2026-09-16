@@ -1,5 +1,6 @@
 import { FC, useEffect, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditingQuestion } from '../../hooks/useCreatorEngine';
 import { Button } from '../ui/Button';
@@ -26,7 +27,7 @@ interface SidebarItemProps {
   onDuplicate: (id: string) => void;
   isMac: boolean;
   canDelete: boolean;
-  t: any;
+  t: TFunction;
 }
 
 const SidebarItem = memo(({ q, idx, isActive, onClick, onDelete, onDuplicate, isMac, canDelete, t }: SidebarItemProps) => {
@@ -67,20 +68,20 @@ const SidebarItem = memo(({ q, idx, isActive, onClick, onDelete, onDuplicate, is
       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm p-1 rounded-lg shadow-sm border border-zinc-200/50 dark:border-zinc-700/50">
         <button 
           onClick={(e) => { e.stopPropagation(); onDuplicate(q.id); }}
-          className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+          className="p-1.5 hover:bg-blue-500/10 rounded transition-colors group/btn"
           title={`Duplikuj (${isMac ? '⌘' : 'Ctrl'} D)`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-3.5 h-3.5 text-zinc-400 group-hover/btn:text-blue-600 dark:group-hover/btn:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
           </svg>
         </button>
         <button 
           onClick={(e) => { e.stopPropagation(); onDelete(q.id); }}
           disabled={!canDelete}
-          className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded disabled:opacity-30"
+          className="p-1.5 hover:bg-red-500/10 rounded disabled:opacity-30 transition-colors group/btn"
           title="Usuń"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-3.5 h-3.5 text-zinc-400 group-hover/btn:text-red-600 dark:group-hover/btn:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

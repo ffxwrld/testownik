@@ -7,15 +7,18 @@ import { buildDemoQuestions } from '../utils/demo';
 import { Question, SavedSessionMetadata } from '../models/types';
 import { getAllSessionMetadata } from '../utils/session';
 import { Button } from './ui/Button';
-import { PenTool } from 'lucide-react';
+import { DatePicker } from './ui/DatePicker';
+import { PenTool, UploadCloud, Layers, Settings, BookOpen } from 'lucide-react';
 import { SessionsList } from './SessionsList';
 import { ImportModal } from './common/ImportModal';
+import { PageHeader } from './common/PageHeader';
+import { cn } from '../utils/cn';
 
 interface LearnViewProps {
   onOpenSettings?: () => void;
   activeTab?: 'new' | 'saved';
   onTabChange?: (tab: 'new' | 'saved') => void;
-  onStartSession: (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob>) => void;
+  onStartSession: (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob>, targetDate?: string) => void;
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void | Promise<void>;
@@ -46,6 +49,7 @@ export const LearnView: FC<LearnViewProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [baseName, setBaseName] = useState<string>('');
+  const [targetDate, setTargetDate] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
   
@@ -80,6 +84,7 @@ export const LearnView: FC<LearnViewProps> = ({
         const nameWithoutZip = file.name.replace(/\.zip$/i, '');
         setFileName(file.name);
         setBaseName(nameWithoutZip);
+        setTargetDate('');
         setShowConfigModal(true); // Otwieramy modal po załadowaniu
       }
     } catch (err) {
@@ -115,6 +120,7 @@ export const LearnView: FC<LearnViewProps> = ({
     setImages({});
     setFileName('pytania_demonstracyjne.zip');
     setBaseName('Pytania demonstracyjne');
+    setTargetDate('');
     setShowConfigModal(true);
   };
 
@@ -125,7 +131,7 @@ export const LearnView: FC<LearnViewProps> = ({
   
   const handleStart = () => {
     setShowConfigModal(false);
-    onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań', images);
+    onStartSession(questions, repeatMode, baseName || fileName || 'Baza pytań', images, targetDate || undefined);
   };
 
   const [showImportModal, setShowImportModal] = useState(false);
@@ -137,18 +143,16 @@ export const LearnView: FC<LearnViewProps> = ({
         <button 
           type="button"
           onClick={() => setShowImportModal(true)}
-          className={`w-full h-[148px] border-2 border-dashed border-amber-500/50 bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-amber-500/20 transition-colors group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500`}
+          className="w-full h-[152px] border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 hover:bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 active:scale-[0.98]"
         >
-          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 group-hover:scale-110 transition-transform">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-            </svg>
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-2.5 group-hover:scale-105 transition-transform">
+            <Layers className="w-5 h-5" />
           </div>
-          <span className="font-bold text-amber-700 dark:text-amber-400 text-sm">
-            Utwórz Fiszki (Wklej)
+          <span className="font-bold text-amber-700 dark:text-amber-300 text-sm">
+            {t('learn.createFlashcards')}
           </span>
           <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
-            Wklej z Quizleta, Excela, AI
+            {t('learn.createFlashcardsSub')}
           </p>
         </button>
       )}
@@ -157,28 +161,31 @@ export const LearnView: FC<LearnViewProps> = ({
         <button 
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={`w-full h-[148px] border-2 border-dashed ${isDragging ? 'border-primary-500 bg-primary-500/20' : 'border-primary-500/50 bg-primary-500/10'} rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-primary-500/20 transition-colors group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500`}
+          className={cn(
+            "w-full h-[152px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:scale-[0.98]",
+            isDragging
+              ? "border-primary-500 bg-primary-500/20"
+              : "border-primary-500/40 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10"
+          )}
         >
-          <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3 group-hover:scale-110 transition-transform">
+          <div className="w-11 h-11 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-2.5 group-hover:scale-105 transition-transform">
             {isLoading ? (
               <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
+              <UploadCloud className="w-5 h-5" />
             )}
           </div>
-          <span className="font-bold text-primary-700 dark:text-primary-400 text-sm">
-            Importuj z dysku
+          <span className="font-bold text-primary-700 dark:text-primary-300 text-sm">
+            {t('learn.importDisk')}
           </span>
           <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-1">
-            Wybierz lub upuść plik .zip
+            {t('learn.importDiskSub')}
           </p>
           {loadError && (
-            <div className="absolute -bottom-10 left-0 right-0 text-center text-xs text-red-500 font-semibold bg-red-100 dark:bg-red-900/40 py-1 rounded">
+            <div className="absolute -bottom-10 left-0 right-0 text-center text-xs text-red-500 font-semibold bg-red-100 dark:bg-red-900/40 py-1 rounded-xl">
               {loadError}
             </div>
           )}
@@ -189,21 +196,21 @@ export const LearnView: FC<LearnViewProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-transparent flex flex-col items-center justify-start pt-12 md:pt-16 p-6 overflow-y-auto relative h-full w-full"
+      className="relative w-full"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Mobile Settings Button */}
-      <button 
-        onClick={onOpenSettings}
-        className="md:hidden absolute top-4 right-4 p-2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm rounded-full shadow-sm border border-zinc-200/50 dark:border-zinc-800/50"
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </button>
+      {onOpenSettings && (
+        <button 
+          onClick={onOpenSettings}
+          className="md:hidden fixed top-[max(1rem,env(safe-area-inset-top))] right-16 z-40 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-full shadow-xs border border-zinc-200/50 dark:border-zinc-800/50 active:scale-95 transition"
+          aria-label={t('nav.settings')}
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+      )}
 
       {/* Drag Overlay */}
       <AnimatePresence>
@@ -216,59 +223,84 @@ export const LearnView: FC<LearnViewProps> = ({
           >
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-full shadow-2xl flex flex-col items-center">
               <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
+                <UploadCloud className="w-8 h-8 text-primary-600 dark:text-primary-400" />
               </div>
               <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                Upuść plik .zip z testem tutaj
+                {t('learn.dragDropTitle')}
               </h2>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-5xl space-y-6 pb-24">
+      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12">
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 px-2 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Twoje materiały do nauki</h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Wybierz zbiór do nauki lub dodaj nowy. <button onClick={handleLoadDemo} className="text-primary-500 hover:underline">Załaduj demo</button></p>
-          </div>
-          
-          <div className="flex items-center gap-3 self-stretch md:self-auto">
-            <div className="flex bg-zinc-200/50 dark:bg-zinc-800/50 p-1 rounded-xl">
-              <button
-                onClick={() => setLearningMode('test')}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  learningMode === 'test'
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-                }`}
+        <PageHeader
+          icon={<BookOpen />}
+          title={t('learn.title')}
+          subtitle={
+            <span>
+              {t('learn.subtitle')}{' '}
+              <button 
+                type="button" 
+                onClick={handleLoadDemo} 
+                className="text-primary-600 dark:text-primary-400 font-semibold hover:underline inline-flex items-center"
               >
-                Testy
+                {t('learn.loadDemo')}
               </button>
-              <button
-                onClick={() => setLearningMode('flashcards')}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  learningMode === 'flashcards'
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-                }`}
-              >
-                Fiszki
-              </button>
-            </div>
-            
+            </span>
+          }
+        >
+          <div className="flex p-1 rounded-2xl bg-zinc-200/60 dark:bg-zinc-800/60 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50">
             <button
-              onClick={onEnterCreator}
-              className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-sm active:scale-[0.97]"
+              type="button"
+              onClick={() => setLearningMode('test')}
+              className={cn(
+                "relative px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-200 z-10 active:scale-[0.98]",
+                learningMode === 'test'
+                  ? "text-zinc-900 dark:text-zinc-50 shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              )}
             >
-              <PenTool className="w-4 h-4" />
-              Kreator
+              {learningMode === 'test' && (
+                <motion.div
+                  layoutId="learn-mode-pill"
+                  className="absolute inset-0 bg-white dark:bg-zinc-700/90 rounded-xl shadow-xs -z-10"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span>{t('learn.tabTest')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLearningMode('flashcards')}
+              className={cn(
+                "relative px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-200 z-10 active:scale-[0.98]",
+                learningMode === 'flashcards'
+                  ? "text-zinc-900 dark:text-zinc-50 shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              )}
+            >
+              {learningMode === 'flashcards' && (
+                <motion.div
+                  layoutId="learn-mode-pill"
+                  className="absolute inset-0 bg-white dark:bg-zinc-700/90 rounded-xl shadow-xs -z-10"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span>{t('learn.tabFlashcards')}</span>
             </button>
           </div>
-        </div>
+          
+          <button
+            type="button"
+            onClick={onEnterCreator}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xs active:scale-[0.98]"
+          >
+            <PenTool className="w-4 h-4" />
+            <span>{t('creator.title', 'Kreator')}</span>
+          </button>
+        </PageHeader>
 
         <input
           type="file"
@@ -329,18 +361,30 @@ export const LearnView: FC<LearnViewProps> = ({
               
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Nazwa sesji</label>
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">{t('learn.newSessionModal.sessionName')}</label>
                   <input
                     type="text"
                     value={baseName}
                     onChange={e => setBaseName(e.target.value)}
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow"
-                    placeholder="Wpisz nazwę..."
+                    placeholder={t('learn.newSessionModal.sessionNamePlaceholder')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Tryb powtórek</label>
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">{t('learn.newSessionModal.targetDate')}</label>
+                  <DatePicker
+                    value={targetDate}
+                    onChange={setTargetDate}
+                    minDate={new Date().toISOString().split('T')[0]}
+                    placeholder={t('learn.newSessionModal.targetDate')}
+                    size="md"
+                    allowClear
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{t('learn.newSessionModal.repeatMode')}</label>
                   <div className="space-y-3">
                     {REPEAT_OPTIONS.map((opt) => (
                       <button type="button"
@@ -374,7 +418,7 @@ export const LearnView: FC<LearnViewProps> = ({
                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
                   </svg>
-                  Rozpocznij naukę
+                  {t('learn.newSessionModal.startBtn')}
                 </Button>
               </div>
 

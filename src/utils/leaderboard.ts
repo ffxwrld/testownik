@@ -1,7 +1,14 @@
 import { supabase } from '../lib/supabase';
-import { LeaderboardEntry } from '../models/social';
+import { LeaderboardEntry, UserId } from '../models/social';
 
 export type LeaderboardTimeRange = '7_days' | '30_days' | 'all_time';
+
+interface LeaderboardRpcRow {
+  user_id: string;
+  username: string;
+  avatar_url?: string;
+  total_xp: number;
+}
 
 export async function getLeaderboard(timeRange: LeaderboardTimeRange): Promise<LeaderboardEntry[]> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -11,15 +18,14 @@ export async function getLeaderboard(timeRange: LeaderboardTimeRange): Promise<L
 
   if (error) throw error;
 
-  let entries = data.map((row: any, index: number) => {
-    return {
-      rank: index + 1,
-      user_id: row.user_id,
-      username: row.username,
-      avatar_url: row.avatar_url,
-      value: row.total_xp // we use XP as the main ranking value
-    } as LeaderboardEntry;
-  });
+  const rows = (data || []) as LeaderboardRpcRow[];
+  const entries: LeaderboardEntry[] = rows.map((row, index) => ({
+    rank: index + 1,
+    user_id: row.user_id as UserId,
+    username: row.username,
+    avatar_url: row.avatar_url ?? null,
+    value: row.total_xp,
+  }));
 
   return entries;
 }

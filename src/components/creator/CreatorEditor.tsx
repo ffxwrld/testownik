@@ -46,7 +46,7 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
-              {t('creator.fileName')}
+              {t('creator.fileNameLabel')}
             </label>
             <input
               type="text"
@@ -71,14 +71,14 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
-            {t('creator.questionContent')}
+            {t('creator.questionTextLabel')}
           </label>
           <textarea
             value={activeQuestion.text}
             onChange={e => updateActiveQuestion({ text: e.target.value })}
             rows={4}
             className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm transition resize-y min-h-[120px]"
-            placeholder={t('creator.questionPlaceholder')}
+            placeholder={t('creator.questionTextPlaceholder')}
           />
         </div>
 
@@ -96,10 +96,10 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
               <div className="absolute top-4 right-4 flex gap-2">
                 <button
                   onClick={handleImageDelete}
-                  className="bg-white/90 dark:bg-zinc-800/90 hover:bg-red-50 dark:hover:bg-red-900/50 text-zinc-600 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 p-2 rounded-lg shadow-sm backdrop-blur-sm transition-colors"
+                  className="bg-white/90 dark:bg-zinc-800/90 hover:bg-red-500/10 p-2 rounded-lg shadow-sm backdrop-blur-sm transition-colors group/btn"
                   title="Usuń zdjęcie"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-zinc-600 dark:text-zinc-300 group-hover/btn:text-red-600 dark:group-hover/btn:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 6l-1.5 14.5a2 2 0 01-2 2H8a2 2 0 01-2-2L4.5 6m15 0H4.5m4.5 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-6 4v8m4-8v8" />
                   </svg>
                 </button>
@@ -168,9 +168,9 @@ export const CreatorEditor: FC<CreatorEditorProps> = ({
                 <button
                   onClick={() => handleDeleteAnswer(ans.id)}
                   disabled={activeQuestion.answers.length <= 1}
-                  className="mt-1 p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded disabled:opacity-30 transition-colors"
+                  className="mt-1 p-1.5 hover:bg-red-500/10 rounded disabled:opacity-30 transition-colors group/btn"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-zinc-400 group-hover/btn:text-red-600 dark:group-hover/btn:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

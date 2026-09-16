@@ -60,6 +60,15 @@ export interface FriendData {
   profile: UserProfile;
 }
 
+interface FriendshipRow {
+  id: string;
+  status: 'pending' | 'accepted' | 'declined';
+  requester_id: string;
+  addressee_id: string;
+  requester: UserProfile;
+  addressee: UserProfile;
+}
+
 export async function getFriends(): Promise<FriendData[]> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) throw new Error('Not authenticated');
@@ -81,7 +90,8 @@ export async function getFriends(): Promise<FriendData[]> {
 
   if (error) throw error;
 
-  return data.map((row: any) => {
+  const rows = (data || []) as unknown as FriendshipRow[];
+  return rows.map((row) => {
     const isRequester = row.requester_id === userId;
     const profile = isRequester ? row.addressee : row.requester;
     

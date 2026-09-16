@@ -1,7 +1,8 @@
 import { type FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, Moon } from 'lucide-react';
 import { useMultiplayerContext } from '../contexts/MultiplayerContext';
-import { Player } from '../hooks/useMultiplayer';
+import { MultiplayerRaceTrack } from './multiplayer/MultiplayerRaceTrack';
 import { Button } from './ui/Button';
 
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,9 @@ import { TestHeader } from './test-view/TestHeader';
 import { QuestionCard } from './test-view/QuestionCard';
 import { TestSidebar } from './test-view/TestSidebar';
 import { PreviousQuestionModal } from './test-view/PreviousQuestionModal';
+import { ChunkPromptModal } from './test-view/ChunkPromptModal';
+import { ChunkSelectorModal } from './test-view/ChunkSelectorModal';
+import { ChunkCompletionModal } from './test-view/ChunkCompletionModal';
 
 interface TestViewProps {
   onOpenSettings?: () => void;
@@ -29,8 +33,35 @@ export const TestView: FC<TestViewProps> = ({
   const { t } = useTranslation();
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [showingPrevious, setShowingPrevious] = useState(false);
+  const [showChunkPrompt, setShowChunkPrompt] = useState(
+    () => session.questions.length > 80 && session.chunkConfig === undefined
+  );
+  const [showChunkSelector, setShowChunkSelector] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('testownik_test_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
-  const { roomCode, players, broadcastTestProgress } = useMultiplayerContext();
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('testownik_test_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (session.questions.length > 80 && session.chunkConfig === undefined) {
+      setShowChunkPrompt(true);
+    }
+  }, [sessionId, session.questions.length, session.chunkConfig]);
+
+  const { roomCode, players, broadcastTestProgress, currentUserId } = useMultiplayerContext();
   
   const engine = useTestEngine({
     session,
@@ -41,47 +72,40 @@ export const TestView: FC<TestViewProps> = ({
     setShowingPrevious,
   });
 
-
   useEffect(() => {
     if (roomCode && engine.progressPercent !== undefined) {
       broadcastTestProgress(engine.progressPercent);
     }
   }, [engine.progressPercent, roomCode, broadcastTestProgress]);
 
-  if (!engine.currentQuestion) {
-
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-6 text-center">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-          {t('test.finishedTitle')}
-        </h2>
-        <p className="text-zinc-500 dark:text-zinc-400 max-w-md">
-          {t('test.finishedDesc')}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <AnimatePresence>
-      {engine.isAfk && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0, y: 10 }} 
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="bg-white dark:bg-zinc-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-zinc-200 dark:border-zinc-800"
+        {engine.isAfk && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-md p-4"
           >
-            <div className="text-5xl mb-4">😴</div>
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">Hej, jesteś tam?</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Czas nauki został wstrzymany ze względu na brak aktywności przez dłuższą chwilę.</p>
-            <Button onClick={() => engine.dismissAfk()} variant="primary" className="w-full py-3">
-              Wracam do nauki
-            </Button>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+              className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl shadow-black/20 border border-black/[0.08] dark:border-white/[0.12]"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4">
+                <Moon className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Czas nauki wstrzymany</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">Timer został zatrzymany z powodu braku aktywności.</p>
+              <Button onClick={() => engine.dismissAfk()} variant="primary" className="w-full py-3 rounded-xl">
+                Wracam do nauki
+              </Button>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
       </AnimatePresence>
 
       <TestHeader
@@ -92,56 +116,98 @@ export const TestView: FC<TestViewProps> = ({
         confirmQuit={confirmQuit}
         onQuitToggle={() => setConfirmQuit(!confirmQuit)}
         onQuitConfirm={onQuit}
+        chunkLabel={engine.chunkLabel}
+        onOpenChunkSelector={() => setShowChunkSelector(true)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
       />
 
       {roomCode && players.length > 1 && (
-        <div className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-3 flex flex-col gap-2">
-          {players.filter((p: Player) => p.status === 'ready' || p.progress > 0).map((p: Player) => (
-            <div key={p.userId} className="flex items-center gap-3">
-              <img src={p.avatarUrl} alt={p.username} className="w-6 h-6 rounded-full border border-zinc-200" />
-              <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden relative">
-                <motion.div 
-                  className="h-full bg-blue-500 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${p.progress}%` }}
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.8 }}
-                />
-              </div>
-              <span className="text-xs font-bold text-zinc-500 w-10 text-right">{Math.round(p.progress)}%</span>
-            </div>
-          ))}
-        </div>
+        <MultiplayerRaceTrack
+          players={players}
+          currentUserId={currentUserId}
+          className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70"
+        />
       )}
 
-
       <main className="flex-1 flex items-start py-8 pb-40 md:pb-16 w-full">
-        <div className="w-full max-w-5xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 items-stretch md:items-center pb-12">
-          <QuestionCard
-            questionKey={engine.questionKey}
-            currentQuestion={engine.currentQuestion}
-            sessionId={sessionId}
-            remainingCount={engine.remainingCount}
-            isMultiAnswer={engine.isMultiAnswer}
-            wrongCountForCurrent={engine.wrongCountForCurrent}
-            shuffledOrder={engine.shuffledOrder}
-            selectedIndices={engine.selectedIndices}
-            feedback={engine.feedback}
-            onToggleAnswer={engine.handleToggleAnswer}
-          />
+        {engine.isChunkCompleted && engine.activeChunk ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+            className="w-full max-w-lg mx-auto px-4 py-12 flex flex-col items-center justify-center text-center"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+              <Trophy className="w-7 h-7" strokeWidth={2.2} />
+            </div>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight mb-2">
+              Część {engine.activeChunk.index + 1} ukończona
+            </h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-sm leading-relaxed">
+              Opanowałeś wszystkie <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{engine.activeChunk.totalQuestions} pytań</strong> z tej części.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-xs">
+              {engine.activeChunk.index + 1 < engine.chunks.length && (
+                <Button
+                  variant="primary"
+                  className="rounded-xl py-3 shadow-lg shadow-primary-600/20"
+                  onClick={() => engine.switchChunk(engine.activeChunk!.index + 1)}
+                >
+                  Przejdź do Części {engine.activeChunk.index + 2}
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                className="rounded-xl py-3"
+                onClick={() => setShowChunkSelector(true)}
+              >
+                Wybierz inną część
+              </Button>
+            </div>
+          </motion.div>
+        ) : engine.currentQuestion ? (
+          <div className={`w-full mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 items-stretch md:items-center pb-12 transition-all duration-300 ${
+            isSidebarCollapsed ? 'max-w-4xl justify-center' : 'max-w-5xl'
+          }`}>
+            <QuestionCard
+              questionKey={engine.questionKey}
+              currentQuestion={engine.currentQuestion}
+              sessionId={sessionId}
+              remainingCount={engine.remainingCount}
+              isMultiAnswer={engine.isMultiAnswer}
+              wrongCountForCurrent={engine.wrongCountForCurrent}
+              shuffledOrder={engine.shuffledOrder}
+              selectedIndices={engine.selectedIndices}
+              feedback={engine.feedback}
+              onToggleAnswer={engine.handleToggleAnswer}
+            />
 
-          <TestSidebar
-            requiredStreak={engine.requiredStreak}
-            consecutiveCorrect={engine.consecutiveCorrect}
-            feedback={engine.feedback}
-            isTransitioning={engine.isTransitioning}
-            selectedIndices={engine.selectedIndices}
-            canConfirm={engine.canConfirm}
-            hasPreviousQuestion={engine.previousQuestion !== null}
-            onConfirm={engine.handleConfirm}
-            onNext={engine.handleNext}
-            onShowPrevious={() => setShowingPrevious(true)}
-          />
-        </div>
+            <TestSidebar
+              requiredStreak={engine.requiredStreak}
+              consecutiveCorrect={engine.consecutiveCorrect}
+              feedback={engine.feedback}
+              isTransitioning={engine.isTransitioning}
+              selectedIndices={engine.selectedIndices}
+              canConfirm={engine.canConfirm}
+              hasPreviousQuestion={engine.previousQuestion !== null}
+              onConfirm={engine.handleConfirm}
+              onNext={engine.handleNext}
+              onShowPrevious={() => setShowingPrevious(true)}
+              isCollapsed={isSidebarCollapsed}
+              onExpand={handleToggleSidebar}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+              {t('test.finishedTitle')}
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 max-w-md">
+              {t('test.finishedDesc')}
+            </p>
+          </div>
+        )}
       </main>
 
       {showingPrevious && engine.previousQuestion && (
@@ -149,6 +215,51 @@ export const TestView: FC<TestViewProps> = ({
           previousQuestion={engine.previousQuestion}
           sessionId={sessionId}
           onClose={() => setShowingPrevious(false)}
+        />
+      )}
+
+      {/* Chunk prompt modal for large databases (> 80 questions) */}
+      <ChunkPromptModal
+        isOpen={showChunkPrompt}
+        totalQuestions={session.questions.length}
+        baseName={session.baseName || 'Baza pytań'}
+        onConfirm={async (chunkSize) => {
+          setShowChunkPrompt(false);
+          await engine.configureChunking(chunkSize);
+        }}
+      />
+
+      {/* Chunk part selector */}
+      <ChunkSelectorModal
+        isOpen={showChunkSelector}
+        onClose={() => setShowChunkSelector(false)}
+        chunks={engine.chunks}
+        activeChunkIndex={engine.activeChunkIndex}
+        questions={session.questions}
+        doneIds={session.done}
+        baseName={session.baseName || 'Baza pytań'}
+        onSelectChunk={async (chunkIndex) => {
+          setShowChunkSelector(false);
+          await engine.switchChunk(chunkIndex);
+        }}
+        onReconfigureChunks={() => {
+          setShowChunkSelector(false);
+          setShowChunkPrompt(true);
+        }}
+      />
+
+      {/* Chunk completion celebration modal */}
+      {engine.activeChunk && (
+        <ChunkCompletionModal
+          isOpen={engine.isChunkCompleted && !showChunkSelector && !showChunkPrompt}
+          chunkIndex={engine.activeChunk.index}
+          totalChunks={engine.chunks.length}
+          chunkQuestionsCount={engine.activeChunk.totalQuestions}
+          hasNextChunk={engine.activeChunk.index + 1 < engine.chunks.length}
+          onNextChunk={() => engine.switchChunk(engine.activeChunk!.index + 1)}
+          onRepeatChunk={() => engine.repeatChunk()}
+          onOpenSelector={() => setShowChunkSelector(true)}
+          onFinishTest={() => engine.finishTest()}
         />
       )}
     </div>

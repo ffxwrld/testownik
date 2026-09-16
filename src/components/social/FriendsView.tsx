@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { Users } from 'lucide-react';
 import { useFriends } from '../../hooks/useFriends';
 import { FriendData } from '../../utils/friends';
+import { UserProfile } from '../../models/social';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { PageHeader } from '../common/PageHeader';
 
 interface FriendsViewProps {
   embedded?: boolean;
@@ -15,7 +18,7 @@ export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) =>
   const { t } = useTranslation();
   const { friends, loading, error, respondToRequest, removeFriend, searchUsers, sendRequest } = useFriends();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [searching, setSearching] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -42,40 +45,39 @@ export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) =>
       <motion.div 
         key={friend.friendshipId} 
         layout 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={false}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="mb-2 block"
+        className="mb-2.5 block"
       >
-        <Card className="flex items-center justify-between bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm" style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}>
-            {initial}
+        <Card className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-xs text-sm flex-shrink-0" style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}>
+              {initial}
+            </div>
+            <div>
+              <div className="font-bold text-sm text-zinc-900 dark:text-zinc-50">{friend.profile.username}</div>
+              {isPending && (
+                <div className="text-xs text-amber-500 font-medium">
+                  {isIncoming ? 'Oczekujące zaproszenie' : 'Wysłano zaproszenie'}
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <div className="font-bold text-zinc-900 dark:text-zinc-50">{friend.profile.username}</div>
-            {isPending && (
-              <div className="text-xs text-amber-500">
-                {isIncoming ? 'Oczekujące zaproszenie' : 'Wysłano zaproszenie'}
-              </div>
+          <div className="flex gap-2">
+            {isIncoming && (
+              <>
+                <Button size="sm" variant="primary" onClick={() => respondToRequest(friend.friendshipId, true)}>{t('social.friends.acceptBtn', 'Akceptuj')}</Button>
+                <Button size="sm" variant="danger" onClick={() => respondToRequest(friend.friendshipId, false)}>{t('social.friends.rejectBtn', 'Odrzuć')}</Button>
+              </>
+            )}
+            {isOutgoing && (
+              <Button size="sm" variant="danger" onClick={() => { removeFriend(friend.friendshipId); toast.success('Anulowano zaproszenie'); }}>Anuluj</Button>
+            )}
+            {friend.status === 'accepted' && (
+              <Button size="sm" variant="secondary" onClick={() => { removeFriend(friend.friendshipId); toast.success('Usunięto znajomego'); }}>Usuń</Button>
             )}
           </div>
-        </div>
-        <div className="flex gap-2">
-          {isIncoming && (
-            <>
-              <Button size="sm" variant="primary" onClick={() => respondToRequest(friend.friendshipId, true)}>{t('social.friends.acceptBtn', 'Akceptuj')}</Button>
-              <Button size="sm" variant="danger" onClick={() => respondToRequest(friend.friendshipId, false)}>{t('social.friends.rejectBtn', 'Odrzuć')}</Button>
-            </>
-          )}
-          {isOutgoing && (
-            <Button size="sm" variant="danger" onClick={() => { removeFriend(friend.friendshipId); toast.success('Anulowano zaproszenie'); }}>Anuluj</Button>
-          )}
-          {friend.status === 'accepted' && (
-            <Button size="sm" variant="secondary" onClick={() => { removeFriend(friend.friendshipId); toast.success('Usunięto znajomego'); }}>Usuń</Button>
-          )}
-        </div>
-      </Card>
+        </Card>
       </motion.div>
     );
   };
@@ -83,44 +85,55 @@ export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) =>
   const pendingIncoming = friends.filter(f => f.status === 'pending' && !f.isRequester);
 
   return (
-    <div className={embedded ? "w-full" : "flex-1 bg-transparent text-zinc-900 dark:text-zinc-50 p-6 flex flex-col items-center"}>
-      <div className={embedded ? "" : "w-full max-w-2xl"}>
-        <div className={`flex items-center justify-between ${embedded ? 'mb-4' : 'mb-8 mt-2'}`}>
-          <div>
-            {embedded ? (
-              <h2 className="text-xl font-bold">Znajomi</h2>
-            ) : (
-              <h1 className="text-3xl font-bold tracking-tight">Znajomi</h1>
-            )}
+    <div className={embedded ? "w-full" : "w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12"}>
+      <div className="w-full">
+        {embedded ? (
+          <div className="mb-4">
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Znajomi</h1>
             {pendingIncoming.length > 0 && (
               <p className="text-sm text-amber-500 font-medium mt-1">
                 {pendingIncoming.length} oczekując{pendingIncoming.length === 1 ? 'e' : 'ych'} zaproszeni{pendingIncoming.length === 1 ? 'e' : 'a'}
               </p>
             )}
           </div>
-        </div>
+        ) : (
+          <PageHeader
+            icon={<Users />}
+            title="Znajomi"
+            subtitle={
+              <div>
+                <span>Zarządzaj swoimi znajomymi i rywalizujcie ze sobą w rankingu.</span>
+                {pendingIncoming.length > 0 && (
+                  <span className="block text-amber-600 dark:text-amber-400 font-medium mt-0.5">
+                    {pendingIncoming.length} oczekując{pendingIncoming.length === 1 ? 'e' : 'ych'} zaproszeni{pendingIncoming.length === 1 ? 'e' : 'a'}
+                  </span>
+                )}
+              </div>
+            }
+          />
+        )}
 
-        {error && <div className="p-4 mb-4 bg-red-900/50 text-red-400 rounded-lg">{error}</div>}
+        {error && <div className="p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-2xl text-sm font-medium">{error}</div>}
 
         {/* Search / Add Friend */}
-        <Card className="mb-8 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-sm border-zinc-200 dark:border-zinc-800 rounded-xl">
-          <h2 className="text-lg font-bold mb-4">Dodaj znajomego</h2>
+        <Card className="mb-8 p-6">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-50 mb-3">Dodaj znajomego</h2>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Szukaj po nicku..."
-              className="flex-1 min-w-0 px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
+              className="flex-1 min-w-0 px-4 py-2 bg-zinc-50/80 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 rounded-xl text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-sm"
               minLength={3}
             />
             <Button type="submit" variant="primary" disabled={searching}>Szukaj</Button>
           </form>
           {searchResults.length > 0 && (
-            <div className="mt-4 space-y-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <div className="mt-4 space-y-2 border-t border-zinc-200/60 dark:border-zinc-800/60 pt-4">
               {searchResults.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-lg font-bold">
-                  <span>{user.username}</span>
+                <div key={user.id} className="flex items-center justify-between p-2.5 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 rounded-xl font-bold text-sm">
+                  <span className="text-zinc-900 dark:text-zinc-100">{user.username}</span>
                   <Button size="sm" variant="secondary" onClick={() => sendRequest(user.id)}>Zaproś</Button>
                 </div>
               ))}
@@ -130,13 +143,13 @@ export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) =>
 
         {/* Friends List */}
         <div>
-          <h2 className="text-lg font-bold mb-4">Twoja lista znajomych</h2>
+          <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-50 mb-4">Twoja lista znajomych</h2>
           {loading ? (
-            <div className="animate-pulse space-y-4" role="status" aria-busy="true" aria-label="Ładowanie listy znajomych">
-              {[1, 2, 3].map(i => <div key={i} className="h-16 bg-white/50 dark:bg-zinc-900/50 shadow-sm rounded-xl"></div>)}
+            <div className="animate-pulse space-y-3" role="status" aria-busy="true" aria-label="Ładowanie listy znajomych">
+              {[1, 2, 3].map(i => <div key={i} className="h-16 bg-zinc-200/50 dark:bg-zinc-800/50 rounded-2xl"></div>)}
             </div>
           ) : friends.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <AnimatePresence mode="popLayout">
               {friends.sort((a, b) => {
                 if (a.status === 'pending' && b.status !== 'pending') return -1;
@@ -146,7 +159,7 @@ export const FriendsView: React.FC<FriendsViewProps> = ({ embedded = false }) =>
               </AnimatePresence>
             </div>
           ) : (
-            <div className="text-center text-zinc-400 dark:text-zinc-500 py-8 bg-white/50 dark:bg-zinc-900/50 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="text-center text-zinc-400 dark:text-zinc-500 py-12 bg-white/40 dark:bg-zinc-900/40 rounded-2xl border-2 border-dashed border-zinc-200/80 dark:border-zinc-800/80 text-sm font-medium">
               Nie masz jeszcze znajomych na liście.
             </div>
           )}

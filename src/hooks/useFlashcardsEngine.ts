@@ -32,6 +32,7 @@ export function useFlashcardsEngine(initialSession: SessionState) {
   const markKnown = useCallback(() => {
     setState(prev => {
       const currentQ = prev.questions[prev.currentIndex];
+      if (!currentQ) return prev;
       const newMastered = new Set(prev.masteredIds).add(currentQ.id);
       
       const nextIndex = prev.currentIndex + 1;
@@ -48,6 +49,7 @@ export function useFlashcardsEngine(initialSession: SessionState) {
   const markRepeat = useCallback(() => {
     setState(prev => {
       const currentQ = prev.questions[prev.currentIndex];
+      if (!currentQ) return prev;
       const newReview = new Set(prev.reviewIds).add(currentQ.id);
       
       // Move this question to the end of the queue

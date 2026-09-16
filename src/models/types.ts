@@ -27,6 +27,19 @@ export interface DoneStat {
   firstAnswerWrong: boolean;
 }
 
+export interface ChunkInfo {
+  index: number;
+  startIndex: number;
+  endIndex: number;
+  totalQuestions: number;
+}
+
+export interface ChunkConfig {
+  enabled: boolean;
+  chunkSize: number;
+  activeChunkIndex: number | null; // null = entire test
+}
+
 export interface SessionState {
   version: number;            // for migration
   questions: Question[];
@@ -47,6 +60,8 @@ export interface SessionState {
   syncedSeconds?: number;
   syncedCorrect?: number;
   syncedAnswers?: number;
+  targetDate?: string;
+  chunkConfig?: ChunkConfig;
 }
 
 export interface SavedSessionMetadata {
@@ -57,6 +72,8 @@ export interface SavedSessionMetadata {
   totalQuestions: number;
   completedQuestions: number;
   currentPhase: 'test' | 'summary';
+  targetDate?: string;
+  chunkConfig?: ChunkConfig;
 }
 
 type FeedbackState = 'correct' | 'wrong';

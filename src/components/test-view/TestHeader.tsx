@@ -1,6 +1,7 @@
 import { type FC } from 'react';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { LogOut, Clock } from 'lucide-react';
+import { LogOut, Clock, Layers, ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ProgressBar } from '../ui/ProgressBar';
 import { formatTime } from '../../utils/session';
 
@@ -13,6 +14,10 @@ interface TestHeaderProps {
   confirmQuit: boolean;
   onQuitToggle: () => void;
   onQuitConfirm: () => void;
+  chunkLabel?: string;
+  onOpenChunkSelector?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const TestHeader: FC<TestHeaderProps> = ({
@@ -24,6 +29,10 @@ export const TestHeader: FC<TestHeaderProps> = ({
   confirmQuit,
   onQuitToggle,
   onQuitConfirm,
+  chunkLabel,
+  onOpenChunkSelector,
+  isSidebarCollapsed = false,
+  onToggleSidebar,
 }) => {
   const { t } = useTranslation();
 
@@ -60,6 +69,22 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
               </button>
             )}
+
+            {chunkLabel && onOpenChunkSelector && !confirmQuit && (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.18 }}
+                onClick={onOpenChunkSelector}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors border border-zinc-200/80 dark:border-zinc-700/80 cursor-pointer shadow-xs select-none tabular-nums"
+                title="Wybierz część"
+              >
+                <Layers className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
+                <span>{chunkLabel}</span>
+                <ChevronDown className="w-3 h-3 text-zinc-400" />
+              </motion.button>
+            )}
           </div>
 
 
@@ -88,6 +113,24 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 {formatTime(elapsed)}
               </span>
             </div>
+
+            {onToggleSidebar && (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={onToggleSidebar}
+                className="hidden md:flex p-1.5 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+                title={isSidebarCollapsed ? t('test.expandSidebar') : t('test.collapseSidebar')}
+                aria-label={isSidebarCollapsed ? t('test.expandSidebar') : t('test.collapseSidebar')}
+              >
+                {isSidebarCollapsed ? (
+                  <PanelRightOpen className="w-4 h-4" />
+                ) : (
+                  <PanelRightClose className="w-4 h-4" />
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
 

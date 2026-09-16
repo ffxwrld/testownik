@@ -60,7 +60,21 @@
     "restartModalTitle": "Start over",
     "restartModalDesc": "Current progress in this test will be lost. Select the required number of correct answers in a row to pass a question:",
     "cancel": "Cancel",
-    "restartBtn": "Restart test"
+    "restartBtn": "Restart test",
+    "rename": "Rename",
+    "exam": "Exam",
+    "mastered100": "100% Mastered",
+    "masteryDegree": "Mastery level",
+    "questionsProgress": "{{completed}} of {{total}} questions",
+    "studyWithFlashcards": "Study with flashcards",
+    "startFlashcards": "Start flashcards",
+    "packageSettings": "Deck settings",
+    "edit": "Edit",
+    "setDate": "Set exam date",
+    "examPrompt": "Enter exam date in YYYY-MM-DD format:",
+    "print": "Print",
+    "printConfirm": "Print as compendium (with answers marked)? (Cancel = study sheet)",
+    "dateAt": "{{date}} at {{time}}"
   },
   "summary": {
     "labels": {
@@ -166,7 +180,11 @@
     "prevQuestion": "Previous question",
     "resultCorrect": "Correct",
     "resultSkipped": "Skipped",
-    "resultWrong": "Wrong"
+    "resultWrong": "Wrong",
+    "toggleSidebar": "Toggle sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "or": "or"
   },
   "theme": {
     "colors": {
@@ -186,7 +204,12 @@
     "questionRenderer": {
       "loadingImage": "Loading image...",
       "missingImage": "Missing image: {{fileName}}",
-      "imageAlt": "Question image"
+      "imageAlt": "Question image",
+      "zoomHint": "Click to zoom",
+      "zoomIn": "Zoom In (+)",
+      "zoomOut": "Zoom Out (-)",
+      "resetZoom": "Fit to screen (100%)",
+      "close": "Close (Esc)"
     },
     "formatInfo": {
       "title": "File Format",
@@ -271,5 +294,249 @@
       "emptyDesc": "Add friends to compete with them on the leaderboard!",
       "accuracyVal": "{{val}}%"
     }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "games": "Play",
+    "learn": "Learn",
+    "schedule": "Schedule",
+    "stats": "Stats",
+    "friends": "Friends",
+    "settings": "Settings",
+    "level": "Lvl",
+    "xpPoints": "XP pts",
+    "multiplayer": "Multiplayer",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "greeting": "Hi, {{name}}!",
+    "subtitle": "Here is a summary of your learning progress.",
+    "examGoal": "Exam Goal",
+    "untilExam": "Until exam:",
+    "daysRemaining_one": "{{count}} day",
+    "daysRemaining_few": "{{count}} days",
+    "daysRemaining_many": "{{count}} days",
+    "daysRemaining_other": "{{count}} days",
+    "questionsRemaining": "Questions left:",
+    "dailyGoal": "Daily goal:",
+    "questionsPerDay": "{{count}} q/day",
+    "continueLearning": "Continue learning",
+    "yourProgress": "Your progress",
+    "accuracy": "Accuracy",
+    "studyTime": "Study time",
+    "dayStreak": "Day streak",
+    "recentTests": "Recent tests",
+    "viewAll": "View all",
+    "noTests": "No tests started",
+    "noTestsDesc": "Start learning to track your progress.",
+    "goToLearn": "Go to learning",
+    "leaderboard": "Leaderboard",
+    "fullLeaderboard": "Full leaderboard",
+    "yourRank": "Your rank:",
+    "noData": "no data",
+    "resumeTest": "Resume test"
+  },
+  "learn": {
+    "title": "Your Study Materials",
+    "subtitle": "Select a question set to learn or add a new one.",
+    "loadDemo": "Load demo",
+    "tabTest": "Testownik",
+    "tabFlashcards": "Flashcards",
+    "importDisk": "Import from disk",
+    "importDiskSub": "Select or drop a .zip file",
+    "createFlashcards": "Create Flashcards (Paste)",
+    "createFlashcardsSub": "Paste from Quizlet, Excel, AI",
+    "dragDropTitle": "Drop .zip file with test here",
+    "newSessionModal": {
+      "title": "Start learning",
+      "sessionName": "Session name",
+      "sessionNamePlaceholder": "e.g. Biology Exam",
+      "targetDate": "Exam date (optional)",
+      "repeatMode": "Repetition mode",
+      "startBtn": "Start test"
+    }
+  },
+  "schedule": {
+    "title": "Schedule",
+    "noExams": "No scheduled exams",
+    "upcomingExams_one": "{{count}} upcoming exam",
+    "upcomingExams_few": "{{count}} upcoming exams",
+    "upcomingExams_many": "{{count}} upcoming exams",
+    "upcomingExams_other": "{{count}} upcoming exams",
+    "scheduleExam": "Schedule exam",
+    "allTests": "All tests",
+    "assignModal": {
+      "title": "Schedule Exam",
+      "desc": "Select a question set and set the deadline by which you want to master it:",
+      "selectBase": "Select question set:",
+      "selectDate": "Select deadline:",
+      "saveBtn": "Save date",
+      "cancelBtn": "Cancel"
+    },
+    "detailsModal": {
+      "title": "Exam Details",
+      "changeDate": "Change date",
+      "removeDate": "Remove from schedule",
+      "startLearning": "Start learning",
+      "close": "Close"
+    },
+    "calendar": {
+      "today": "Today",
+      "month": "Month",
+      "week": "Week",
+      "day": "Day",
+      "agenda": "Agenda"
+    }
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Track your study progress, learning time, and community leaderboard position.",
+    "tabs": {
+      "progress": "Progress",
+      "ranking": "Ranking"
+    },
+    "progress": {
+      "last7Days": "Last 7 days",
+      "studyTime": "Study time",
+      "accuracy": "Accuracy",
+      "sessions": "Sessions",
+      "questions": "Questions",
+      "activity": "Activity",
+      "minutes": "min",
+      "streakTitle": "Day streak",
+      "days_one": "{{count}} day",
+      "days_few": "{{count}} days",
+      "days_many": "{{count}} days",
+      "days_other": "{{count}} days"
+    },
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "games": {
+    "title": "Arcade & Games",
+    "subtitle": "Solo competition for high scores or real-time duels with friends.",
+    "tabs": {
+      "solo": "Solo Modes",
+      "multiplayer": "With Friends"
+    },
+    "solo": {
+      "suddenDeath": {
+        "badge": "High stakes mode",
+        "title": "Sudden Death (3 Hearts)",
+        "desc": "You start with 3 lives. Each mistake immediately takes a heart. 3 errors end the game. See how long a streak of correct answers you can build without a mistake.",
+        "highScore": "High score",
+        "bestStreak": "Longest streak",
+        "questions_one": "{{count}} question",
+        "questions_few": "{{count}} questions",
+        "questions_many": "{{count}} questions",
+        "questions_other": "{{count}} questions",
+        "start": "Start"
+      },
+      "timeAttack": {
+        "badge": "60s Sprint",
+        "title": "Time Attack",
+        "desc": "The clock counts down from 60 seconds. A correct answer adds +3s and boosts the combo multiplier. A mistake gives a -5s penalty.",
+        "record": "Record",
+        "play": "Play"
+      },
+      "zen": {
+        "badge": "Relaxed review",
+        "title": "Zen Training",
+        "desc": "Answer questions at your own pace with no ticking clock and no heart loss. Ideal before bedtime.",
+        "completed": "Completed",
+        "play": "Play"
+      },
+      "deckPicker": {
+        "title": "Select question database",
+        "subtitle": "Select the question set you want to play with in",
+        "noDecks": "No saved tests. Import a .zip file in the Learn tab.",
+        "questionsCount": "{{count}} questions"
+      },
+      "confirmAnswer": "Confirm answer (Space / Enter)",
+      "finishSession": "Finish session"
+    },
+    "multiplayerPrompt": "Multiplayer mode requires login to manage P2P rooms and synchronize race progress.",
+    "multiplayerLogin": "Log in to play",
+    "hud": {
+      "exit": "Quit game",
+      "score": "Score",
+      "combo": "COMBO",
+      "streak": "Streak",
+      "lives": "Lives",
+      "time": "Time"
+    },
+    "gameOver": {
+      "victoryTitle": "Victory!",
+      "victorySub": "You conquered all questions without losing all lives.",
+      "timeUpTitle": "Time's Up",
+      "timeUpSub": "The clock reached zero. Great reflexes!",
+      "defeatTitle": "Game Over",
+      "defeatSub": "You lost all 3 hearts.",
+      "zenTitle": "Summary",
+      "zenSub": "Good job, every streak brings you closer to mastery.",
+      "newHighScore": "NEW HIGH SCORE!",
+      "newBestStreak": "LONGEST STREAK!",
+      "stats": {
+        "score": "Score",
+        "streak": "Longest streak",
+        "accuracy": "Accuracy",
+        "correct": "Correct",
+        "time": "Game time"
+      },
+      "playAgain": "Play again",
+      "exit": "Exit to menu"
+    }
+  },
+  "flashcards": {
+    "title": "Flashcards",
+    "mastered": "Mastered: {{count}} of {{total}}",
+    "flipHint": "Press space or tap to flip",
+    "definitionOnly": "This question has only a definition.",
+    "repeatBtn": "Repeat",
+    "knowBtn": "I know"
+  },
+  "settings": {
+    "title": "Settings",
+    "questionFormat": "Question format",
+    "view": "View",
+    "language": "Language",
+    "colorTheme": "Color theme",
+    "darkMode": "Dark mode",
+    "uiScale": "UI scale",
+    "privacyPolicy": "Privacy policy",
+    "version": "Version",
+    "appSettings": "App Settings"
+  },
+  "privacyModal": {
+    "title": "Privacy Policy",
+    "close": "Close",
+    "section1Title": "1. Data Collection",
+    "section1Text": "The Testownik application stores your question decks and study progress locally on your device (in browser storage via IndexedDB). When using login and synchronization features (including cloud backup and leaderboards), basic profile data (username, avatar) and statistics (XP gained, completed sessions) are securely transmitted and stored in our database (Supabase).",
+    "section2Title": "2. Multiplayer Mode (Race)",
+    "section2Text": "In live race mode, question decks and images are transferred directly between peer devices via Peer-to-Peer technology (WebRTC). Your IP addresses may be briefly visible to signaling servers (STUN) to establish connection, but no question contents or images in this mode are stored on our servers.",
+    "section3Title": "3. Data Usage",
+    "section3Text": "Collected data is solely used to:",
+    "section3Item1": "Ensure proper operation of the app and sync your progress.",
+    "section3Item2": "Display your position on the global leaderboard.",
+    "section3Item3": "Enable multiplayer matches with friends.",
+    "section4Title": "4. Security",
+    "section4Text": "We use modern database security standards (Row Level Security) to ensure unauthorized parties cannot access your sensitive data. We do not share or sell your data to third parties.",
+    "understandBtn": "I understand"
+  },
+  "commandPalette": {
+    "placeholder": "Search decks, jump to views... (or type ? for shortcuts)",
+    "shortcutsTitle": "Keyboard Shortcuts",
+    "commandPalette": "Command Palette",
+    "navigation": "Navigation",
+    "decks": "Question Decks",
+    "questionsCount": "{{count}} questions",
+    "noResults": "No results for \"{{query}}\""
   }
 }

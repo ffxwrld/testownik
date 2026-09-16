@@ -1,12 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { SessionState, Question, AnswerFeedback } from '../models/types';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { SessionState, Question, AnswerFeedback, ChunkConfig } from '../models/types';
 import {
   getQuestionForQueueItem,
   saveSession,
   processCorrectAnswer,
   processWrongAnswer,
+  getChunkList,
+  buildChunkQueue,
 } from '../utils/session';
-import { findShuffledPosition } from '../utils/shuffle';
+import { findShuffledPosition, shuffleIndices, shuffle } from '../utils/shuffle';
 
 export interface PreviousQuestionData {
   question: Question;
@@ -268,7 +270,30 @@ export function useTestEngine({
     return () => window.removeEventListener('keydown', handleKey);
   }, [handleToggleAnswer, handleConfirm, handleNext, currentQuestion, feedback, isTransitioning, showingPrevious, previousQuestion, onQuitToggle, setShowingPrevious]);
 
-  const totalQuestions = session.questions.length;
+  const isChunkingEnabled = Boolean(session.chunkConfig?.enabled);
+  const effectiveChunkSize = session.chunkConfig?.chunkSize || 50;
+  const chunks = useMemo(
+    () => (isChunkingEnabled ? getChunkList(session.questions.length, effectiveChunkSize) : []),
+    [isChunkingEnabled, session.questions.length, effectiveChunkSize]
+  );
+  const activeChunkIndex = session.chunkConfig?.activeChunkIndex ?? null;
+  const activeChunk = useMemo(
+    () =>
+      isChunkingEnabled && activeChunkIndex !== null && activeChunkIndex >= 0 && activeChunkIndex < chunks.length
+        ? chunks[activeChunkIndex]
+        : null,
+    [isChunkingEnabled, activeChunkIndex, chunks]
+  );
+
+  const chunkLabel = activeChunk
+    ? `Część ${activeChunk.index + 1} (${activeChunk.startIndex + 1}–${activeChunk.endIndex + 1})`
+    : isChunkingEnabled
+    ? 'Cała baza'
+    : undefined;
+
+  const totalQuestions = activeChunk
+    ? activeChunk.totalQuestions
+    : session.questions.length;
 
   const consecutiveCorrect = optimisticStreak !== null
     ? optimisticStreak
@@ -278,7 +303,17 @@ export function useTestEngine({
     ? optimisticWrongCount
     : (currentItem?.wrongCount ?? 0);
 
-  let doneCount = session.done.length;
+  const chunkQuestions = useMemo(
+    () =>
+      activeChunk
+        ? session.questions.slice(activeChunk.startIndex, activeChunk.endIndex + 1)
+        : session.questions,
+    [activeChunk, session.questions]
+  );
+
+  let doneCount = activeChunk
+    ? chunkQuestions.filter(q => session.done.includes(q.id)).length
+    : session.done.length;
   let remainingCount = session.queue.length;
 
   // Optimistically update progress when correct answer is given
@@ -289,12 +324,219 @@ export function useTestEngine({
 
   const progressPercent = totalQuestions > 0 ? (doneCount / totalQuestions) * 100 : 0;
 
+  const isChunkCompleted = Boolean(
+    activeChunk !== null &&
+    session.queue.length === 0 &&
+    feedback === null &&
+    !isTransitioning
+  );
+
   const canConfirm = feedback === null && !isTransitioning;
 
   const dismissAfk = () => {
     lastActivityRef.current = Date.now();
     setIsAfk(false);
   };
+
+  const switchChunk = useCallback(
+    async (newChunkIndex: number | null) => {
+      const currentBase = processedSessionRef.current ?? sessionRef.current;
+      const currentElapsed = elapsedRef.current;
+      const chunkSize = currentBase.chunkConfig?.chunkSize || 50;
+      const allChunks = getChunkList(currentBase.questions.length, chunkSize);
+
+      let newQueue: SessionState['queue'];
+      let newChunkConfig: ChunkConfig;
+
+      if (newChunkIndex !== null && newChunkIndex >= 0 && newChunkIndex < allChunks.length) {
+        const targetChunk = allChunks[newChunkIndex];
+        newQueue = buildChunkQueue(
+          currentBase.questions,
+          targetChunk,
+          currentBase.repeatMode,
+          currentBase.done
+        );
+        newChunkConfig = {
+          enabled: true,
+          chunkSize,
+          activeChunkIndex: newChunkIndex,
+        };
+      } else {
+        // Entire test (Cała baza)
+        const doneSet = new Set(currentBase.done);
+        const remainingQuestions = currentBase.questions.filter(q => !doneSet.has(q.id));
+        const questionsToQueue = remainingQuestions.length > 0 ? remainingQuestions : currentBase.questions;
+        const shuffled = shuffle([...questionsToQueue]);
+        const initialStreak = currentBase.repeatMode > 1 ? currentBase.repeatMode : 1;
+        newQueue = shuffled.map(q => ({
+          questionId: q.id,
+          requiredCorrectStreak: initialStreak,
+          consecutiveCorrect: 0,
+          wrongCount: 0,
+          firstAnswerWrong: false,
+        }));
+        newChunkConfig = {
+          enabled: currentBase.chunkConfig?.enabled ?? true,
+          chunkSize,
+          activeChunkIndex: null,
+        };
+      }
+
+      const nextQ = newQueue.length > 0 ? getQuestionForQueueItem(currentBase.questions, newQueue[0]) : null;
+      const nextShuffledOrder = nextQ ? shuffleIndices(nextQ.answers.length) : [];
+
+      const updatedSession: SessionState = {
+        ...currentBase,
+        elapsedSeconds: currentElapsed,
+        queue: newQueue,
+        currentQuestionIndex: 0,
+        shuffledAnswerOrder: nextShuffledOrder,
+        chunkConfig: newChunkConfig,
+        phase: 'test',
+      };
+
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      setFeedback(null);
+      setIsTransitioning(false);
+      setSelectedIndices([]);
+      setOptimisticStreak(null);
+      setOptimisticWrongCount(null);
+      setQuestionKey(k => k + 1);
+      setShowingPrevious(false);
+
+      processedSessionRef.current = updatedSession;
+      await saveSession(updatedSession, sessionId).catch(console.error);
+      onSessionUpdate(updatedSession);
+    },
+    [sessionId, onSessionUpdate, setShowingPrevious]
+  );
+
+  const configureChunking = useCallback(
+    async (newChunkSize: number | null) => {
+      const currentBase = processedSessionRef.current ?? sessionRef.current;
+      const currentElapsed = elapsedRef.current;
+
+      if (newChunkSize !== null && newChunkSize > 0) {
+        const allChunks = getChunkList(currentBase.questions.length, newChunkSize);
+        const firstChunk = allChunks[0];
+        const newQueue = firstChunk
+          ? buildChunkQueue(
+              currentBase.questions,
+              firstChunk,
+              currentBase.repeatMode,
+              currentBase.done
+            )
+          : currentBase.queue;
+
+        const nextQ = newQueue.length > 0 ? getQuestionForQueueItem(currentBase.questions, newQueue[0]) : null;
+        const nextShuffledOrder = nextQ ? shuffleIndices(nextQ.answers.length) : [];
+
+        const updatedSession: SessionState = {
+          ...currentBase,
+          elapsedSeconds: currentElapsed,
+          queue: newQueue,
+          currentQuestionIndex: 0,
+          shuffledAnswerOrder: nextShuffledOrder,
+          chunkConfig: {
+            enabled: true,
+            chunkSize: newChunkSize,
+            activeChunkIndex: 0,
+          },
+          phase: 'test',
+        };
+
+        if (feedbackTimeoutRef.current) {
+          clearTimeout(feedbackTimeoutRef.current);
+        }
+        setFeedback(null);
+        setIsTransitioning(false);
+        setSelectedIndices([]);
+        setOptimisticStreak(null);
+        setOptimisticWrongCount(null);
+        setQuestionKey(k => k + 1);
+        setShowingPrevious(false);
+
+        processedSessionRef.current = updatedSession;
+        await saveSession(updatedSession, sessionId).catch(console.error);
+        onSessionUpdate(updatedSession);
+      } else {
+        const updatedSession: SessionState = {
+          ...currentBase,
+          elapsedSeconds: currentElapsed,
+          chunkConfig: {
+            enabled: false,
+            chunkSize: 50,
+            activeChunkIndex: null,
+          },
+        };
+        processedSessionRef.current = updatedSession;
+        await saveSession(updatedSession, sessionId).catch(console.error);
+        onSessionUpdate(updatedSession);
+      }
+    },
+    [sessionId, onSessionUpdate, setShowingPrevious]
+  );
+
+  const repeatChunk = useCallback(async () => {
+    const currentBase = processedSessionRef.current ?? sessionRef.current;
+    if (!currentBase.chunkConfig?.enabled || currentBase.chunkConfig.activeChunkIndex === null) {
+      return;
+    }
+    const currentElapsed = elapsedRef.current;
+    const chunkSize = currentBase.chunkConfig.chunkSize || 50;
+    const allChunks = getChunkList(currentBase.questions.length, chunkSize);
+    const targetChunk = allChunks[currentBase.chunkConfig.activeChunkIndex];
+    if (!targetChunk) return;
+
+    const newQueue = buildChunkQueue(
+      currentBase.questions,
+      targetChunk,
+      currentBase.repeatMode,
+      []
+    );
+
+    const nextQ = newQueue.length > 0 ? getQuestionForQueueItem(currentBase.questions, newQueue[0]) : null;
+    const nextShuffledOrder = nextQ ? shuffleIndices(nextQ.answers.length) : [];
+
+    const updatedSession: SessionState = {
+      ...currentBase,
+      elapsedSeconds: currentElapsed,
+      queue: newQueue,
+      currentQuestionIndex: 0,
+      shuffledAnswerOrder: nextShuffledOrder,
+      phase: 'test',
+    };
+
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setFeedback(null);
+    setIsTransitioning(false);
+    setSelectedIndices([]);
+    setOptimisticStreak(null);
+    setOptimisticWrongCount(null);
+    setQuestionKey(k => k + 1);
+    setShowingPrevious(false);
+
+    processedSessionRef.current = updatedSession;
+    await saveSession(updatedSession, sessionId).catch(console.error);
+    onSessionUpdate(updatedSession);
+  }, [sessionId, onSessionUpdate, setShowingPrevious]);
+
+  const finishTest = useCallback(async () => {
+    const currentBase = processedSessionRef.current ?? sessionRef.current;
+    const currentElapsed = elapsedRef.current;
+    const updatedSession: SessionState = {
+      ...currentBase,
+      elapsedSeconds: currentElapsed,
+      phase: 'summary',
+    };
+    processedSessionRef.current = updatedSession;
+    await saveSession(updatedSession, sessionId).catch(console.error);
+    onSessionUpdate(updatedSession);
+  }, [sessionId, onSessionUpdate]);
 
   return {
     elapsed,
@@ -318,6 +560,15 @@ export function useTestEngine({
     consecutiveCorrect,
     requiredStreak,
     wrongCountForCurrent,
+    chunks,
+    activeChunkIndex,
+    activeChunk,
+    chunkLabel,
+    isChunkCompleted,
+    switchChunk,
+    configureChunking,
+    repeatChunk,
+    finishTest,
     handleToggleAnswer,
     handleConfirm,
     handleNext,

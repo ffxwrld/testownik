@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Search, Zap, BarChart3, Gamepad2, User, BookOpen, Command } from 'lucide-react';
 import { useSpotlightSearch } from '../../hooks/useSpotlightSearch';
 import { getAllSessionMetadata } from '../../utils/session';
 import { SavedSessionMetadata } from '../../models/types';
 
 export const CommandPalette: React.FC = () => {
+  const { t } = useTranslation();
   const { isOpen, close } = useSpotlightSearch();
   const [query, setQuery] = useState('');
   const [sessions, setSessions] = useState<SavedSessionMetadata[]>([]);
@@ -25,10 +27,10 @@ export const CommandPalette: React.FC = () => {
   }, [isOpen]);
 
   const navItems = [
-    { id: 'nav-nauka', label: 'Nauka', icon: <Zap className="w-4 h-4" />, action: () => setLocation('/nauka'), shortcut: 'N' },
-    { id: 'nav-stats', label: 'Statystyki', icon: <BarChart3 className="w-4 h-4" />, action: () => setLocation('/statystyki'), shortcut: 'S' },
-    { id: 'nav-multi', label: 'Multiplayer', icon: <Gamepad2 className="w-4 h-4" />, action: () => setLocation('/multiplayer'), shortcut: 'M' },
-    { id: 'nav-profile', label: 'Profil', icon: <User className="w-4 h-4" />, action: () => setLocation('/profil'), shortcut: 'P' },
+    { id: 'nav-nauka', label: t('nav.learn'), icon: <Zap className="w-4 h-4" />, action: () => setLocation('/nauka'), shortcut: 'N' },
+    { id: 'nav-stats', label: t('nav.stats'), icon: <BarChart3 className="w-4 h-4" />, action: () => setLocation('/statystyki'), shortcut: 'S' },
+    { id: 'nav-multi', label: t('nav.multiplayer'), icon: <Gamepad2 className="w-4 h-4" />, action: () => setLocation('/multiplayer'), shortcut: 'M' },
+    { id: 'nav-profile', label: t('nav.profile'), icon: <User className="w-4 h-4" />, action: () => setLocation('/profil'), shortcut: 'P' },
   ];
 
   // Filtrowanie wyników
@@ -121,7 +123,7 @@ export const CommandPalette: React.FC = () => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Szukaj paczek, przechodź do widoków... (lub wpisz ? dla skrótów)"
+                  placeholder={t('commandPalette.placeholder')}
                   className="w-full bg-transparent border-none py-4 px-3 text-lg text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 focus:outline-none focus:ring-0"
                 />
                 <div className="flex gap-1">
@@ -135,19 +137,19 @@ export const CommandPalette: React.FC = () => {
                 {query === '?' ? (
                   <div className="p-4 text-center text-zinc-500">
                     <Command className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Skróty Klawiszowe</h3>
+                    <h3 className="font-bold text-zinc-900 dark:text-white mb-4">{t('commandPalette.shortcutsTitle')}</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm text-left max-w-md mx-auto">
-                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">Paleta poleceń</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">⌘ K</kbd></div>
-                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">Nauka</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">N</kbd></div>
-                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">Statystyki</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">S</kbd></div>
-                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">Multiplayer</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">M</kbd></div>
+                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">{t('commandPalette.commandPalette')}</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">⌘ K</kbd></div>
+                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">{t('nav.learn')}</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">N</kbd></div>
+                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">{t('nav.stats')}</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">S</kbd></div>
+                      <div className="flex justify-between items-center"><span className="text-zinc-600 dark:text-zinc-400">{t('nav.multiplayer')}</span><kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-700 shadow-sm font-sans text-xs">M</kbd></div>
                     </div>
                   </div>
                 ) : (
                   <>
                     {filteredNav.length > 0 && (
                       <div className="mb-4">
-                        <div className="px-3 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Nawigacja</div>
+                        <div className="px-3 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">{t('commandPalette.navigation')}</div>
                         {filteredNav.map((item, i) => (
                           <div
                             key={item.id}
@@ -171,7 +173,7 @@ export const CommandPalette: React.FC = () => {
                     
                     {filteredSessions.length > 0 && (
                       <div>
-                        <div className="px-3 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Bazy pytań</div>
+                        <div className="px-3 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">{t('commandPalette.decks')}</div>
                         {filteredSessions.map((session, i) => {
                           const actualIndex = i + filteredNav.length;
                           return (
@@ -185,7 +187,7 @@ export const CommandPalette: React.FC = () => {
                             >
                               <BookOpen className="w-4 h-4 opacity-50" />
                               <span className="font-medium">{session.baseName}</span>
-                              <span className="ml-auto text-xs opacity-50">{session.totalQuestions} pytań</span>
+                              <span className="ml-auto text-xs opacity-50">{t('commandPalette.questionsCount', { count: session.totalQuestions })}</span>
                             </div>
                           );
                         })}
@@ -194,7 +196,7 @@ export const CommandPalette: React.FC = () => {
 
                     {allItems.length === 0 && (
                       <div className="p-8 text-center text-zinc-500 dark:text-zinc-400">
-                        Brak wyników dla "{query}"
+                        {t('commandPalette.noResults', { query })}
                       </div>
                     )}
                   </>

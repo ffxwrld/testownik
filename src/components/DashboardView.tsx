@@ -1,13 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useProfile } from '../hooks/useProfile';
-import { useActivity } from '../hooks/useActivity';
-import { useUserStats, calculateLevel } from '../hooks/useUserStats';
+import { useUserStats } from '../hooks/useUserStats';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { getAllSessionMetadata } from '../utils/session';
 import { SavedSessionMetadata } from '../models/types';
-import { Play, Flame, Target, RotateCcw } from 'lucide-react';
+import { Play, Target, RotateCcw, LayoutDashboard } from 'lucide-react';
+import { differenceInCalendarDays } from 'date-fns';
+import { PageHeader } from './common/PageHeader';
 
 interface DashboardViewProps {
   onStartSession: (sessionId: string) => void;
@@ -16,12 +18,10 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, onResetSession }) => {
   const [] = useLocation();
+  const { t, i18n } = useTranslation();
   const { profile } = useProfile();
-  const { activity } = useActivity();
   const { stats } = useUserStats();
   const { entries: friendsLeaderboard } = useLeaderboard('all_time');
-
-  const levelInfo = stats ? calculateLevel(stats.total_xp) : { level: 1, currentLevelXp: 0, nextLevelXp: 1250, progress: 0, xpToNextLevel: 1250 };
   
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
   
@@ -35,8 +35,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
       .slice(0, 5);
   }, [savedSessions]);
 
-
-  
   const overallAccuracy = stats && stats.total_questions > 0 
     ? Math.round((stats.total_correct_first / stats.total_questions) * 100) 
     : 0;
@@ -48,272 +46,231 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
     return `${m}min`;
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: typeof window !== 'undefined' && window.innerWidth > 768 ? 0.05 : 0 } }
-  } as any;
+  const primarySession = recentSessions.find(s => s.targetDate && new Date(s.targetDate) >= new Date(new Date().setHours(0,0,0,0))) || recentSessions[0];
+  let daysLeft: number | null = null;
+  let dailyGoal: number | null = null;
+  let questionsLeft: number = 0;
+  
+  if (primarySession && primarySession.targetDate) {
+    const target = new Date(primarySession.targetDate);
+    const now = new Date();
+    daysLeft = Math.max(0, differenceInCalendarDays(target, now));
+    
+    questionsLeft = Math.max(0, primarySession.totalQuestions - primarySession.completedQuestions);
+    dailyGoal = daysLeft > 0 ? Math.ceil(questionsLeft / daysLeft) : questionsLeft;
+  }
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15, scale: 0.98 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", bounce: 0.2, duration: 0.4 } }
-  } as any;
+  const localeStr = i18n.language === 'en' ? 'en-US' : 'pl-PL';
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 pb-32 md:pb-12 space-y-6">
+    <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 pb-32 md:pb-12 space-y-8">
       
-      {/* HEADER WITH INTEGRATED STATS */}
-      <motion.div 
-        variants={containerVariants} 
-        initial="hidden" 
-        animate="visible"
-        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col relative overflow-hidden"
+      {/* PAGE HEADER */}
+      <PageHeader
+        icon={<LayoutDashboard />}
+        title={t('dashboard.greeting', { name: profile?.username || (i18n.language === 'en' ? 'User' : 'Użytkowniku') })}
+        subtitle={
+          <span>
+            {t('social.profile.sessions')}: <strong className="text-zinc-900 dark:text-zinc-200">{stats?.total_sessions || 0}</strong> • {t('dashboard.studyTime')}: <strong className="text-zinc-900 dark:text-zinc-200">{formatTime(stats?.total_study_seconds || 0)}</strong>
+          </span>
+        }
       >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle,var(--color-primary-500)_0%,transparent_70%)] opacity-10 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row gap-6 md:items-end justify-between mb-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Cześć, {profile?.username || 'Użytkowniku'}!</h1>
-              <span className="text-2xl">👋</span>
-            </div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Masz <strong className="text-zinc-900 dark:text-zinc-200">{stats?.total_sessions || 0}</strong> ukończonych sesji, a Twój łączny czas nauki to <strong className="text-zinc-900 dark:text-zinc-200">{formatTime(stats?.total_study_seconds || 0)}</strong>.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-700/50">
-            <div className="text-center px-2">
-              <div className="text-xl font-bold text-orange-500 flex items-center justify-center gap-1">
-                <Flame className="w-5 h-5 text-orange-500" fill="currentColor" /> {stats?.current_streak || 0}
-              </div>
-              <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Passa dni</div>
-            </div>
-            <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700"></div>
-            <div className="text-center px-2">
-              <div className="text-xl font-bold text-emerald-500 flex items-center justify-center gap-1">
-                <Target className="w-5 h-5 text-emerald-500" strokeWidth={2.5} /> {overallAccuracy}%
-              </div>
-              <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Celność</div>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 bg-zinc-100/80 dark:bg-zinc-800/80 px-3.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-xs">
+          <Target className="w-4 h-4 text-emerald-500" strokeWidth={2.5} />
+          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{overallAccuracy}%</span>
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('dashboard.accuracy')}</span>
         </div>
+      </PageHeader>
 
-        <div className="relative z-10 bg-zinc-50 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center justify-between text-sm font-bold text-zinc-600 dark:text-zinc-400 mb-3">
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs">
-                {levelInfo.level}
-              </span>
-              <span className="text-primary-600 dark:text-primary-400">Poziom {levelInfo.level}</span>
-            </span>
-            <span>{levelInfo.currentLevelXp} / {levelInfo.nextLevelXp} XP</span>
+      {daysLeft !== null && dailyGoal !== null ? (
+        <div className="bg-primary-50/50 dark:bg-primary-950/30 p-5 rounded-2xl border border-primary-200/60 dark:border-primary-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-sm shadow-xs">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400 mb-1">{t('dashboard.examGoal')}</div>
+            <div className="text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              {t('dashboard.untilExam')}{' '}
+              <span className="text-primary-600 dark:text-primary-400">{primarySession.baseName}</span>{' '}
+              {daysLeft === 1 ? t('dashboard.daysRemaining_one', { count: 1 }) : t('dashboard.daysRemaining_few', { count: daysLeft })}!
+            </div>
           </div>
-          <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-700/50 rounded-full overflow-hidden shadow-inner">
-            <motion.div 
-              className="h-full bg-primary-500 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${levelInfo.progress}%` }}
-              transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            />
+          <div className="flex items-baseline md:flex-col md:items-end gap-1 flex-shrink-0">
+            <span className="text-xs font-bold text-primary-700/80 dark:text-primary-300/80 uppercase tracking-wider">{t('dashboard.dailyGoal')}</span>
+            <span className="text-2xl md:text-3xl font-black text-primary-950 dark:text-primary-100 tabular-nums">
+              {dailyGoal} <span className="text-sm font-semibold opacity-75">{t('dashboard.questionsPerDay', { count: dailyGoal }).replace(/^[0-9]+\s*/, '')}</span>
+            </span>
           </div>
         </div>
-      </motion.div>
+      ) : recentSessions.length === 0 ? (
+        <div className="bg-zinc-50/80 dark:bg-zinc-800/40 p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 text-center flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="text-left">
+            <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{t('dashboard.noTests')}</div>
+            <div className="text-xs font-medium text-zinc-500 mt-0.5">{t('dashboard.noTestsDesc')}</div>
+          </div>
+          <Link href="/nauka" className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition shadow-xs whitespace-nowrap">
+            {t('dashboard.goToLearn')}
+          </Link>
+        </div>
+      ) : null}
 
       {/* HERO CARD: LAST TEST */}
       {recentSessions.length > 0 && (
-        <motion.div variants={itemVariants} className="bg-primary-50 dark:bg-primary-900/10 border-2 border-primary-100 dark:border-primary-800/30 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-          <div className="flex-1 w-full">
-            <span className="text-xs font-bold tracking-widest uppercase text-primary-600 dark:text-primary-400 mb-2 block">
-              Ostatnio ćwiczono
+        <div 
+          className="bg-white dark:bg-zinc-900 border border-primary-200/70 dark:border-primary-800/40 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-xs relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-primary-50/50 dark:from-primary-950/20 to-transparent pointer-events-none" />
+          
+          <div className="flex-1 w-full relative z-10">
+            <span className="text-[11px] font-bold tracking-wider uppercase text-primary-600 dark:text-primary-400 mb-1.5 block">
+              {t('dashboard.recentTests')}
             </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2 truncate">
+            <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2 truncate">
               {recentSessions[0].baseName}
             </h2>
-            <div className="flex items-center gap-4 text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-4">
-              <span>{recentSessions[0].totalQuestions} pytań</span>
+            <div className="flex items-center gap-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-4">
+              <span>{t('home.questionsCount', { count: recentSessions[0].totalQuestions })}</span>
               <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
               <span>
-                {new Date(recentSessions[0].updatedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                {new Date(recentSessions[0].updatedAt).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' })}
               </span>
             </div>
             
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-1.5">
-                <span>Skuteczność</span>
-                <span className="text-primary-600 dark:text-primary-400">{Math.round((recentSessions[0].completedQuestions / (recentSessions[0].totalQuestions || 1)) * 100)}%</span>
+              <div className="flex justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">
+                <span>{t('dashboard.yourProgress')}</span>
+                <span className="text-primary-600 dark:text-primary-400 font-bold tabular-nums">
+                  {Math.round((recentSessions[0].completedQuestions / (recentSessions[0].totalQuestions || 1)) * 100)}%
+                </span>
               </div>
-              <div className="h-2 w-full bg-primary-200/50 dark:bg-primary-900/30 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary-500 rounded-full"
-                  style={{ width: `${Math.round((recentSessions[0].completedQuestions / (recentSessions[0].totalQuestions || 1)) * 100)}%` }}
-                />
+              <div className="h-2 w-full bg-primary-100/70 dark:bg-primary-950/60 rounded-full overflow-hidden relative">
+                <motion.div 
+                  className="h-full bg-primary-600 dark:bg-primary-500 rounded-full relative overflow-hidden"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.round((recentSessions[0].completedQuestions / (recentSessions[0].totalQuestions || 1)) * 100)}%` }}
+                  transition={{ type: 'spring', bounce: 0, duration: 0.8 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shimmer" />
+                </motion.div>
               </div>
             </div>
           </div>
-          <div className="w-full md:w-auto">
+          
+          <div className="w-full md:w-auto relative z-10">
             {recentSessions[0].currentPhase === 'summary' || recentSessions[0].completedQuestions >= recentSessions[0].totalQuestions ? (
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.2 }}
                 onClick={() => onResetSession(recentSessions[0].id)}
-                className="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-zinc-800/20 transition active:scale-[0.97]"
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-3.5 px-7 rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-5 h-5" />
-                Zacznij od nowa
-              </button>
+                <RotateCcw className="w-4 h-4" />
+                {t('sessionsList.startOver')}
+              </motion.button>
             ) : (
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.2 }}
                 onClick={() => onStartSession(recentSessions[0].id)}
-                className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-primary-600/20 transition active:scale-[0.97]"
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 px-7 rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                <Play className="w-5 h-5 fill-current" />
-                Kontynuuj naukę
-              </button>
+                <Play className="w-4 h-4 fill-current" />
+                {t('dashboard.continueLearning')}
+              </motion.button>
             )}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* GRID SECTION: OLDER PACKS & RANKING */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div className="lg:col-span-2 space-y-4">
-          <div className="space-y-4 mb-6">
-            <div className="px-1">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Aktywność 7 dni</h2>
-            </div>
-            <motion.div variants={itemVariants} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 sm:p-5 flex justify-between gap-1 sm:gap-2 shadow-sm overflow-x-auto hide-scrollbar">
-              {(() => {
-                const activeDates = new Set<string>();
-                const today = new Date();
-                
-                // Use the globally synced activity logs!
-                activity.forEach(a => {
-                  if (a.study_seconds > 0) {
-                    activeDates.add(a.log_date);
-                  }
-                });
-                
-                // Fallback for immediate UI feedback (if sync hasn't occurred yet, check local session updates today)
-                savedSessions.forEach(s => {
-                  const d = new Date(s.updatedAt);
-                  const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-                  if (diffDays === 0) { // only trust local for "today" to avoid ghost days
-                    activeDates.add(d.toISOString().slice(0, 10));
-                  }
-                });
+        <div className="lg:col-span-2 space-y-3">
 
-                const dayLabels = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nd'];
-                const mondayOffset = (today.getDay() + 6) % 7;
-                const monday = new Date(today);
-                monday.setDate(today.getDate() - mondayOffset);
-                monday.setHours(0, 0, 0, 0);
-
-                return dayLabels.map((label, i) => {
-                  const day = new Date(monday);
-                  day.setDate(monday.getDate() + i);
-                  const dateStr = day.toISOString().slice(0, 10);
-                  const isActive = activeDates.has(dateStr);
-                  const isFuture = day > today;
-
-                  return (
-                    <div key={label} className="flex flex-col items-center gap-2">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors ${
-                        isFuture
-                          ? 'bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100 dark:border-zinc-800/50 text-transparent'
-                          : isActive 
-                            ? 'bg-indigo-50 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 shadow-inner' 
-                            : 'bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 text-transparent'
-                      }`}>
-                        {isActive && <span className="text-sm">✓</span>}
-                      </div>
-                      <span className={`text-[10px] font-semibold ${isFuture ? 'text-zinc-300 dark:text-zinc-700' : 'text-zinc-500'}`}>{label}</span>
-                    </div>
-                  );
-                });
-              })()}
-            </motion.div>
-          </div>
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Inne testy</h2>
-            <Link href="/nauka" className="text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
-              Wszystkie &gt;
+            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{t('dashboard.recentTests')}</h2>
+            <Link href="/nauka" className="text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
+              {t('dashboard.viewAll')} &gt;
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {recentSessions.slice(1, 5).length > 0 ? (
               recentSessions.slice(1, 5).map((session) => {
-                const dateStr = new Date(session.updatedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+                const dateStr = new Date(session.updatedAt).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' });
                 return (
-                  <motion.button type="button"
+                  <button 
+                    type="button"
                     style={{ minWidth: 0 }}
-                    variants={itemVariants}
                     key={session.id}
-                    className="text-left w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors rounded-2xl overflow-hidden flex flex-col group shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                    className="text-left w-full bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 active:scale-[0.99] transition-[border-color,box-shadow,transform] duration-150 rounded-2xl overflow-hidden flex flex-col group shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                     onClick={() => onStartSession(session.id)}
                   >
                     <div className="p-4 flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                          Paczka
+                      <div className="flex items-start justify-between mb-2.5">
+                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400">
+                          {t('sessionsList.defaultBaseName')}
                         </span>
-                        <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover:bg-primary-600 group-hover:text-white text-zinc-500 dark:text-zinc-400 flex items-center justify-center transition-colors">
-                          <Play className="w-4 h-4 ml-0.5" />
+                        <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover:bg-primary-600 group-hover:text-white text-zinc-500 dark:text-zinc-400 flex items-center justify-center transition-colors">
+                          <Play className="w-3.5 h-3.5 ml-0.5" />
                         </div>
                       </div>
                       <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 mb-1 truncate">{session.baseName}</h4>
-                      <p className="text-xs text-zinc-500">{session.totalQuestions} pytań • {dateStr}</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('home.questionsCount', { count: session.totalQuestions })} • {dateStr}</p>
                     </div>
-                  </motion.button>
-                )
+                  </button>
+                );
               })
             ) : (
-              <div className="col-span-2 py-8 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Brak starszych paczek.</p>
+              <div className="col-span-2 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">{t('sessionsList.emptyState')}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* SIDEBAR: RANKING */}
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Ranking</h2>
-              <Link href="/statystyki" className="text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
-                Pełny &gt;
-              </Link>
-            </div>
-            <motion.div variants={itemVariants} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
-              {friendsLeaderboard.slice(0, 5).map((entry) => {
-                const hue = entry.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
-                return (
-                  <div key={entry.user_id} className="flex items-center gap-3 py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                    <span className="w-5 text-center text-sm font-bold text-zinc-500">
-                      {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`}
-                    </span>
-                    <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                      style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}
-                    >
-                      {entry.username.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{entry.username}</div>
-                      <div className="text-[10px] text-zinc-500 font-medium">{entry.value} XP</div>
-                    </div>
-                  </div>
-                );
-              })}
-              {friendsLeaderboard.length === 0 && (
-                <div className="text-center py-4 text-zinc-500 text-sm">
-                  Brak użytkowników w rankingu
-                </div>
-              )}
-            </motion.div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{t('dashboard.leaderboard')}</h2>
+            <Link href="/statystyki" className="text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition">
+              {t('dashboard.fullLeaderboard')} &gt;
+            </Link>
           </div>
-
-          
-
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-4 shadow-xs">
+            {friendsLeaderboard.slice(0, 5).map((entry) => {
+              const hue = entry.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+              return (
+                <div key={entry.user_id} className="flex items-center gap-3 py-2 border-b border-zinc-100 dark:border-zinc-800/60 last:border-0">
+                  <div className="w-5 flex items-center justify-center flex-shrink-0">
+                    {entry.rank === 1 ? (
+                      <span className="w-5 h-5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black flex items-center justify-center shadow-xs">1</span>
+                    ) : entry.rank === 2 ? (
+                      <span className="w-5 h-5 rounded-full bg-zinc-300 dark:bg-zinc-600 text-zinc-900 dark:text-zinc-100 text-[10px] font-black flex items-center justify-center shadow-xs">2</span>
+                    ) : entry.rank === 3 ? (
+                      <span className="w-5 h-5 rounded-full bg-amber-700/80 text-white text-[10px] font-black flex items-center justify-center shadow-xs">3</span>
+                    ) : (
+                      <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 tabular-nums">{entry.rank}</span>
+                    )}
+                  </div>
+                  <div 
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                    style={{ backgroundColor: `hsl(${hue}, 70%, 50%)` }}
+                  >
+                    {entry.username.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{entry.username}</div>
+                    <div className="text-[10px] text-zinc-500 font-medium">{entry.value} XP</div>
+                  </div>
+                </div>
+              );
+            })}
+            {friendsLeaderboard.length === 0 && (
+              <div className="text-center py-4 text-zinc-500 text-sm">
+                {t('social.leaderboard.emptyTitle')}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>

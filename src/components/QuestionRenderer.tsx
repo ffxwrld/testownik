@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, FC } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ZoomIn } from 'lucide-react';
 import { getSessionImage } from '../utils/db';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { ImageLightboxModal } from './common/ImageLightboxModal';
 
 interface QuestionRendererProps {
   text: string;
@@ -21,6 +23,7 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
   const { t } = useTranslation();
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -97,11 +100,18 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
       const firstUrl = Object.values(imageUrls)[0];
       return (
         <div className="mt-4 flex justify-center animate-fadeIn">
-          <img 
-            src={firstUrl} 
-            alt={t('components.questionRenderer.imageAlt')} 
-            className="max-w-full h-auto max-h-[60vh] rounded-lg shadow-sm block object-contain" 
-          />
+          <div className="group relative inline-block max-w-full text-center">
+            <img 
+              src={firstUrl} 
+              alt={t('components.questionRenderer.imageAlt')} 
+              onClick={() => setLightboxImage({ src: firstUrl, alt: t('components.questionRenderer.imageAlt') })}
+              className="max-w-full h-auto max-h-[60vh] rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs block object-contain cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]" 
+            />
+            <span className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/70 backdrop-blur-md text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 pointer-events-none shadow-md">
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>{t('components.questionRenderer.zoomHint') || 'Powiększ'}</span>
+            </span>
+          </div>
         </div>
       );
     }
@@ -117,9 +127,21 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
           </span>
         </div>
       )}
-      <MarkdownRenderer content={text} imageUrls={imageUrls} />
+      <MarkdownRenderer 
+        content={text} 
+        imageUrls={imageUrls} 
+        onImageClick={(src, alt) => setLightboxImage({ src, alt })}
+      />
       {fallbackNode}
+
+      <ImageLightboxModal
+        isOpen={lightboxImage !== null}
+        src={lightboxImage?.src || ''}
+        alt={lightboxImage?.alt}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   );
 };
+
 

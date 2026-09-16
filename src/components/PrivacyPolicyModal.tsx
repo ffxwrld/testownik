@@ -1,12 +1,15 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PrivacyPolicyModalProps {
   onClose: () => void;
 }
 
 export const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ onClose }) => {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -27,9 +30,10 @@ export const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ onClose }) => 
           <div className="p-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-xl">
             <Shield className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-zinc-900 dark:text-white flex-1">Polityka Prywatności</h3>
+          <h3 className="text-xl font-bold text-zinc-900 dark:text-white flex-1">{t('privacyModal.title')}</h3>
           <button
             onClick={onClose}
+            aria-label={t('privacyModal.close')}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -40,36 +44,35 @@ export const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ onClose }) => 
 
         <div className="flex-1 overflow-y-auto hide-scrollbar space-y-6 text-sm text-zinc-600 dark:text-zinc-400 pr-2">
           <section>
-            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">1. Gromadzenie danych</h4>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">{t('privacyModal.section1Title')}</h4>
             <p>
-              Aplikacja Testownik przechowuje Twoje paczki pytań oraz postępy w nauce lokalnie na Twoim urządzeniu (w pamięci przeglądarki za pomocą IndexedDB). 
-              Gdy korzystasz z funkcji logowania i synchronizacji (w tym zapisu w chmurze i rankingu), Twoje podstawowe dane profilowe (nazwa użytkownika, avatar) oraz statystyki (ilość zdobytego doświadczenia, ukończone sesje) są bezpiecznie przesyłane i przechowywane w naszej bazie danych (Supabase).
+              {t('privacyModal.section1Text')}
             </p>
           </section>
 
           <section>
-            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">2. Tryb Multiplayer (Wyścig)</h4>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">{t('privacyModal.section2Title')}</h4>
             <p>
-              W trybie wyścigu na żywo, paczki pytań oraz zdjęcia przesyłane są bezpośrednio między urządzeniami graczy w technologii Peer-to-Peer (WebRTC). Twoje adresy IP mogą być krótkotrwale widoczne dla serwerów sygnalizacyjnych (STUN) w celu nawiązania połączenia, jednak żadne treści pytań ani przesyłane grafiki w tym trybie nie są zapisywane na naszych serwerach.
+              {t('privacyModal.section2Text')}
             </p>
           </section>
 
           <section>
-            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">3. Wykorzystanie danych</h4>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">{t('privacyModal.section3Title')}</h4>
             <p>
-              Gromadzone dane służą wyłącznie do:
+              {t('privacyModal.section3Text')}
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Zapewnienia prawidłowego działania aplikacji i synchronizacji Twoich postępów.</li>
-              <li>Wyświetlania Twojej pozycji w rankingu ogólnym.</li>
-              <li>Umożliwienia rozgrywki wieloosobowej ze znajomymi.</li>
+              <li>{t('privacyModal.section3Item1')}</li>
+              <li>{t('privacyModal.section3Item2')}</li>
+              <li>{t('privacyModal.section3Item3')}</li>
             </ul>
           </section>
 
           <section>
-            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">4. Bezpieczeństwo</h4>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-base">{t('privacyModal.section4Title')}</h4>
             <p>
-              Stosujemy nowoczesne standardy zabezpieczeń bazy danych (Row Level Security), aby upewnić się, że nikt niepowołany nie ma dostępu do Twoich wrażliwych danych. Nie udostępniamy i nigdy nie sprzedajemy Twoich danych podmiotom trzecim.
+              {t('privacyModal.section4Text')}
             </p>
           </section>
         </div>
@@ -79,7 +82,7 @@ export const PrivacyPolicyModal: FC<PrivacyPolicyModalProps> = ({ onClose }) => 
             onClick={onClose}
             className="px-6 py-2.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold rounded-xl transition-colors shadow-sm"
           >
-            Rozumiem
+            {t('privacyModal.understandBtn')}
           </button>
         </div>
       </motion.div>

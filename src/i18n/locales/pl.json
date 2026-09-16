@@ -60,7 +60,21 @@
     "restartModalTitle": "Zacznij od nowa",
     "restartModalDesc": "Bieżący postęp w tym teście zostanie utracony. Wybierz wymaganą liczbę poprawnych odpowiedzi z rzędu do zaliczenia pytania:",
     "cancel": "Anuluj",
-    "restartBtn": "Restartuj test"
+    "restartBtn": "Restartuj test",
+    "rename": "Zmień nazwę",
+    "exam": "Egzamin",
+    "mastered100": "Opanowano na 100%",
+    "masteryDegree": "Stopień opanowania",
+    "questionsProgress": "{{completed}} z {{total}} pytań",
+    "studyWithFlashcards": "Ucz się z fiszek",
+    "startFlashcards": "Rozpocznij fiszki",
+    "packageSettings": "Ustawienia paczki",
+    "edit": "Edytuj",
+    "setDate": "Ustaw datę",
+    "examPrompt": "Podaj datę egzaminu w formacie YYYY-MM-DD:",
+    "print": "Drukuj",
+    "printConfirm": "Wydrukować jako kompendium (z zaznaczonymi odpowiedziami)? (Anuluj = arkusz do nauki)",
+    "dateAt": "{{date}} o {{time}}"
   },
   "summary": {
     "labels": {
@@ -126,12 +140,7 @@
     "saveModalTitle": "Zapisz do Testownika",
     "saveModalDesc": "Podaj nazwę, pod którą chcesz zapisać tę bazę pytań w swoich testach.",
     "cancel": "Anuluj",
-    "save": "Zapisz",
-    "quit": "Wyjdź",
-    "saveToTestownik": "Zapisz do aplikacji",
-    "fileName": "Nazwa pliku",
-    "questionContent": "Treść pytania",
-    "questionPlaceholder": "Wpisz treść pytania..."
+    "save": "Zapisz"
   },
   "test": {
     "loading": "Ładowanie pytania…",
@@ -171,7 +180,11 @@
     "prevQuestion": "Poprzednie pytanie",
     "resultCorrect": "Poprawna",
     "resultSkipped": "Pominięto",
-    "resultWrong": "Błędna"
+    "resultWrong": "Błędna",
+    "toggleSidebar": "Przełącz pasek boczny",
+    "collapseSidebar": "Zwiń pasek boczny",
+    "expandSidebar": "Rozwiń pasek boczny",
+    "or": "lub"
   },
   "theme": {
     "colors": {
@@ -191,7 +204,12 @@
     "questionRenderer": {
       "loadingImage": "Ładowanie obrazka...",
       "missingImage": "Brak obrazka: {{fileName}}",
-      "imageAlt": "Obrazek do pytania"
+      "imageAlt": "Obrazek do pytania",
+      "zoomHint": "Kliknij, aby powiększyć",
+      "zoomIn": "Powiększ (+)",
+      "zoomOut": "Pomniejsz (-)",
+      "resetZoom": "Dopasuj (100%)",
+      "close": "Zamknij (Esc)"
     },
     "formatInfo": {
       "title": "Format plików",
@@ -276,5 +294,249 @@
       "emptyDesc": "Dodaj znajomych, aby rywalizować z nimi w rankingu!",
       "accuracyVal": "{{val}}%"
     }
+  },
+  "nav": {
+    "dashboard": "Pulpit",
+    "games": "Graj",
+    "learn": "Nauka",
+    "schedule": "Harmonogram",
+    "stats": "Statystyki",
+    "friends": "Znajomi",
+    "settings": "Ustawienia",
+    "level": "Poz.",
+    "xpPoints": "pkt XP",
+    "multiplayer": "Multiplayer",
+    "profile": "Profil"
+  },
+  "dashboard": {
+    "greeting": "Cześć, {{name}}!",
+    "subtitle": "Oto podsumowanie Twoich postępów w nauce.",
+    "examGoal": "Cel egzaminacyjny",
+    "untilExam": "Do egzaminu:",
+    "daysRemaining_one": "{{count}} dzień",
+    "daysRemaining_few": "{{count}} dni",
+    "daysRemaining_many": "{{count}} dni",
+    "daysRemaining_other": "{{count}} dni",
+    "questionsRemaining": "Zostało pytań:",
+    "dailyGoal": "Cel na dziś:",
+    "questionsPerDay": "{{count}} pyt./dzień",
+    "continueLearning": "Kontynuuj naukę",
+    "yourProgress": "Twój postęp",
+    "accuracy": "Skuteczność",
+    "studyTime": "Czas nauki",
+    "dayStreak": "Seria dni",
+    "recentTests": "Ostatnie testy",
+    "viewAll": "Zobacz wszystkie",
+    "noTests": "Brak rozpoczętych testów",
+    "noTestsDesc": "Rozpocznij naukę, aby śledzić swoje postępy.",
+    "goToLearn": "Przejdź do nauki",
+    "leaderboard": "Ranking",
+    "fullLeaderboard": "Pełny ranking",
+    "yourRank": "Twoje miejsce:",
+    "noData": "brak danych",
+    "resumeTest": "Wróć do testu"
+  },
+  "learn": {
+    "title": "Twoje materiały do nauki",
+    "subtitle": "Wybierz zbiór do nauki lub dodaj nowy.",
+    "loadDemo": "Załaduj demo",
+    "tabTest": "Testownik",
+    "tabFlashcards": "Fiszki",
+    "importDisk": "Importuj z dysku",
+    "importDiskSub": "Wybierz lub upuść plik .zip",
+    "createFlashcards": "Utwórz Fiszki (Wklej)",
+    "createFlashcardsSub": "Wklej z Quizleta, Excela, AI",
+    "dragDropTitle": "Upuść plik .zip z testem tutaj",
+    "newSessionModal": {
+      "title": "Rozpocznij naukę",
+      "sessionName": "Nazwa sesji",
+      "sessionNamePlaceholder": "np. Egzamin z Biologii",
+      "targetDate": "Data egzaminu (opcjonalnie)",
+      "repeatMode": "Tryb powtórzeń",
+      "startBtn": "Rozpocznij test"
+    }
+  },
+  "schedule": {
+    "title": "Harmonogram",
+    "noExams": "Brak zaplanowanych egzaminów",
+    "upcomingExams_one": "{{count}} egzamin w nadchodzącym czasie",
+    "upcomingExams_few": "{{count}} egzaminy w nadchodzącym czasie",
+    "upcomingExams_many": "{{count}} egzaminów w nadchodzącym czasie",
+    "upcomingExams_other": "{{count}} egzaminów w nadchodzącym czasie",
+    "scheduleExam": "Zaplanuj egzamin",
+    "allTests": "Wszystkie testy",
+    "assignModal": {
+      "title": "Zaplanuj egzamin",
+      "desc": "Wybierz zbiór pytań i ustaw datę, do kiedy chcesz go opanować:",
+      "selectBase": "Wybierz bazę pytań:",
+      "selectDate": "Wybierz termin:",
+      "saveBtn": "Zapisz termin",
+      "cancelBtn": "Anuluj"
+    },
+    "detailsModal": {
+      "title": "Szczegóły egzaminu",
+      "changeDate": "Zmień termin",
+      "removeDate": "Usuń z harmonogramu",
+      "startLearning": "Rozpocznij naukę",
+      "close": "Zamknij"
+    },
+    "calendar": {
+      "today": "Dzisiaj",
+      "month": "Miesiąc",
+      "week": "Tydzień",
+      "day": "Dzień",
+      "agenda": "Agenda"
+    }
+  },
+  "stats": {
+    "title": "Statystyki",
+    "subtitle": "Śledź swoje postępy w nauce, czas pracy i pozycję w rankingu społeczności.",
+    "tabs": {
+      "progress": "Postępy",
+      "ranking": "Ranking"
+    },
+    "progress": {
+      "last7Days": "Ostatnie 7 dni",
+      "studyTime": "Czas nauki",
+      "accuracy": "Celność",
+      "sessions": "Sesje",
+      "questions": "Pytania",
+      "activity": "Aktywność",
+      "minutes": "min",
+      "streakTitle": "Dni z rzędu",
+      "days_one": "{{count}} dzień",
+      "days_few": "{{count}} dni",
+      "days_many": "{{count}} dni",
+      "days_other": "{{count}} dni"
+    },
+    "days": {
+      "sun": "Nd",
+      "mon": "Pon",
+      "tue": "Wt",
+      "wed": "Śr",
+      "thu": "Czw",
+      "fri": "Pt",
+      "sat": "Sob"
+    }
+  },
+  "games": {
+    "title": "Centrum Rozgrywki",
+    "subtitle": "Rywalizacja solo o rekordy lub pojedynki ze znajomymi w czasie rzeczywistym.",
+    "tabs": {
+      "solo": "Tryby Solo",
+      "multiplayer": "Ze Znajomymi"
+    },
+    "solo": {
+      "suddenDeath": {
+        "badge": "Tryb o wysoką stawkę",
+        "title": "Sudden Death (3 Serca)",
+        "desc": "Zaczynasz z 3 życiami. Każda pomyłka natychmiast odbiera serce. 3 błędy kończą grę. Sprawdź, jak długą serię poprawnych odpowiedzi zdołasz zbudować bez wpadki.",
+        "highScore": "Rekord punktów",
+        "bestStreak": "Najdłuższa seria",
+        "questions_one": "{{count}} pytanie",
+        "questions_few": "{{count}} pytania",
+        "questions_many": "{{count}} pytań",
+        "questions_other": "{{count}} pytań",
+        "start": "Rozpocznij"
+      },
+      "timeAttack": {
+        "badge": "Sprint 60s",
+        "title": "Time Attack",
+        "desc": "Zegar odlicza od 60 sekund. Poprawna odpowiedź dodaje +3s i podbija mnożnik combo. Błąd to -5s kary.",
+        "record": "Rekord",
+        "play": "Graj"
+      },
+      "zen": {
+        "badge": "Spokojna powtórka",
+        "title": "Trening Zen",
+        "desc": "Rozwiązuj pytania we własnym rytmie bez presji uciekającego czasu i bez utraty serc. Idealne przed snem.",
+        "completed": "Ukończone",
+        "play": "Graj"
+      },
+      "deckPicker": {
+        "title": "Wybierz bazę pytań",
+        "subtitle": "Wybierz zbiór pytań, na którym chcesz zagrać w trybie",
+        "noDecks": "Brak zapisanych testów. Zaimportuj plik .zip w zakładce Nauka.",
+        "questionsCount": "{{count}} pytań"
+      },
+      "confirmAnswer": "Zatwierdź odpowiedź (Spacja / Enter)",
+      "finishSession": "Zakończ sesję"
+    },
+    "multiplayerPrompt": "Tryb wieloosobowy wymaga zalogowania, aby zarządzać pokojami P2P i synchronizować wyścig.",
+    "multiplayerLogin": "Zaloguj się, aby zagrać",
+    "hud": {
+      "exit": "Zakończ grę",
+      "score": "Punkty",
+      "combo": "COMBO",
+      "streak": "Seria",
+      "lives": "Życia",
+      "time": "Czas"
+    },
+    "gameOver": {
+      "victoryTitle": "Zwycięstwo!",
+      "victorySub": "Opanowałeś całą pulę pytań bez utraty wszystkich żyć.",
+      "timeUpTitle": "Czas Minął",
+      "timeUpSub": "Zegar dobił do zera. Dobry refleks!",
+      "defeatTitle": "Koniec Gry",
+      "defeatSub": "Straciłeś wszystkie 3 serca.",
+      "zenTitle": "Podsumowanie",
+      "zenSub": "Dobra robota, każda seria przybliża Cię do mistrzostwa.",
+      "newHighScore": "NOWY REKORD!",
+      "newBestStreak": "NAJDŁUŻSZA SERIA!",
+      "stats": {
+        "score": "Punkty",
+        "streak": "Najdłuższa seria",
+        "accuracy": "Skuteczność",
+        "correct": "Poprawne",
+        "time": "Czas rozgrywki"
+      },
+      "playAgain": "Zagraj ponownie",
+      "exit": "Wyjdź do menu"
+    }
+  },
+  "flashcards": {
+    "title": "Fiszki",
+    "mastered": "Opanowano: {{count}} z {{total}}",
+    "flipHint": "Naciśnij spację lub dotknij, by obrócić",
+    "definitionOnly": "To pytanie ma tylko definicję.",
+    "repeatBtn": "Powtórz",
+    "knowBtn": "Umiem"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "questionFormat": "Format pytań",
+    "view": "Zobacz",
+    "language": "Język",
+    "colorTheme": "Motyw koloru",
+    "darkMode": "Tryb ciemny",
+    "uiScale": "Skala interfejsu",
+    "privacyPolicy": "Polityka prywatności",
+    "version": "Wersja",
+    "appSettings": "Ustawienia aplikacji"
+  },
+  "privacyModal": {
+    "title": "Polityka Prywatności",
+    "close": "Zamknij",
+    "section1Title": "1. Gromadzenie danych",
+    "section1Text": "Aplikacja Testownik przechowuje Twoje paczki pytań oraz postępy w nauce lokalnie na Twoim urządzeniu (w pamięci przeglądarki za pomocą IndexedDB). Gdy korzystasz z funkcji logowania i synchronizacji (w tym zapisu w chmurze i rankingu), Twoje podstawowe dane profilowe (nazwa użytkownika, avatar) oraz statystyki (ilość zdobytego doświadczenia, ukończone sesje) są bezpiecznie przesyłane i przechowywane w naszej bazie danych (Supabase).",
+    "section2Title": "2. Tryb Multiplayer (Wyścig)",
+    "section2Text": "W trybie wyścigu na żywo, paczki pytań oraz zdjęcia przesyłane są bezpośrednio między urządzeniami graczy w technologii Peer-to-Peer (WebRTC). Twoje adresy IP mogą być krótkotrwale widoczne dla serwerów sygnalizacyjnych (STUN) w celu nawiązania połączenia, jednak żadne treści pytań ani przesyłane grafiki w tym trybie nie są zapisywane na naszych serwerach.",
+    "section3Title": "3. Wykorzystanie danych",
+    "section3Text": "Gromadzone dane służą wyłącznie do:",
+    "section3Item1": "Zapewnienia prawidłowego działania aplikacji i synchronizacji Twoich postępów.",
+    "section3Item2": "Wyświetlania Twojej pozycji w rankingu ogólnym.",
+    "section3Item3": "Umożliwienia rozgrywki wieloosobowej ze znajomymi.",
+    "section4Title": "4. Bezpieczeństwo",
+    "section4Text": "Stosujemy nowoczesne standardy zabezpieczeń bazy danych (Row Level Security), aby upewnić się, że nikt niepowołany nie ma dostępu do Twoich wrażliwych danych. Nie udostępniamy i nigdy nie sprzedajemy Twoich danych podmiotom trzecim.",
+    "understandBtn": "Rozumiem"
+  },
+  "commandPalette": {
+    "placeholder": "Szukaj paczek, przechodź do widoków... (lub wpisz ? dla skrótów)",
+    "shortcutsTitle": "Skróty Klawiszowe",
+    "commandPalette": "Paleta poleceń",
+    "navigation": "Nawigacja",
+    "decks": "Bazy pytań",
+    "questionsCount": "{{count}} pytań",
+    "noResults": "Brak wyników dla \"{{query}}\""
   }
 }

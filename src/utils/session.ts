@@ -1,5 +1,5 @@
 import { get, set } from 'idb-keyval';
-import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata } from '../models/types';
+import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata, ChunkInfo } from '../models/types';
 import { shuffle, shuffleIndices } from './shuffle';
 import { deleteSessionImages } from './db';
 
@@ -10,7 +10,8 @@ const SCHEMA_VERSION = 1;
 export function buildInitialSession(
   questions: Question[],
   repeatMode: number,
-  baseName: string = 'Baza pytań'
+  baseName: string = 'Baza pytań',
+  targetDate?: string
 ): SessionState {
   const shuffled = shuffle([...questions]);
 
@@ -43,6 +44,7 @@ export function buildInitialSession(
     currentQuestionIndex: 0,
     shuffledAnswerOrder: shuffleIndices(firstQ?.answers.length ?? 4),
     baseName,
+    targetDate,
   };
 }
 
@@ -73,12 +75,16 @@ export function processCorrectAnswer(session: SessionState): SessionState {
       firstAnswerWrong: item.firstAnswerWrong,
     };
     queue.splice(s.currentQuestionIndex, 1);
-    s.done = [...s.done, item.questionId];
+    if (!s.done.includes(item.questionId)) {
+      s.done = [...s.done, item.questionId];
+    }
     s.doneStats = [...s.doneStats, stat];
 
     if (queue.length === 0) {
       s.queue = queue;
-      s.phase = 'summary';
+      if (!s.chunkConfig?.enabled || s.chunkConfig.activeChunkIndex === null) {
+        s.phase = 'summary';
+      }
       return s;
     }
 
@@ -256,6 +262,59 @@ export async function deleteSession(sessionId: string): Promise<void> {
   }
 }
 
+export function getChunkList(totalQuestions: number, chunkSize: number): ChunkInfo[] {
+  if (chunkSize <= 0 || totalQuestions <= 0) return [];
+  const chunks: ChunkInfo[] = [];
+  const numChunks = Math.ceil(totalQuestions / chunkSize);
+  for (let i = 0; i < numChunks; i++) {
+    const startIndex = i * chunkSize;
+    const endIndex = Math.min(startIndex + chunkSize - 1, totalQuestions - 1);
+    chunks.push({
+      index: i,
+      startIndex,
+      endIndex,
+      totalQuestions: endIndex - startIndex + 1,
+    });
+  }
+  return chunks;
+}
+
+export function getChunkProgress(
+  chunk: ChunkInfo,
+  questions: Question[],
+  doneIds: string[]
+): { completed: number; total: number; percent: number } {
+  const chunkQuestions = questions.slice(chunk.startIndex, chunk.endIndex + 1);
+  const doneSet = new Set(doneIds);
+  const completed = chunkQuestions.filter(q => doneSet.has(q.id)).length;
+  const total = chunkQuestions.length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { completed, total, percent };
+}
+
+export function buildChunkQueue(
+  questions: Question[],
+  chunk: ChunkInfo,
+  repeatMode: number,
+  doneIds: string[]
+): QueueItem[] {
+  const doneSet = new Set(doneIds);
+  const chunkQuestions = questions.slice(chunk.startIndex, chunk.endIndex + 1);
+  const remainingQuestions = chunkQuestions.filter(q => !doneSet.has(q.id));
+  const questionsToQueue = remainingQuestions.length > 0 ? remainingQuestions : chunkQuestions;
+
+  const shuffled = shuffle([...questionsToQueue]);
+  const initialStreak = repeatMode > 1 ? repeatMode : 1;
+
+  return shuffled.map(q => ({
+    questionId: q.id,
+    requiredCorrectStreak: initialStreak,
+    consecutiveCorrect: 0,
+    wrongCount: 0,
+    firstAnswerWrong: false,
+  }));
+}
+
 export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
   try {
     const sessions = await loadAllSessions();
@@ -268,6 +327,8 @@ export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
         totalQuestions: session.questions.length,
         completedQuestions: session.done.length,
         currentPhase: session.phase as 'test' | 'summary',
+        targetDate: session.targetDate,
+        chunkConfig: session.chunkConfig,
       }))
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   } catch {

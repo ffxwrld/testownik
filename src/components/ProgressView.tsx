@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useActivity } from '../hooks/useActivity';
 import { Clock, CheckCircle2, TrendingUp, Target, CalendarDays } from 'lucide-react';
 import { Card } from './ui/Card';
@@ -9,12 +9,14 @@ interface ProgressViewProps {
 }
 
 export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true }) => {
+  const { t } = useTranslation();
   const { activity } = useActivity();
   
   const last7Days = useMemo(() => {
     const days = [];
     const today = new Date();
     today.setHours(0,0,0,0);
+    const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
     
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
@@ -23,7 +25,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
-      const dayLabel = ['Nd', 'Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob'][d.getDay()];
+      const dayLabel = t(`stats.days.${dayKeys[d.getDay()]}`);
       
       const dayData = activity.find(a => a.log_date === dateString);
       days.push({
@@ -34,7 +36,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
       });
     }
     return days;
-  }, [activity]);
+  }, [activity, t]);
 
   const maxStudyTime = Math.max(...last7Days.map(d => d.studySeconds), 60); // min 1 minute to avoid divide by zero
   
@@ -52,67 +54,49 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
     ? Math.round((weeklyStats.correct / weeklyStats.questions) * 100) 
     : 0;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
-  };
-
   return (
-    <div className="flex-1 overflow-y-auto hide-scrollbar bg-transparent">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className={showHeader ? "w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12" : "w-full"}>
+      <div className={showHeader ? "w-full" : "w-full"}>
         
         {showHeader && (
           <div className="flex items-center justify-between mb-8 mt-2">
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Postępy</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{t('stats.tabs.progress')}</h1>
           </div>
         )}
 
-        <motion.div 
-          className="space-y-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-        >
+        <div className="space-y-6">
           
-          <div className="flex items-center gap-2 text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4">
-            <CalendarDays className="w-4 h-4" /> Ostatnie 7 dni
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-4">
+            <CalendarDays className="w-4 h-4 text-primary-500" /> {t('stats.progress.last7Days')}
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Tile 1 */}
-            <motion.div variants={itemVariants}>
-              <Card className="p-5 flex flex-col items-start bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow h-full">
+            <div>
+              <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
+                  <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-500/20">
                     <Clock className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider">Czas nauki</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.studyTime')}</span>
                 </div>
                 <div className="mt-auto">
                   <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tabular-nums tracking-tight">
                     {Math.round(weeklyStats.time / 60)}
                   </span>
-                  <span className="text-sm font-bold text-zinc-400 ml-1">min</span>
+                  <span className="text-sm font-bold text-zinc-400 ml-1">{t('stats.progress.minutes')}</span>
                 </div>
               </Card>
-            </motion.div>
+            </div>
 
             {/* Tile 2 */}
-            <motion.div variants={itemVariants}>
-              <Card className="p-5 flex flex-col items-start bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow h-full">
+            <div>
+              <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-500/20">
                     <Target className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider">Celność</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.accuracy')}</span>
                 </div>
                 <div className="mt-auto">
                   <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tabular-nums tracking-tight">
@@ -121,16 +105,16 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                   <span className="text-sm font-bold text-zinc-400 ml-1">%</span>
                 </div>
               </Card>
-            </motion.div>
+            </div>
 
             {/* Tile 3 */}
-            <motion.div variants={itemVariants}>
-              <Card className="p-5 flex flex-col items-start bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow h-full">
+            <div>
+              <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
-                  <div className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl">
+                  <div className="p-2 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-500/20">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider">Sesje</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.sessions')}</span>
                 </div>
                 <div className="mt-auto">
                   <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tabular-nums tracking-tight">
@@ -138,16 +122,16 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                   </span>
                 </div>
               </Card>
-            </motion.div>
+            </div>
 
             {/* Tile 4 */}
-            <motion.div variants={itemVariants}>
-              <Card className="p-5 flex flex-col items-start bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow h-full">
+            <div>
+              <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
-                  <div className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
+                  <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20">
                     <TrendingUp className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider">Pytania</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.questions')}</span>
                 </div>
                 <div className="mt-auto">
                   <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tabular-nums tracking-tight">
@@ -155,12 +139,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                   </span>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.div variants={itemVariants} className="pt-4">
-            <Card className="p-6 sm:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-8">Aktywność</h3>
+          <div className="pt-4">
+            <Card className="p-6 sm:p-8">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-8">{t('stats.progress.activity')}</h3>
               
               <div className="relative h-56 mt-6">
                 <div className="absolute inset-0 flex items-end justify-between gap-2 sm:gap-6">
@@ -173,12 +157,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                         
                         {/* The actual chart track area */}
                         <div className="w-full h-48 flex items-end justify-center">
-                          {/* The animated bar */}
-                          <motion.div 
-                            initial={{ height: 0 }}
-                            animate={{ height: `${heightPercent}%` }}
-                            transition={{ duration: 0.8, delay: i * 0.08, type: "spring", bounce: 0.2 }}
-                            className={`w-full max-w-[48px] rounded-t-xl relative flex justify-center ${
+                          {/* The chart bar */}
+                          <div 
+                            style={{ height: `${heightPercent}%` }}
+                            className={`w-full max-w-[48px] rounded-t-xl relative flex justify-center transition-[height] duration-300 ease-out ${
                               isToday 
                                 ? 'bg-primary-500 shadow-[0_0_15px_rgba(var(--color-primary-500),0.3)]' 
                                 : 'bg-zinc-300 dark:bg-zinc-700 group-hover:bg-primary-400 dark:group-hover:bg-primary-500 transition-colors'
@@ -188,12 +170,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                             {day.studySeconds > 0 && (
                               <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-200 ease-out group-hover:-translate-y-1 pointer-events-none z-10 flex flex-col items-center">
                                 <div className="bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] sm:text-xs font-bold py-1 px-2 sm:py-1.5 sm:px-3 rounded-lg shadow-lg whitespace-nowrap">
-                                  {Math.round(day.studySeconds / 60)} min
+                                  {Math.round(day.studySeconds / 60)} {t('stats.progress.minutes')}
                                 </div>
                                 <div className="w-2 h-2 bg-zinc-800 dark:bg-zinc-100 rotate-45 -mt-1 shadow-sm" />
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                         </div>
                         
                         {/* Label */}
@@ -210,9 +192,9 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
                 </div>
               </div>
             </Card>
-          </motion.div>
+          </div>
 
-        </motion.div>
+        </div>
 
       </div>
     </div>

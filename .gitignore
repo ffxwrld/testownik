@@ -29,3 +29,7 @@ release
 .agents/
 skills-lock.json
 /*.py
+
+# Temporary & run artifacts
+strix_runs/
+graphify-out/

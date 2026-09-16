@@ -6,6 +6,12 @@ export type PeerConnectionCallbacks = {
   onConnectionStateChange: (state: RTCPeerConnectionState) => void;
 };
 
+const TURN_URL = import.meta.env.VITE_TURN_URL || 'openrelay.metered.ca';
+const TURN_USER = import.meta.env.VITE_TURN_USERNAME || 'openrelayproject';
+const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL || 'openrelayproject';
+
+const ICE_GATHERING_TIMEOUT_MS = 4000;
+
 export class WebRTCManager {
   private pc: RTCPeerConnection;
   private iceCandidateQueue: RTCIceCandidateInit[] = [];
@@ -15,16 +21,16 @@ export class WebRTCManager {
   private expectedSize = 0;
   
   public onProgress?: (percent: number) => void;
-  public onFileReceived?: (blob: Blob, metadata: any) => void;
+  public onFileReceived?: (blob: Blob, metadata: Record<string, unknown>) => void;
 
   constructor(private callbacks: PeerConnectionCallbacks) {
     this.pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:global.stun.twilio.com:3478' },
-        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+        { urls: `turn:${TURN_URL}:80`, username: TURN_USER, credential: TURN_CRED },
+        { urls: `turn:${TURN_URL}:443`, username: TURN_USER, credential: TURN_CRED },
+        { urls: `turn:${TURN_URL}:443?transport=tcp`, username: TURN_USER, credential: TURN_CRED }
       ]
     });
 
@@ -50,12 +56,12 @@ export class WebRTCManager {
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
     
-    // Zbieramy kandydatów ICE przez maksymalnie 1.5 sekundy, żeby wbudować ich w Offer (omijamy rate-limity Supabase)
+    // Zbieramy kandydatów ICE przez maksymalnie 4 sekundy, żeby wbudować ich w Offer (omijamy rate-limity Supabase)
     await new Promise<void>((resolve) => {
       if (this.pc.iceGatheringState === 'complete') {
         resolve();
       } else {
-        const timeout = setTimeout(resolve, 1500);
+        const timeout = setTimeout(resolve, ICE_GATHERING_TIMEOUT_MS);
         this.pc.onicegatheringstatechange = () => {
           if (this.pc.iceGatheringState === 'complete') {
             clearTimeout(timeout);
@@ -84,12 +90,12 @@ export class WebRTCManager {
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
     
-    // Zbieramy kandydatów ICE przez maksymalnie 1.5 sekundy, żeby wbudować ich w Answer
+    // Zbieramy kandydatów ICE przez maksymalnie 4 sekundy, żeby wbudować ich w Answer
     await new Promise<void>((resolve) => {
       if (this.pc.iceGatheringState === 'complete') {
         resolve();
       } else {
-        const timeout = setTimeout(resolve, 1500);
+        const timeout = setTimeout(resolve, ICE_GATHERING_TIMEOUT_MS);
         this.pc.onicegatheringstatechange = () => {
           if (this.pc.iceGatheringState === 'complete') {
             clearTimeout(timeout);
@@ -159,7 +165,7 @@ export class WebRTCManager {
     };
   }
 
-  public async sendFile(file: File | Blob, metadata: any = {}, onProgress?: (p: number) => void) {
+  public async sendFile(file: File | Blob, metadata: Record<string, unknown> = {}, onProgress?: (p: number) => void) {
     if (!this.dataChannel) {
       throw new Error('Data channel is not created');
     }

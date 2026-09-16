@@ -22,10 +22,19 @@ export const CreatorView: FC<CreatorViewProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   
   const engine = useCreatorEngine(
     initialQuestions, initialBaseName, initialImageNames, sourceSessionId
   );
+
+  const handleRequestQuit = () => {
+    if (engine.questions.length > 0) {
+      setShowQuitConfirm(true);
+    } else {
+      onQuit();
+    }
+  };
 
   // Protection against page reload (F5, Cmd+R) / tab close
   useEffect(() => {
@@ -37,10 +46,46 @@ export const CreatorView: FC<CreatorViewProps> = ({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // Keyboard shortcut listener for Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showQuitConfirm) {
+          setShowQuitConfirm(false);
+          return;
+        }
+        if (engine.showSavePrompt) {
+          engine.setShowSavePrompt(false);
+          return;
+        }
+        if (engine.fullscreenImage) {
+          engine.setFullscreenImage(null);
+          return;
+        }
+        if (isMobileSidebarOpen) {
+          setIsMobileSidebarOpen(false);
+          return;
+        }
+        const target = e.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable)
+        ) {
+          return;
+        }
+        handleRequestQuit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showQuitConfirm, engine.showSavePrompt, engine.fullscreenImage, isMobileSidebarOpen, engine.questions.length]);
+
   return (
     <div className="h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 overflow-hidden font-sans">
       <CreatorHeader 
-        onQuit={onQuit} 
+        onQuit={handleRequestQuit} 
         onSaveClick={() => {
           if (engine.savePromptName.trim()) {
             onSaveToTestownik(engine.questions, engine.savePromptName.trim(), engine.images, Array.from(engine.existingImages), engine.sourceSessionId);
@@ -162,6 +207,49 @@ export const CreatorView: FC<CreatorViewProps> = ({
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showQuitConfirm && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', bounce: 0.15, duration: 0.25 }}
+              className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 w-full max-w-sm shadow-2xl border border-zinc-200 dark:border-zinc-800 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1.5">
+                Czy na pewno chcesz wyjść?
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+                Niezapisane pytania i wprowadzone zmiany zostaną utracone.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <Button
+                  variant="secondary"
+                  className="flex-1 order-2 sm:order-1"
+                  onClick={() => setShowQuitConfirm(false)}
+                  autoFocus
+                >
+                  Zostań
+                </Button>
+                <Button
+                  variant="danger"
+                  className="flex-1 order-1 sm:order-2"
+                  onClick={onQuit}
+                >
+                  Wyjdź bez zapisu
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

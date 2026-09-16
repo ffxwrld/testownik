@@ -5,6 +5,7 @@ import { getAllSessionMetadata, loadSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
 import { Users, Play, Download, CheckCircle2, Copy } from 'lucide-react';
+import { BackButton } from '../common/BackButton';
 
 interface MultiplayerViewProps {
   onStartSession: (sessionId: string) => void;
@@ -99,37 +100,40 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   };
 
   return (
-    <div className="flex-1 overflow-y-auto hide-scrollbar bg-transparent p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-8 mt-2">
-          Graj ze znajomymi
-        </h1>
-
+    <div className="w-full space-y-6">
         <AnimatePresence mode="wait">
           {view === 'menu' && (
-            <motion.div key="menu" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-primary-500 transition-colors group" onClick={() => setView('host_select')}>
-                <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-6 group-hover:scale-110 transition-transform">
-                  <Play className="w-8 h-8 ml-1" fill="currentColor" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Stwórz Pokój</h2>
-                <p className="text-zinc-500">Wybierz paczkę ze swojego telefonu i udostępnij ją znajomym przez WebRTC. Bądź hostem wyścigu.</p>
+            <div key="menu">
+              <div className="mb-8 mt-2">
+                <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  Graj ze znajomymi
+                </h1>
               </div>
-              
-              <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-blue-500 transition-colors group" onClick={() => setView('join')}>
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
-                  <Users className="w-8 h-8" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-primary-500 transition-colors group" onClick={() => setView('host_select')}>
+                  <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-6 group-hover:scale-110 transition-transform">
+                    <Play className="w-8 h-8 ml-1" fill="currentColor" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Stwórz Pokój</h2>
+                  <p className="text-zinc-500">Wybierz paczkę ze swojego telefonu i udostępnij ją znajomym przez WebRTC. Bądź hostem wyścigu.</p>
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Dołącz do znajomych</h2>
-                <p className="text-zinc-500">Wpisz 6-cyfrowy kod pokoju, aby pobrać paczkę P2P i rozpocząć rywalizację na żywo.</p>
+                
+                <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-blue-500 transition-colors group" onClick={() => setView('join')}>
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Dołącz do znajomych</h2>
+                  <p className="text-zinc-500">Wpisz 6-cyfrowy kod pokoju, aby pobrać paczkę P2P i rozpocząć rywalizację na żywo.</p>
+                </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {view === 'host_select' && (
             <motion.div key="host_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => setView('menu')} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-semibold text-sm">&larr; Wróć</button>
+                <BackButton onClick={() => setView('menu')} />
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Wybierz paczkę dla pokoju</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,9 +162,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
           )}
 
           {view === 'join' && (
-            <motion.div key="join" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-md mx-auto mt-12 text-center relative">
+            <motion.div key="join" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-md mx-auto mt-6 text-center relative">
               <div className="text-left mb-6">
-                 <button onClick={() => setView('menu')} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-semibold text-sm">&larr; Wróć</button>
+                <BackButton onClick={() => setView('menu')} />
               </div>
               <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Wpisz kod pokoju</h2>
               <input 
@@ -168,7 +172,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 maxLength={6}
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                className="w-full text-center text-4xl font-black tracking-[0.5em] p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border-2 border-zinc-200 dark:border-zinc-700 focus:border-primary-500 focus:outline-none transition mb-6 uppercase text-zinc-900 dark:text-white"
+                className="w-full text-center text-2xl sm:text-4xl font-black tracking-[0.25em] sm:tracking-[0.5em] p-4 sm:p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border-2 border-zinc-200 dark:border-zinc-700 focus:border-primary-500 focus:outline-none transition mb-6 uppercase text-zinc-900 dark:text-white"
                 placeholder="------"
               />
               <button 
@@ -182,11 +186,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
           )}
 
           {view === 'lobby' && (
-            <motion.div key="lobby" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-8 relative">
-              <div className="absolute -top-12 left-0">
-                 <button onClick={handleLeaveLobby} className="text-zinc-500 hover:text-red-500 font-semibold text-sm transition-colors flex items-center gap-1">
-                    &larr; Opuść pokój
-                 </button>
+            <motion.div key="lobby" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-4 relative">
+              <div className="flex items-center justify-between mb-6">
+                <BackButton onClick={handleLeaveLobby} label="Opuść pokój" />
               </div>
               <div className="mb-12">
                 <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-2">Kod Pokoju</p>
@@ -270,7 +272,6 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
     </div>
   );
 };
