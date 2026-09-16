@@ -48,7 +48,7 @@ export function applyZoom(level: number): number {
 export function useAppOrchestrator() {
   const { t } = useTranslation();
   const { triggerSync } = useSync();
-  const { broadcastTestProgress, roomCode, resetRace, rematchEventCount, isHost } = useMultiplayerContext();
+  const { broadcastTestProgress, roomCode, resetRace, rematchEventCount, isHost, cleanup: cleanupMultiplayer } = useMultiplayerContext();
 
   const [location, setLocation] = useLocation();
 
@@ -204,11 +204,12 @@ export function useAppOrchestrator() {
       const sessionData = await loadSession(id);
       if (!sessionData) return;
 
-      const resetSession = {
+      const firstQ = sessionData.questions.find(q => q.id === sessionData.questions[0]?.id);
+      const resetSession: SessionState = {
         ...sessionData,
         queue: sessionData.questions.map(q => ({
           questionId: q.id,
-          requiredCorrectStreak: sessionData.repeatMode,
+          requiredCorrectStreak: sessionData.repeatMode > 1 ? sessionData.repeatMode : 1,
           consecutiveCorrect: 0,
           wrongCount: 0,
           firstAnswerWrong: false,
@@ -218,13 +219,14 @@ export function useAppOrchestrator() {
         elapsedSeconds: 0,
         totalFirstAttempts: 0,
         totalFirstCorrect: 0,
-        phase: 'test' as const,
+        phase: 'test',
         currentQuestionIndex: 0,
+        shuffledAnswerOrder: firstQ ? Array.from({ length: firstQ.answers.length }, (_, i) => i) : [0, 1, 2, 3],
         startedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      await import('../utils/session').then(m => m.saveSession(resetSession, id));
+      await saveSession(resetSession, id);
       setSession(resetSession);
       setCurrentSessionId(id);
       setPhase('test');
@@ -343,8 +345,11 @@ export function useAppOrchestrator() {
   );
 
   const handleQuit = useCallback(() => {
+    if (roomCode) {
+      cleanupMultiplayer();
+    }
     setPhase('learn');
-  }, [setPhase]);
+  }, [roomCode, cleanupMultiplayer, setPhase]);
 
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);

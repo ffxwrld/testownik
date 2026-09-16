@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
-import { getAllSessionMetadata, loadSession } from '../../utils/session';
+import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
 import { Users, Play, Download, CheckCircle2, Copy, Loader2 } from 'lucide-react';
@@ -13,12 +13,6 @@ interface MultiplayerViewProps {
 }
 
 export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession }) => {
-  const [view, setView] = useState<'menu' | 'host_select' | 'join' | 'lobby'>('menu');
-  const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [joinCode, setJoinCode] = useState('');
-  const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
-  
   const { 
     roomCode, 
     isHost, 
@@ -32,6 +26,20 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     startRace, 
     raceStarted 
   } = useMultiplayerContext();
+
+  const [view, setView] = useState<'menu' | 'host_select' | 'join' | 'lobby'>(() => {
+    return roomCode ? 'lobby' : 'menu';
+  });
+  const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState('');
+  const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (roomCode && view === 'menu') {
+      setView('lobby');
+    }
+  }, [roomCode, view]);
 
   useEffect(() => {
     if (view === 'host_select') {
@@ -98,25 +106,17 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
         return;
       }
       
-      // Zresetuj postęp paczki zanim wyślesz ją znajomym
-      const cleanSession = {
-        ...session,
-        phase: 'test' as const,
-        currentQuestionIndex: 0,
-        done: [],
-        doneStats: [],
-        totalFirstAttempts: 0,
-        totalFirstCorrect: 0,
-        elapsedSeconds: 0,
-        queue: session.questions.map(q => ({
-          questionId: q.id,
-          requiredCorrectStreak: session.repeatMode > 1 ? session.repeatMode : 1,
-          consecutiveCorrect: 0,
-          wrongCount: 0,
-          firstAnswerWrong: false
-        }))
-      };
+      // Tworzymy w 100% świeżą sesję z nowo potasowaną kolejką i wyzerowanym postępem
+      const cleanSession = buildInitialSession(
+        session.questions,
+        session.repeatMode > 1 ? session.repeatMode : 1,
+        session.baseName
+      );
       
+      // Kluczowe: Zapisujemy zresetowaną sesję u gospodarza, aby host startował od zera, a nie w widoku podsumowania!
+      await saveSession(cleanSession, selectedSessionId);
+      
+      // I tę samą wyzerowaną sesję pakujemy dla gości
       const blob = await exportSessionToZip(selectedSessionId, cleanSession);
       await sendFileToAll(blob);
     } catch (err) {

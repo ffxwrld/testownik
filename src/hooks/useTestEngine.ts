@@ -9,6 +9,7 @@ import {
   buildChunkQueue,
 } from '../utils/session';
 import { findShuffledPosition, shuffleIndices, shuffle } from '../utils/shuffle';
+import { playCorrectSound, playWrongSound } from '../utils/sound';
 
 export interface PreviousQuestionData {
   question: Question;
@@ -24,6 +25,7 @@ interface UseTestEngineProps {
   onQuitToggle: () => void;
   showingPrevious: boolean;
   setShowingPrevious: React.Dispatch<React.SetStateAction<boolean>>;
+  instantMode?: boolean;
 }
 
 const FEEDBACK_DELAY_MS = 150;
@@ -36,12 +38,14 @@ export function useTestEngine({
   onQuitToggle,
   showingPrevious,
   setShowingPrevious,
+  instantMode = false,
 }: UseTestEngineProps) {
   const [elapsed, setElapsed] = useState(session.elapsedSeconds);
   const [isAfk, setIsAfk] = useState(false);
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [questionKey, setQuestionKey] = useState(0);
+  const [shakeKey, setShakeKey] = useState(0);
   const [processedSession, setProcessedSession] = useState<SessionState | null>(null);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [optimisticStreak, setOptimisticStreak] = useState<number | null>(null);
@@ -50,6 +54,7 @@ export function useTestEngine({
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sessionRef = useRef(session);
   sessionRef.current = session;
@@ -61,6 +66,7 @@ export function useTestEngine({
   useEffect(() => {
     return () => {
       if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
     };
   }, []);
 
@@ -129,9 +135,139 @@ export function useTestEngine({
     findShuffledPosition(shuffledOrder, origIdx)
   );
 
+  const handleNext = useCallback(() => {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
+    }
+
+    if (currentQuestion && feedback) {
+      setPreviousQuestion({
+        question: currentQuestion,
+        shuffledOrder,
+        correctShuffledIndices,
+        feedback,
+      });
+    }
+
+    setFeedback(null);
+    setIsTransitioning(false);
+    setSelectedIndices([]);
+    setOptimisticStreak(null);
+    setOptimisticWrongCount(null);
+    setQuestionKey(k => k + 1);
+    setShowingPrevious(false);
+    
+    const sessionToApply = processedSessionRef.current ?? processedSession;
+    if (sessionToApply) {
+      processedSessionRef.current = null;
+      onSessionUpdate(sessionToApply);
+      setProcessedSession(null);
+    }
+  }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices, setShowingPrevious]);
+
+  const evaluateAnswer = useCallback(
+    (chosenIndices: number[]) => {
+      if (feedback !== null || isTransitioning || !currentQuestion) return;
+
+      const isSkip = chosenIndices.length === 0;
+
+      const allSelectedCorrect = !isSkip && chosenIndices.every(si =>
+        correctShuffledIndices.includes(si)
+      );
+      const allCorrectSelected = !isSkip && correctShuffledIndices.every(ci =>
+        chosenIndices.includes(ci)
+      );
+      const isCorrect = !isSkip && allSelectedCorrect && allCorrectSelected;
+
+      if (instantMode) {
+        if (isCorrect) {
+          playCorrectSound();
+        } else {
+          playWrongSound();
+          setShakeKey(k => k + 1);
+        }
+      }
+
+      if (isCorrect) {
+        setOptimisticStreak((currentItem?.consecutiveCorrect ?? 0) + 1);
+        setOptimisticWrongCount(null);
+      } else {
+        setOptimisticStreak(0);
+        setOptimisticWrongCount((currentItem?.wrongCount ?? 0) + 1);
+      }
+
+      const newFeedback: AnswerFeedback = {
+        selectedAnswerIndices: chosenIndices,
+        state: isCorrect ? 'correct' : 'wrong',
+        correctShuffledIndices,
+      };
+
+      setFeedback(newFeedback);
+      setIsTransitioning(true);
+
+      const currentElapsed = elapsedRef.current;
+      const baseSession = { ...sessionRef.current, elapsedSeconds: currentElapsed };
+      const updatedSession = isCorrect
+        ? processCorrectAnswer(baseSession)
+        : processWrongAnswer(baseSession);
+
+      saveSession(updatedSession, sessionId).catch(console.error);
+      processedSessionRef.current = updatedSession;
+      setProcessedSession(updatedSession);
+
+      if (instantMode) {
+        setIsTransitioning(false);
+        if (autoAdvanceTimeoutRef.current) {
+          clearTimeout(autoAdvanceTimeoutRef.current);
+        }
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          handleNext();
+        }, isCorrect ? 500 : 900);
+      } else {
+        if (feedbackTimeoutRef.current) {
+          clearTimeout(feedbackTimeoutRef.current);
+        }
+        feedbackTimeoutRef.current = setTimeout(() => {
+          setIsTransitioning(false);
+        }, FEEDBACK_DELAY_MS);
+      }
+    },
+    [
+      feedback,
+      isTransitioning,
+      currentQuestion,
+      correctShuffledIndices,
+      currentItem,
+      instantMode,
+      sessionId,
+      handleNext,
+    ]
+  );
+
+  const handleConfirm = useCallback(() => {
+    evaluateAnswer(selectedIndices);
+  }, [evaluateAnswer, selectedIndices]);
+
   const handleToggleAnswer = useCallback(
     (shuffledIndex: number) => {
-      if (feedback !== null || isTransitioning || !currentQuestion) return;
+      if (feedback !== null) {
+        if (instantMode) {
+          handleNext();
+        }
+        return;
+      }
+      if (isTransitioning || !currentQuestion) return;
+
+      if (instantMode && !isMultiAnswer) {
+        setSelectedIndices([shuffledIndex]);
+        evaluateAnswer([shuffledIndex]);
+        return;
+      }
 
       setSelectedIndices(prev => {
         if (isMultiAnswer) {
@@ -143,83 +279,8 @@ export function useTestEngine({
         }
       });
     },
-    [feedback, isTransitioning, currentQuestion, isMultiAnswer]
+    [feedback, isTransitioning, currentQuestion, isMultiAnswer, instantMode, handleNext, evaluateAnswer]
   );
-
-  const handleConfirm = useCallback(() => {
-    if (feedback !== null || isTransitioning || !currentQuestion) return;
-
-    const isSkip = selectedIndices.length === 0;
-
-    const allSelectedCorrect = !isSkip && selectedIndices.every(si =>
-      correctShuffledIndices.includes(si)
-    );
-    const allCorrectSelected = !isSkip && correctShuffledIndices.every(ci =>
-      selectedIndices.includes(ci)
-    );
-    const isCorrect = !isSkip && allSelectedCorrect && allCorrectSelected;
-
-    if (isCorrect) {
-      setOptimisticStreak((currentItem?.consecutiveCorrect ?? 0) + 1);
-      setOptimisticWrongCount(null);
-    } else {
-      setOptimisticStreak(0);
-      setOptimisticWrongCount((currentItem?.wrongCount ?? 0) + 1);
-    }
-
-    const newFeedback: AnswerFeedback = {
-      selectedAnswerIndices: selectedIndices,
-      state: isCorrect ? 'correct' : 'wrong',
-      correctShuffledIndices,
-    };
-
-    setFeedback(newFeedback);
-    setIsTransitioning(true);
-
-    feedbackTimeoutRef.current = setTimeout(() => {
-      const currentElapsed = elapsedRef.current;
-      const baseSession = { ...sessionRef.current, elapsedSeconds: currentElapsed };
-      const updatedSession = isCorrect
-        ? processCorrectAnswer(baseSession)
-        : processWrongAnswer(baseSession);
-
-      saveSession(updatedSession, sessionId).catch(console.error);
-      setProcessedSession(updatedSession);
-      setIsTransitioning(false);
-    }, FEEDBACK_DELAY_MS);
-  }, [
-    feedback,
-    isTransitioning,
-    currentQuestion,
-    selectedIndices,
-    correctShuffledIndices,
-    currentItem,
-    sessionId,
-  ]);
-
-  const handleNext = useCallback(() => {
-    if (currentQuestion && feedback) {
-      setPreviousQuestion({
-        question: currentQuestion,
-        shuffledOrder,
-        correctShuffledIndices,
-        feedback,
-      });
-    }
-
-    setFeedback(null);
-    setSelectedIndices([]);
-    setOptimisticStreak(null);
-    setOptimisticWrongCount(null);
-    setQuestionKey(k => k + 1);
-    setShowingPrevious(false);
-    
-    if (processedSession) {
-      processedSessionRef.current = processedSession;
-      onSessionUpdate(processedSession);
-      setProcessedSession(null);
-    }
-  }, [processedSession, onSessionUpdate, currentQuestion, feedback, shuffledOrder, correctShuffledIndices, setShowingPrevious]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -247,7 +308,7 @@ export function useTestEngine({
         return;
       }
 
-      if ((e.key === ' ' || e.key === 'Enter') && !isTransitioning) {
+      if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         if (showingPrevious) {
           setShowingPrevious(false);
@@ -255,7 +316,9 @@ export function useTestEngine({
         }
         if (feedback !== null) {
           handleNext();
-        } else {
+          return;
+        }
+        if (!isTransitioning) {
           handleConfirm();
         }
         return;
@@ -545,6 +608,7 @@ export function useTestEngine({
     feedback,
     isTransitioning,
     questionKey,
+    shakeKey,
     selectedIndices,
     previousQuestion,
     currentItem,

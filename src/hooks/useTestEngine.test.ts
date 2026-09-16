@@ -225,4 +225,86 @@ describe('useTestEngine', () => {
     expect(result.current.previousQuestion?.question.id).toBe(firstQuestionId);
     expect(onSessionUpdate).toHaveBeenCalled();
   });
+
+  it('handles single-choice tap with instant evaluation and auto-advance in instantMode', () => {
+    const session = buildInitialSession([mockQuestions[0]], 1, 'Instant Test');
+    const onSessionUpdate = vi.fn();
+    let showingPrev = false;
+
+    const { result } = renderHook(() =>
+      useTestEngine({
+        session,
+        sessionId: 'test-instant-id',
+        onSessionUpdate,
+        onQuitToggle: vi.fn(),
+        showingPrevious: showingPrev,
+        setShowingPrevious: (v) => {
+          showingPrev = typeof v === 'function' ? v(showingPrev) : v;
+        },
+        instantMode: true,
+      })
+    );
+
+    const correctShuffledIdx = result.current.shuffledOrder.findIndex(
+      origIdx => result.current.currentQuestion?.answers[origIdx]?.isCorrect
+    );
+
+    // In instantMode, simply toggling/tapping the answer immediately evaluates it
+    act(() => {
+      result.current.handleToggleAnswer(correctShuffledIdx);
+    });
+
+    expect(result.current.selectedIndices).toEqual([correctShuffledIdx]);
+    expect(result.current.feedback?.state).toBe('correct');
+
+    // Auto-advances after 500ms
+    act(() => {
+      vi.advanceTimersByTime(550);
+    });
+
+    expect(result.current.feedback).toBeNull();
+    expect(onSessionUpdate).toHaveBeenCalled();
+  });
+
+  it('handles wrong answer in instantMode, triggers shakeKey, and auto-advances', () => {
+    const session = buildInitialSession([mockQuestions[0]], 1, 'Instant Wrong Test');
+    const onSessionUpdate = vi.fn();
+    let showingPrev = false;
+
+    const { result } = renderHook(() =>
+      useTestEngine({
+        session,
+        sessionId: 'test-instant-wrong-id',
+        onSessionUpdate,
+        onQuitToggle: vi.fn(),
+        showingPrevious: showingPrev,
+        setShowingPrevious: (v) => {
+          showingPrev = typeof v === 'function' ? v(showingPrev) : v;
+        },
+        instantMode: true,
+      })
+    );
+
+    const wrongShuffledIdx = result.current.shuffledOrder.findIndex(
+      origIdx => !result.current.currentQuestion?.answers[origIdx]?.isCorrect
+    );
+
+    const initialShake = result.current.shakeKey;
+
+    act(() => {
+      result.current.handleToggleAnswer(wrongShuffledIdx);
+    });
+
+    expect(result.current.feedback?.state).toBe('wrong');
+    expect(result.current.shakeKey).toBeGreaterThan(initialShake);
+
+    // Auto-advances after 900ms
+    act(() => {
+      vi.advanceTimersByTime(950);
+    });
+
+    expect(result.current.feedback).toBeNull();
+    expect(onSessionUpdate).toHaveBeenCalled();
+  });
 });
+

@@ -221,7 +221,7 @@ const App: FC = () => {
                 )}
                 {displayPhase === 'multiplayer' && (
                   <GameHubView 
-                    onStartSession={(id) => handleResumeSession(id)} 
+                    onStartSession={(id) => handleResetSession(id)} 
                     onStartSoloGame={(mode, questions, sessionId) => {
                       setActiveSoloGame({ mode, questions, sessionId });
                     }}

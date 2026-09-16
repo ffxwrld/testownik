@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LogOut, Clock, Layers, ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ProgressBar } from '../ui/ProgressBar';
 import { formatTime } from '../../utils/session';
+import { cn } from '../../utils/cn';
 
 interface TestHeaderProps {
   onOpenSettings?: () => void;
@@ -18,6 +19,7 @@ interface TestHeaderProps {
   onOpenChunkSelector?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  hideProgressBar?: boolean;
 }
 
 export const TestHeader: FC<TestHeaderProps> = ({
@@ -33,13 +35,14 @@ export const TestHeader: FC<TestHeaderProps> = ({
   onOpenChunkSelector,
   isSidebarCollapsed = false,
   onToggleSidebar,
+  hideProgressBar = false,
 }) => {
   const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-zinc-900">
       <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-3">
-        <div className="flex items-center justify-between gap-2 sm:gap-4 mb-2.5">
+        <div className={cn("flex items-center justify-between gap-2 sm:gap-4", !hideProgressBar && "mb-2.5")}>
           <div className="flex items-center gap-2">
             {confirmQuit ? (
               <>
@@ -134,7 +137,9 @@ export const TestHeader: FC<TestHeaderProps> = ({
           </div>
         </div>
 
-        <ProgressBar value={progressPercent} size="sm" color="emerald" />
+        {!hideProgressBar && (
+          <ProgressBar value={progressPercent} size="sm" color="emerald" />
+        )}
       </div>
     </header>
   );

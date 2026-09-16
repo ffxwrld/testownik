@@ -62,6 +62,7 @@ export const TestView: FC<TestViewProps> = ({
   }, [sessionId, session.questions.length, session.chunkConfig]);
 
   const { roomCode, players, broadcastTestProgress, currentUserId } = useMultiplayerContext();
+  const isMultiplayer = Boolean(roomCode);
   
   const engine = useTestEngine({
     session,
@@ -70,6 +71,7 @@ export const TestView: FC<TestViewProps> = ({
     onQuitToggle: () => setConfirmQuit(q => !q),
     showingPrevious,
     setShowingPrevious,
+    instantMode: isMultiplayer,
   });
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export const TestView: FC<TestViewProps> = ({
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       <AnimatePresence>
-        {engine.isAfk && (
+        {engine.isAfk && !isMultiplayer && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -120,6 +122,7 @@ export const TestView: FC<TestViewProps> = ({
         onOpenChunkSelector={() => setShowChunkSelector(true)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
+        hideProgressBar={Boolean(roomCode && players.length > 1)}
       />
 
       {roomCode && players.length > 1 && (
@@ -170,18 +173,26 @@ export const TestView: FC<TestViewProps> = ({
           <div className={`w-full mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 items-stretch md:items-center pb-12 transition-all duration-300 ${
             isSidebarCollapsed ? 'max-w-4xl justify-center' : 'max-w-5xl'
           }`}>
-            <QuestionCard
-              questionKey={engine.questionKey}
-              currentQuestion={engine.currentQuestion}
-              sessionId={sessionId}
-              remainingCount={engine.remainingCount}
-              isMultiAnswer={engine.isMultiAnswer}
-              wrongCountForCurrent={engine.wrongCountForCurrent}
-              shuffledOrder={engine.shuffledOrder}
-              selectedIndices={engine.selectedIndices}
-              feedback={engine.feedback}
-              onToggleAnswer={engine.handleToggleAnswer}
-            />
+            <motion.div
+              key={engine.shakeKey}
+              animate={engine.shakeKey > 0 ? { x: [0, -10, 10, -6, 6, -3, 3, 0] } : {}}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="flex-1 min-w-0"
+            >
+              <QuestionCard
+                questionKey={engine.questionKey}
+                currentQuestion={engine.currentQuestion}
+                sessionId={sessionId}
+                remainingCount={engine.remainingCount}
+                isMultiAnswer={engine.isMultiAnswer}
+                wrongCountForCurrent={engine.wrongCountForCurrent}
+                shuffledOrder={engine.shuffledOrder}
+                selectedIndices={engine.selectedIndices}
+                feedback={engine.feedback}
+                onToggleAnswer={engine.handleToggleAnswer}
+                hideNavigationHints={isMultiplayer}
+              />
+            </motion.div>
 
             <TestSidebar
               requiredStreak={engine.requiredStreak}

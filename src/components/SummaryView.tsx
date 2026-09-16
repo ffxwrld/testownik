@@ -300,34 +300,6 @@ export const SummaryView: FC<SummaryViewProps> = ({
           </Card>
         </div>
 
-                {roomCode && (
-          <Card className="border-primary-500 shadow-md shadow-primary-500/10 mb-6">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary-500" />
-              Wyścig P2P
-            </h3>
-            <div className="space-y-4">
-              {[...players].sort((a, b) => b.progress - a.progress).map((p, idx) => (
-                <motion.div layout key={p.userId} className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-xl">
-                  <div className="font-bold text-lg w-6 text-center flex-shrink-0">
-                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : <span className="text-zinc-500 text-base">{idx + 1}.</span>}
-                  </div>
-                  <img src={p.avatarUrl} alt="" className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 shadow-sm" />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-semibold text-zinc-900 dark:text-white">
-                        {p.username} {p.isHost && <span className="text-xs text-primary-500 ml-1">(Host)</span>}
-                      </span>
-                      <span className="text-sm font-bold text-zinc-900 dark:text-white">{p.progress}%</span>
-                    </div>
-                    <ProgressBar value={p.progress} color={p.progress === 100 ? 'emerald' : 'blue'} size="md" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </Card>
-        )}
-
         <Card>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { WebRTCManager } from '../utils/webrtc';
@@ -64,6 +64,40 @@ interface PackageTransferChunkPayload {
   data: string;
 }
 
+const MULTIPLAYER_SESSION_KEY = 'testownik_multiplayer_session';
+
+interface StoredMultiplayerSession {
+  roomCode: string;
+  isHost: boolean;
+  raceStarted: boolean;
+}
+
+function getStoredMultiplayerSession(): StoredMultiplayerSession | null {
+  try {
+    if (typeof sessionStorage === 'undefined') return null;
+    const raw = sessionStorage.getItem(MULTIPLAYER_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredMultiplayerSession(data: StoredMultiplayerSession): void {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(MULTIPLAYER_SESSION_KEY, JSON.stringify(data));
+    }
+  } catch {}
+}
+
+function clearStoredMultiplayerSession(): void {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(MULTIPLAYER_SESSION_KEY);
+    }
+  } catch {}
+}
+
 export const useMultiplayer = () => {
   const { profile } = useProfile();
   const [roomCode, setRoomCode] = useState<string | null>(null);
@@ -77,6 +111,7 @@ export const useMultiplayer = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastBroadcastTimeRef = useRef(0);
   const lastBroadcastPercentRef = useRef<number | null>(null);
+  const hasReconnectedRef = useRef(false);
 
   // Buffer for Supabase Realtime package chunks
   const incomingSupabasePkgRef = useRef<{
@@ -95,6 +130,7 @@ export const useMultiplayer = () => {
   const addLog = useCallback((msg: string) => setDebugLogs(p => [...p, msg].slice(-10)), []);
 
   const cleanup = useCallback(() => {
+    clearStoredMultiplayerSession();
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
@@ -104,6 +140,8 @@ export const useMultiplayer = () => {
     setRoomCode(null);
     setPlayers([]);
     setReceivedFile(null);
+    setRaceStarted(false);
+    raceStartedRef.current = false;
     incomingSupabasePkgRef.current = null;
   }, []);
 
@@ -216,6 +254,7 @@ export const useMultiplayer = () => {
     
     setIsHost(hostMode);
     setRoomCode(code);
+    setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: raceStartedRef.current });
     
     const channel = supabase.channel(`room:${code}`, {
       config: { presence: { key: profile.id }, broadcast: { ack: true } }
@@ -247,7 +286,9 @@ export const useMultiplayer = () => {
           if (raceStartedRef.current) {
             const merged = presentPlayers.map(np => {
               const existing = prev.find(ep => ep.userId === np.userId);
-              return existing ? { ...existing, ...np, status: existing.status === 'disconnected' ? 'ready' : (np.status || existing.status) } : np;
+              return existing
+                ? { ...existing, ...np, isDNF: false, status: existing.status === 'disconnected' ? 'ready' : (np.status || existing.status) }
+                : np;
             });
             prev.forEach(ep => {
               if (!activeIds.has(ep.userId)) {
@@ -383,9 +424,13 @@ export const useMultiplayer = () => {
       })
       .on('broadcast', { event: 'start_race' }, () => {
         setRaceStarted(true);
+        raceStartedRef.current = true;
+        setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: true });
       })
       .on('broadcast', { event: 'reset_race' }, () => {
         setRaceStarted(false);
+        raceStartedRef.current = false;
+        setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: false });
         setReceivedFile(null);
         setPlayers(prev => prev.map(p => ({
           ...p,
@@ -406,7 +451,9 @@ export const useMultiplayer = () => {
                 progress: payload.progress,
                 accuracy: payload.accuracy !== undefined ? payload.accuracy : p.accuracy,
                 timeSeconds: payload.timeSeconds !== undefined ? payload.timeSeconds : p.timeSeconds,
-                finishedAt: payload.finishedAt !== undefined ? payload.finishedAt : p.finishedAt,
+                finishedAt: payload.finishedAt !== undefined 
+                  ? (p.finishedAt ? Math.min(p.finishedAt, payload.finishedAt) : payload.finishedAt)
+                  : (payload.progress >= 100 && !p.finishedAt ? Date.now() : p.finishedAt),
               } 
             : p
         ));
@@ -435,9 +482,44 @@ export const useMultiplayer = () => {
     });
   }, [profile, cleanup, initWebRTCForPeer, addLog]);
 
+  // Auto-reconnect to room after unexpected page refresh
+  useEffect(() => {
+    if (!profile || hasReconnectedRef.current || roomCode) return;
+
+    const stored = getStoredMultiplayerSession();
+    if (stored?.roomCode) {
+      hasReconnectedRef.current = true;
+      if (stored.raceStarted) {
+        setRaceStarted(true);
+        raceStartedRef.current = true;
+      }
+      joinRoom(stored.roomCode, stored.isHost);
+    }
+  }, [profile, roomCode, joinRoom]);
+
+  // Prevent accidental page refresh / tab close during active room or race
+  useEffect(() => {
+    if (!roomCode) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [roomCode]);
+
   const resetRace = useCallback(() => {
     setRaceStarted(false);
+    raceStartedRef.current = false;
     setReceivedFile(null);
+    if (roomCode) {
+      setStoredMultiplayerSession({ roomCode, isHost, raceStarted: false });
+    }
     setPlayers(prev => prev.map(p => ({
       ...p,
       progress: 0,
@@ -447,7 +529,7 @@ export const useMultiplayer = () => {
       finishedAt: undefined,
       isDNF: false,
     })));
-  }, []);
+  }, [roomCode, isHost]);
 
   const triggerRematch = useCallback(() => {
     channelRef.current?.send({
@@ -455,6 +537,10 @@ export const useMultiplayer = () => {
       event: 'reset_race',
     });
     setRaceStarted(false);
+    raceStartedRef.current = false;
+    if (roomCode) {
+      setStoredMultiplayerSession({ roomCode, isHost, raceStarted: false });
+    }
     setPlayers(prev => prev.map(p => ({
       ...p,
       progress: 0,
@@ -465,7 +551,7 @@ export const useMultiplayer = () => {
       isDNF: false,
     })));
     setRematchEventCount(c => c + 1);
-  }, []);
+  }, [roomCode, isHost]);
 
   const startRace = useCallback(() => {
     if (!isHost) return;
@@ -474,7 +560,11 @@ export const useMultiplayer = () => {
       event: 'start_race'
     });
     setRaceStarted(true);
-  }, [isHost]);
+    raceStartedRef.current = true;
+    if (roomCode) {
+      setStoredMultiplayerSession({ roomCode, isHost: true, raceStarted: true });
+    }
+  }, [isHost, roomCode]);
 
   const broadcastTestProgress = useCallback((
     percent: number,
@@ -497,19 +587,35 @@ export const useMultiplayer = () => {
     lastBroadcastTimeRef.current = now;
     lastBroadcastPercentRef.current = percent;
 
+    const resolvedFinishedAt = extra?.finishedAt !== undefined
+      ? extra.finishedAt
+      : (percent >= 100 ? now : undefined);
+
+    const fullExtra = {
+      ...extra,
+      ...(resolvedFinishedAt !== undefined ? { finishedAt: resolvedFinishedAt } : {}),
+    };
+
     channelRef.current?.send({
       type: 'broadcast',
       event: 'test_progress',
       payload: { 
         userId: profile.id, 
         progress: percent,
-        ...extra,
+        ...fullExtra,
       }
     });
 
     setPlayers(prev => prev.map(p => 
       p.userId === profile.id 
-        ? { ...p, progress: percent, ...extra } 
+        ? { 
+            ...p, 
+            progress: percent, 
+            ...fullExtra,
+            finishedAt: fullExtra.finishedAt !== undefined
+              ? (p.finishedAt ? Math.min(p.finishedAt, fullExtra.finishedAt) : fullExtra.finishedAt)
+              : p.finishedAt,
+          } 
         : p
     ));
   }, [roomCode, profile]);
