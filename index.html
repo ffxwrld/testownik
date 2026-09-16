@@ -6,13 +6,24 @@
     <title>Testownik</title>
     <link rel="icon" type="image/png" href="/logo.png" />
     <script>
-      // Prevent flash of wrong theme by applying class synchronously
+      // Prevent flash of wrong theme or dark mode by applying attributes synchronously
       (function() {
         try {
-          var stored = localStorage.getItem('testownik_dark');
+          var storedDark = localStorage.getItem('testownik_dark');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var dark = stored !== null ? stored === 'true' : prefersDark;
-          if (dark) document.documentElement.classList.add('dark');
+          var dark = storedDark !== null ? storedDark === 'true' : prefersDark;
+          if (dark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+
+          var storedTheme = localStorage.getItem('testownik_theme');
+          if (storedTheme && storedTheme !== 'blue') {
+            document.documentElement.setAttribute('data-theme', storedTheme);
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
         } catch(e) {}
       })();
     </script>

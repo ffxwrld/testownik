@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
+import { cn } from '../../utils/cn';
 
 interface MultiplayerRaceTrackProps {
   players: Player[];
@@ -14,6 +16,7 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
   currentUserId,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [finishBanner, setFinishBanner] = useState<string | null>(null);
   const finishedIdsRef = useRef<Set<string>>(new Set());
 
@@ -42,14 +45,14 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
         finishedIdsRef.current.add(p.userId);
         const isMe = p.userId === currentUserId;
         const msg = isMe
-          ? 'Przekroczyłeś linię mety! 🏁'
-          : `${p.username} ukończył wyścig! 🏁`;
+          ? t('multiplayer.race.finishedYou')
+          : t('multiplayer.race.finishedOther', { name: p.username });
         setFinishBanner(msg);
-        const t = setTimeout(() => setFinishBanner(null), 3500);
-        return () => clearTimeout(t);
+        const timer = setTimeout(() => setFinishBanner(null), 3500);
+        return () => clearTimeout(timer);
       }
     });
-  }, [players, currentUserId]);
+  }, [players, currentUserId, t]);
 
   const myRankIndex = rankedPlayers.findIndex((p) => p.userId === currentUserId);
   const myRank = myRankIndex >= 0 ? myRankIndex + 1 : 1;
@@ -58,25 +61,26 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
   const myPlayer = rankedPlayers.find((p) => p.userId === currentUserId);
 
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return { text: '1. miejsce', icon: '🥇', color: 'text-amber-500 bg-amber-500/10' };
-    if (rank === 2) return { text: '2. miejsce', icon: '🥈', color: 'text-slate-400 bg-slate-500/10' };
-    if (rank === 3) return { text: '3. miejsce', icon: '🥉', color: 'text-amber-700 bg-amber-700/10' };
-    return { text: `${rank}. miejsce`, icon: '🏎️', color: 'text-zinc-500 bg-zinc-500/10' };
+    const text = t('multiplayer.race.rankPlace', { rank });
+    if (rank === 1) return { text, icon: '🥇', color: 'text-amber-500 bg-amber-500/10' };
+    if (rank === 2) return { text, icon: '🥈', color: 'text-slate-400 bg-slate-500/10' };
+    if (rank === 3) return { text, icon: '🥉', color: 'text-amber-700 bg-amber-700/10' };
+    return { text, icon: '🏎️', color: 'text-zinc-500 bg-zinc-500/10' };
   };
 
   const rankInfo = getRankBadge(myRank);
 
   return (
-    <div className={`w-full max-w-5xl mx-auto px-4 md:px-8 pt-2 pb-1 ${className}`}>
+    <div className={cn("w-full pt-1", className)}>
       {/* Finish Notification Banner */}
       <AnimatePresence>
         {finishBanner && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ type: 'spring', bounce: 0, duration: 0.25 }}
-            className="mb-2 py-1 px-3.5 mx-auto w-fit rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 shadow-xs"
+            className="mb-1.5 py-0.5 px-3 mx-auto w-fit rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 shadow-xs"
           >
             <span>🏁</span>
             <span>{finishBanner}</span>
@@ -84,27 +88,25 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Main Glass Track Card */}
-      <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl shadow-xs p-2.5 sm:p-3.5 transition-all">
-        {/* Track Top Bar: Live Rank & Competitors Summary */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2 py-0.5 rounded-lg text-xs font-bold flex items-center gap-1 ${rankInfo.color}`}
-            >
+      {/* Track Top Bar: Live Rank & Competitors Summary */}
+      <div className="flex items-center justify-between mb-1.5 px-0.5">
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-0.5 rounded-lg text-xs font-bold flex items-center gap-1 ${rankInfo.color}`}
+          >
               <span>{rankInfo.icon}</span>
               <span>{rankInfo.text}</span>
             </span>
             {leader && leader.userId !== currentUserId && myPlayer && (
               <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 hidden xs:inline">
-                Strata do lidera: -{Math.max(0, Math.round(leader.progress - myPlayer.progress))}%
+                {t('multiplayer.race.behindLeader', { diff: Math.max(0, Math.round(leader.progress - myPlayer.progress)) })}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
             <Users className="w-3.5 h-3.5" />
-            <span>{totalInRace} graczy</span>
+            <span>{t('multiplayer.race.playersCount', { count: totalInRace })}</span>
           </div>
         </div>
 
@@ -182,14 +184,14 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                     {/* Finished Badge */}
                     {isFinished && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter shadow-xs flex items-center gap-0.5 whitespace-nowrap">
-                        META 🏁
+                        {t('multiplayer.race.finishBadge')}
                       </div>
                     )}
 
                     {/* "Ty" Badge (when not finished) */}
                     {isMe && !isDisconnected && !isFinished && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary-600 text-white text-[9px] font-extrabold px-1 py-0.2 rounded-full uppercase tracking-tighter shadow-xs">
-                        Ty
+                        {t('multiplayer.race.youBadge')}
                       </div>
                     )}
 
@@ -202,7 +204,7 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
 
                     {/* Hover tooltip with name & progress */}
                     <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 text-white text-[10px] font-medium py-0.5 px-1.5 rounded-md whitespace-nowrap transition-opacity z-40 shadow-md">
-                      {p.username} {isDisconnected ? '(Rozłączony / DNF)' : isFinished ? '(Ukończono! 🏁)' : `(${Math.round(p.progress)}%)`}
+                      {p.username} {isDisconnected ? t('multiplayer.race.disconnected') : isFinished ? t('multiplayer.race.finished') : `(${Math.round(p.progress)}%)`}
                     </div>
                   </div>
                 </motion.div>
@@ -211,6 +213,5 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };

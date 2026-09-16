@@ -1,7 +1,7 @@
 import { FC, ReactNode, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { BarChart3, LayoutDashboard, Zap, Users, Gamepad2, Calendar } from 'lucide-react';
+import { LayoutDashboard, Zap, Gamepad2, Calendar, User } from 'lucide-react';
 
 import { useLocation } from 'wouter';
 import logo from '../../assets/logo.png';
@@ -36,16 +36,37 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
     { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: t('nav.games', 'Graj') },
     { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
     { id: 'schedule', icon: <Calendar className="w-5 h-5" />, label: t('nav.schedule', 'Harmonogram') },
-    { id: 'stats', icon: <BarChart3 className="w-5 h-5" />, label: t('nav.stats', 'Statystyki') },
   ];
 
-  const bottomTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
-    { id: 'friends', icon: <Users className="w-5 h-5" />, label: t('nav.friends', 'Znajomi') }
-  ];
+  const userHue = profile
+    ? profile.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360
+    : 200;
 
-  const allMobileTabs = [
-    ...mainTabs,
-    bottomTabs[0]
+  const profileAvatarIcon = profile ? (
+    profile.avatar_url ? (
+      <img
+        src={profile.avatar_url}
+        alt={profile.username}
+        className="w-[18px] h-[18px] rounded-full object-cover shadow-xs border border-white/80 dark:border-zinc-700"
+      />
+    ) : (
+      <div
+        className="w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold text-[9px] text-white shadow-xs"
+        style={{ backgroundColor: `hsl(${userHue}, 70%, 50%)` }}
+      >
+        {profile.username.charAt(0).toUpperCase()}
+      </div>
+    )
+  ) : (
+    <User className="w-[18px] h-[18px]" />
+  );
+
+  const mobileTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
+    { id: 'dashboard', icon: <LayoutDashboard className="w-[18px] h-[18px]" />, label: t('nav.dashboard', 'Pulpit') },
+    { id: 'learn', icon: <Zap className="w-[18px] h-[18px]" />, label: t('nav.learn', 'Nauka') },
+    { id: 'multiplayer', icon: <Gamepad2 className="w-[18px] h-[18px]" />, label: t('nav.games', 'Graj') },
+    { id: 'schedule', icon: <Calendar className="w-[18px] h-[18px]" />, label: t('nav.schedule', 'Harmonogram') },
+    { id: 'profile', icon: profileAvatarIcon, label: t('nav.profile', 'Profil') },
   ];
 
   const renderTab = (tab: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }) => {
@@ -95,13 +116,10 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
 
         {/* Fixed bottom area */}
         <div className="flex-none pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
-          <div className="flex flex-col gap-1.5">
-            {bottomTabs.map(renderTab)}
-          </div>
           {/* User Profile Mini Snippet */}
           {profile && (
             <div 
-              className={`mt-2 flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition cursor-pointer shrink-0 ${
+              className={`flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition cursor-pointer shrink-0 ${
                 currentPhase === 'profile' 
                   ? 'bg-zinc-100 dark:bg-zinc-800/80 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50' 
                   : 'border border-transparent'
@@ -132,49 +150,48 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
         {children}
       </main>
 
-      {/* Mobile bottom bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-white/90 dark:bg-[#0f0f13]/90 backdrop-blur-md border-t border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-around z-40 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
-        {allMobileTabs.map(tab => {
-          const isActive = currentPhase === tab.id;
-          return (
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              key={tab.id}
-              onClick={() => onNavigate?.(tab.id)}
-              className={`relative flex flex-col items-center justify-center w-full h-full gap-1.5 transition-colors ${
-                isActive ? 'text-primary-600 dark:text-primary-400' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400'
-              }`}
-            >
-              
-              <span className={`text-xl transition-transform duration-200 opacity-80 grayscale ${isActive ? 'scale-110 -translate-y-0.5 grayscale-0' : ''}`}>
-                {tab.icon}
-              </span>
-              <span className={`text-[10px] font-bold tracking-wide transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-0'}`}>
-                {tab.label}
-              </span>
-            </motion.button>
-          )
-        })}
-      </nav>
-
-      {/* Mobile Floating Profile Avatar (Apple Design Style) */}
-      {profile && currentPhase !== 'profile' && (
-        <motion.div 
-          className="md:hidden fixed top-[max(1rem,env(safe-area-inset-top))] right-4 z-50"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 300 }}
-        >
-          <motion.button 
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onNavigate?.('profile')}
-            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg border-2 border-white dark:border-zinc-800 bg-zinc-800"
-            style={{ backgroundColor: `hsl(${profile.username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)` }}
-          >
-            {profile.username.charAt(0).toUpperCase()}
-          </motion.button>
-        </motion.div>
-      )}
+      {/* Mobile Floating Island TabBar (Apple iOS 18 & visionOS Style) */}
+      <div className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 flex justify-center px-3 pointer-events-none">
+        <nav className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-2xl border border-zinc-200/80 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] max-w-full overflow-x-auto hide-scrollbar">
+          {mobileTabs.map(tab => {
+            const isActive = currentPhase === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                whileTap={{ scale: 0.92 }}
+                onClick={() => onNavigate?.(tab.id)}
+                className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-full font-semibold text-xs transition-colors duration-200 select-none cursor-pointer ${
+                  isActive
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="mobile-active-pill"
+                    className="absolute inset-0 bg-primary-500/10 dark:bg-primary-400/15 border border-primary-500/25 dark:border-primary-400/30 rounded-full -z-10 shadow-xs"
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                  />
+                )}
+                <span className={`shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] transition-transform duration-200 ${isActive ? 'scale-105' : 'opacity-80'}`}>
+                  {tab.icon}
+                </span>
+                {isActive && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.25 }}
+                    className="whitespace-nowrap overflow-hidden font-bold tracking-tight text-[11px]"
+                  >
+                    {tab.label}
+                  </motion.span>
+                )}
+              </motion.button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 };

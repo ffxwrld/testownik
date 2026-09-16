@@ -142,6 +142,13 @@
     "cancel": "Anuluj",
     "save": "Zapisz"
   },
+  "common": {
+    "progress": "Postęp",
+    "loading": "Ładowanie...",
+    "error": "Wystąpił błąd",
+    "save": "Zapisz",
+    "cancel": "Anuluj"
+  },
   "test": {
     "loading": "Ładowanie pytania…",
     "quitConfirmPrompt": "Zakończyć?",
@@ -184,7 +191,17 @@
     "toggleSidebar": "Przełącz pasek boczny",
     "collapseSidebar": "Zwiń pasek boczny",
     "expandSidebar": "Rozwiń pasek boczny",
-    "or": "lub"
+    "or": "lub",
+    "afkTitle": "Czas nauki wstrzymany",
+    "afkDesc": "Timer został zatrzymany z powodu braku aktywności.",
+    "afkResume": "Wracam do nauki",
+    "chunkCompleted": "Część {{index}} ukończona",
+    "chunkMastered_one": "Opanowałeś {{count}} pytanie z tej części.",
+    "chunkMastered_few": "Opanowałeś wszystkie {{count}} pytania z tej części.",
+    "chunkMastered_many": "Opanowałeś wszystkie {{count}} pytań z tej części.",
+    "chunkMastered_other": "Opanowałeś wszystkie {{count}} pytań z tej części.",
+    "chunkNext": "Przejdź do Części {{index}}",
+    "chunkSelectOther": "Wybierz inną część"
   },
   "theme": {
     "colors": {
@@ -251,10 +268,10 @@
   "social": {
     "profile": {
       "title": "Mój Profil",
-      "joined": "Dołączył: {{date}}",
+      "joined": "Konto od {{date}}",
       "syncBtn": "Synchronizuj",
-      "syncingBtn": "Synchronizowanie...",
-      "logoutBtn": "Wyloguj",
+      "syncingBtn": "Zapis...",
+      "logoutBtn": "Wyloguj się",
       "xp": "Punkty XP",
       "sessions": "Ukończone Sesje",
       "streak": "Obecny Streak",
@@ -262,29 +279,84 @@
       "questions": "Rozwiązane Pytania",
       "correct": "Poprawne (1. raz)",
       "time": "Czas nauki",
-      "minutes": "{{count}} min"
+      "minutes": "{{count}} min",
+      "tabs": {
+        "account": "Konto",
+        "stats": "Statystyki",
+        "friends": "Znajomi"
+      },
+      "headers": {
+        "accountTitle": "Konto i Profil",
+        "accountSubtitle": "Zarządzaj swoim kontem, synchronizacją i ustawieniami.",
+        "statsTitle": "Statystyki",
+        "statsSubtitle": "Śledź swoje postępy i rywalizuj w rankingach.",
+        "friendsTitle": "Znajomi",
+        "friendsSubtitle": "Zarządzaj swoimi znajomymi i zaproszeniami."
+      },
+      "sections": {
+        "cloudData": "Chmura i dane",
+        "preferences": "Preferencje",
+        "session": "Sesja"
+      },
+      "syncTitle": "Synchronizacja",
+      "syncDesc": "Zapisz postępy i paczki pytań",
+      "syncSuccess": "Dane zostały zsynchronizowane z chmurą",
+      "guestAccount": "Konto lokalne (Gość)",
+      "appSettingsTitle": "Ustawienia aplikacji",
+      "appSettingsDesc": "Dźwięki, motyw, powiadomienia i formaty",
+      "deleteAccountBtn": "Usuń konto na zawsze",
+      "deletingAccount": "Usuwanie konta...",
+      "deleteAccountDesc": "Trwale usuwa konto, statystyki oraz znajomych.",
+      "deleteConfirm": "Czy na pewno chcesz usunąć swoje konto? Bezpowrotnie stracisz wszystkie swoje statystyki, postępy i znajomych. Tej operacji nie można cofnąć!",
+      "deleteSuccess": "Konto zostało pomyślnie usunięte.",
+      "deleteError": "Błąd podczas usuwania konta: {{message}}",
+      "checkConnection": "Upewnij się, że masz połączenie z internetem."
     },
     "friends": {
       "title": "Znajomi",
-      "searchPlaceholder": "Szukaj znajomych (min. 3 znaki)...",
+      "subtitle": "Zarządzaj swoimi znajomymi i rywalizujcie ze sobą w rankingu.",
+      "searchPlaceholder": "Szukaj po nicku...",
       "searching": "Szukanie...",
+      "searchBtn": "Szukaj",
       "noResults": "Nie znaleziono użytkowników.",
+      "addFriend": "Dodaj znajomego",
       "addBtn": "Zaproś",
       "cancelBtn": "Anuluj",
       "acceptBtn": "Akceptuj",
       "rejectBtn": "Odrzuć",
       "removeBtn": "Usuń",
       "pending": "Oczekujące zaproszenia",
-      "list": "Twoi znajomi",
-      "noFriends": "Nie masz jeszcze znajomych. Poszukaj ich używając wyszukiwarki powyżej!",
+      "pendingCount_one": "{{count}} oczekujące zaproszenie",
+      "pendingCount_few": "{{count}} oczekujące zaproszenia",
+      "pendingCount_many": "{{count}} oczekujących zaproszeń",
+      "pendingCount_other": "{{count}} oczekujących zaproszeń",
+      "incomingRequest": "Oczekujące zaproszenie",
+      "outgoingRequest": "Wysłano zaproszenie",
+      "list": "Twoja lista znajomych",
+      "loadingList": "Ładowanie listy znajomych",
+      "noFriends": "Nie masz jeszcze znajomych na liście.",
       "addedToast": "Zaproszenie wysłane",
       "acceptedToast": "Zaproszenie zaakceptowane",
       "removedToast": "Usunięto znajomego",
       "rejectedToast": "Odrzucono zaproszenie",
-      "canceledToast": "Cofnięto zaproszenie"
+      "canceledToast": "Anulowano zaproszenie"
     },
     "leaderboard": {
       "title": "Ranking Znajomych",
+      "communityTitle": "Ranking Społeczności",
+      "place": "miejsce",
+      "you": "Ty",
+      "emptyRange": "Brak wyników w tym przedziale czasowym.",
+      "ranges": {
+        "sevenDays": "7 Dni",
+        "thirtyDays": "30 Dni",
+        "allTime": "Ogółem"
+      },
+      "participantsCount_one": "{{count}} uczestnik",
+      "participantsCount_few": "{{count}} uczestników",
+      "participantsCount_many": "{{count}} uczestników",
+      "participantsCount_other": "{{count}} uczestników",
+      "loading": "Ładowanie rankingu...",
       "xpTab": "Punkty XP",
       "accTab": "Poprawność",
       "sessTab": "Sesje",
@@ -492,6 +564,22 @@
       },
       "playAgain": "Zagraj ponownie",
       "exit": "Wyjdź do menu"
+    }
+  },
+  "multiplayer": {
+    "race": {
+      "finishedYou": "Przekroczyłeś linię mety! 🏁",
+      "finishedOther": "{{name}} ukończył wyścig! 🏁",
+      "rankPlace": "{{rank}}. miejsce",
+      "behindLeader": "Strata do lidera: -{{diff}}%",
+      "playersCount_one": "{{count}} gracz",
+      "playersCount_few": "{{count}} graczy",
+      "playersCount_many": "{{count}} graczy",
+      "playersCount_other": "{{count}} graczy",
+      "finishBadge": "META 🏁",
+      "youBadge": "Ty",
+      "disconnected": "(Rozłączony / DNF)",
+      "finished": "(Ukończono! 🏁)"
     }
   },
   "flashcards": {

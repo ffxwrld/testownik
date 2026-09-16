@@ -1,50 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, BookOpen, Flame, Target, Sparkles, Clock, Snowflake, Trash2, AlertTriangle, User, Settings } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
+import { 
+  User, 
+  Settings, 
+  BarChart3, 
+  Users, 
+  RefreshCw, 
+  Cloud, 
+  LogOut, 
+  ChevronRight, 
+  Calendar, 
+  Mail
+} from 'lucide-react';
+
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useSync } from '../../hooks/useSync';
-import { supabase } from '../../lib/supabase';
-import { UserStats } from '../../models/social';
-import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { PageHeader } from '../common/PageHeader';
+import { StatsView } from '../StatsView';
+import { FriendsView } from './FriendsView';
+import { cn } from '../../utils/cn';
+
+export type ProfileTab = 'profile' | 'stats' | 'friends';
 
 interface ProfileViewProps {
   onOpenSettings?: () => void;
+  initialTab?: ProfileTab;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings }) => {
-  const { t } = useTranslation();
+export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initialTab = 'profile' }) => {
+  const { t, i18n } = useTranslation();
   const { user, signOut, deleteAccount } = useAuth();
   const { profile } = useProfile();
-  const { triggerSync, buyStreakFreeze } = useSync();
+  const { triggerSync } = useSync();
   const [syncing, setSyncing] = useState(false);
-  const [stats, setStats] = useState<UserStats | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
 
-  const loadStats = async () => {
-    if (!user) return;
-    const { data } = await supabase.from('user_stats').select('user_id, total_xp, total_sessions, total_questions, total_correct_first, total_study_seconds, current_streak, longest_streak, last_study_date').eq('user_id', user.id).single();
-    if (data) setStats(data as UserStats);
-  };
+  const userEmail = user?.email || user?.user_metadata?.email || (typeof window !== 'undefined' ? localStorage.getItem('testownik_user_email') : null);
 
-  useEffect(() => {
-    loadStats();
-  }, [user]);
-
-  
   const handleDeleteAccount = async () => {
-    if (window.confirm("Czy na pewno chcesz usunąć swoje konto? Bezpowrotnie stracisz wszystkie swoje statystyki, postępy i znajomych. Tej operacji nie można cofnąć!")) {
+    if (window.confirm(t('social.profile.deleteConfirm'))) {
       setIsDeleting(true);
       try {
         await deleteAccount();
-        toast.success("Konto zostało pomyślnie usunięte.");
+        toast.success(t('social.profile.deleteSuccess'));
       } catch (err: unknown) {
-        toast.error("Błąd podczas usuwania konta: " + ((err as Error)?.message || "Upewnij się, że masz połączenie z internetem."));
+        toast.error(
+          t('social.profile.deleteError', {
+            message: (err as Error)?.message || t('social.profile.checkConnection')
+          })
+        );
         setIsDeleting(false);
       }
     }
@@ -53,9 +62,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings }) => {
   const handleSync = async () => {
     setSyncing(true);
     await triggerSync();
-    await loadStats();
     setSyncing(false);
-    toast.success("Synchronizacja zakończona");
+    toast.success(t('social.profile.syncSuccess'));
   };
 
   if (!profile) return null;
@@ -65,145 +73,237 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings }) => {
   const hue = colorHash % 360;
   const avatarStyle = { backgroundColor: `hsl(${hue}, 70%, 50%)` };
 
-  return (
-    <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12">
-      <PageHeader
-        icon={<User />}
-        title="Twój Profil"
-        subtitle="Zarządzaj swoim kontem, synchronizacją i osiągnięciami."
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="danger" onClick={signOut}>Wyloguj się</Button>
-          {onOpenSettings && (
-            <motion.button 
-              whileTap={{ scale: 0.92 }}
-              onClick={onOpenSettings}
-              className="p-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl transition-colors cursor-pointer"
-              title="Ustawienia aplikacji"
-            >
-              <Settings className="w-5 h-5" />
-            </motion.button>
-          )}
-        </div>
-      </PageHeader>
+  const tabs: { id: ProfileTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'profile', label: t('social.profile.tabs.account'), icon: <User className="w-4 h-4" /> },
+    { id: 'stats', label: t('social.profile.tabs.stats'), icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'friends', label: t('social.profile.tabs.friends'), icon: <Users className="w-4 h-4" /> },
+  ];
 
-      <Card className="p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div 
-            className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-md flex-shrink-0"
-            style={avatarStyle}
-          >
-            {initial}
-          </div>
-          <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">{profile.username}</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{user?.email}</p>
-            <div className="mt-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
-              Dołączył(a): {new Date(profile.created_at).toLocaleDateString('pl-PL')}
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6 pb-32 md:pb-12">
+      <PageHeader
+        icon={activeTab === 'profile' ? <User /> : activeTab === 'stats' ? <BarChart3 /> : <Users />}
+        title={
+          activeTab === 'profile' 
+            ? t('social.profile.headers.accountTitle') 
+            : activeTab === 'stats' 
+            ? t('social.profile.headers.statsTitle') 
+            : t('social.profile.headers.friendsTitle')
+        }
+        subtitle={
+          activeTab === 'profile' 
+            ? t('social.profile.headers.accountSubtitle')
+            : activeTab === 'stats'
+            ? t('social.profile.headers.statsSubtitle')
+            : t('social.profile.headers.friendsSubtitle')
+        }
+      />
+
+      {/* Apple-style Segmented Control */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center p-1 rounded-2xl bg-zinc-100/90 dark:bg-zinc-800/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "relative flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors duration-200 select-none cursor-pointer",
+                  isActive
+                    ? "text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="profile-active-tab-pill"
+                    className="absolute inset-0 bg-white dark:bg-zinc-900 rounded-xl shadow-xs border border-zinc-200/50 dark:border-zinc-700/50 -z-10"
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                  />
+                )}
+                <span className="shrink-0">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab 1: Profile Details (Apple iOS Settings Inset Grouped Style) */}
+      {activeTab === 'profile' && (
+        <motion.div 
+          key="profile-tab-content"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="max-w-xl mx-auto space-y-6"
+        >
+          {/* 1. Identity Hero Card (Apple ID Card) */}
+          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center shadow-xs">
+            <div 
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-md mb-3.5 border-2 border-white dark:border-zinc-800"
+              style={avatarStyle}
+            >
+              {initial}
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
+              {profile.username}
+            </h2>
+            {userEmail ? (
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+                <Mail className="w-3.5 h-3.5 opacity-70" />
+                <span>{userEmail}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-400 dark:text-zinc-500 mt-1 font-medium">
+                <User className="w-3.5 h-3.5 opacity-70" />
+                <span>{t('social.profile.guestAccount')}</span>
+              </div>
+            )}
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100/90 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 text-xs font-medium border border-zinc-200/50 dark:border-zinc-700/50">
+              <Calendar className="w-3.5 h-3.5 text-primary-500" />
+              <span>
+                {t('social.profile.joined', { 
+                  date: new Date(profile.created_at).toLocaleDateString(i18n.language === 'pl' ? 'pl-PL' : 'en-US') 
+                })}
+              </span>
             </div>
           </div>
-        </div>
-      </Card>
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-50">Twoje statystyki</h2>
-          <Button 
-            variant="secondary" 
-            onClick={handleSync} 
-            disabled={syncing}
-            className="flex items-center gap-2"
-          >
-            <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {syncing ? 'Synchronizacja...' : 'Synchronizuj'}
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title={t('social.profile.xp')} value={stats ? stats.total_xp : '-'} icon={<Trophy className="w-6 h-6 text-yellow-500" strokeWidth={1.5} />} />
-          <StatCard title={t('social.profile.sessions')} value={stats ? stats.total_sessions : '-'} icon={<BookOpen className="w-6 h-6 text-blue-500" strokeWidth={1.5} />} />
-          <StatCard title={t('social.profile.streak')} value={stats ? t('social.profile.days', { count: stats.current_streak }) : '-'} icon={<Flame className="w-6 h-6 text-orange-500" strokeWidth={1.5} fill="currentColor" />} />
-          <StatCard title={t('social.profile.questions')} value={stats ? stats.total_questions : '-'} icon={<Target className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />} />
-          <StatCard title={t('social.profile.correct')} value={stats ? stats.total_correct_first : '-'} icon={<Sparkles className="w-6 h-6 text-purple-500" strokeWidth={1.5} />} />
-          <StatCard title={t('social.profile.time')} value={stats ? t('social.profile.minutes', { count: Math.round(stats.total_study_seconds / 60) }) : '-'} icon={<Clock className="w-6 h-6 text-sky-500" strokeWidth={1.5} />} />
-          <StatCard title="Zamrożenia" value={stats ? stats.streak_freezes : '-'} icon={<Snowflake className="w-6 h-6 text-cyan-500" strokeWidth={1.5} />} />
-        </div>
-      </div>
-
-      {stats && (
-        <Card className="p-6 md:p-8 max-w-xl mx-auto text-center border-primary-200/60 dark:border-primary-800/40">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center mx-auto mb-3">
-            <Snowflake className="w-6 h-6" />
+          {/* 2. Group 1: Chmura i Synchronizacja */}
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 px-3 uppercase tracking-wider">
+              {t('social.profile.sections.cloudData')}
+            </span>
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-xs">
+              {/* Synchronizacja */}
+              <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                    <Cloud className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      {t('social.profile.syncTitle')}
+                    </div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {t('social.profile.syncDesc')}
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={handleSync} 
+                  disabled={syncing}
+                  className="flex items-center gap-1.5 shrink-0"
+                >
+                  <RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
+                  {syncing ? t('social.profile.syncingBtn') : t('social.profile.syncBtn')}
+                </Button>
+              </div>
+            </div>
           </div>
-          <h2 className="text-lg font-bold mb-2 text-zinc-900 dark:text-zinc-50 flex items-center justify-center gap-2">
-            Zamrożenie Serii
-          </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-md mx-auto">
-            Kup zamrożenie serii, aby uchronić swój streak przed wyzerowaniem w razie 1 dnia nieobecności.
-            Koszt: <span className="font-bold text-amber-500">1000 XP</span>
-          </p>
-          <Button 
-            variant="primary" 
-            disabled={stats.total_xp < 1000 || syncing}
-            onClick={async () => {
-              setSyncing(true);
-              const res = await buyStreakFreeze();
-              if (res.success) {
-                toast.success("Zakupiono zamrożenie!");
-                loadStats();
-              } else {
-                toast.error(res.error?.message || "Błąd zakupu");
-              }
-              setSyncing(false);
-            }}
-          >
-            Kup zamrożenie
-          </Button>
-        </Card>
-      )}
 
-      {/* DANGER ZONE */}
-      <div className="pt-6 border-t border-zinc-200/60 dark:border-zinc-800/60 w-full">
-        <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5" />
-          Strefa niebezpieczna
-        </h2>
-        <Card className="bg-red-50/50 dark:bg-red-950/20 border-red-200/60 dark:border-red-900/40 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h3 className="text-base font-bold text-red-900 dark:text-red-300 mb-1">Usuń konto</h3>
-            <p className="text-xs sm:text-sm text-red-700/80 dark:text-red-400/80 max-w-md">
-              Trwale usunie Twoje konto, statystyki, wszystkie wyniki oraz usunie Cię z list znajomych. Tej operacji nie można cofnąć.
+          {/* 3. Group 2: Ustawienia aplikacji */}
+          {onOpenSettings && (
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 px-3 uppercase tracking-wider">
+                {t('social.profile.sections.preferences')}
+              </span>
+              <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-xs">
+                <motion.button
+                  whileTap={{ scale: 0.99 }}
+                  onClick={onOpenSettings}
+                  className="w-full flex items-center justify-between p-4 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50 transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 flex items-center justify-center shrink-0">
+                      <Settings className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {t('social.profile.appSettingsTitle')}
+                      </div>
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {t('social.profile.appSettingsDesc')}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                </motion.button>
+              </div>
+            </div>
+          )}
+
+          {/* 4. Group 3: Zarządzanie Sesją */}
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 px-3 uppercase tracking-wider">
+              {t('social.profile.sections.session')}
+            </span>
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-xs">
+              <motion.button
+                whileTap={{ scale: 0.99 }}
+                onClick={signOut}
+                className="w-full flex items-center justify-between p-4 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <div className="text-sm font-semibold text-rose-600 dark:text-rose-400">
+                    {t('social.profile.logoutBtn')}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-rose-300 dark:text-rose-800 group-hover:translate-x-0.5 transition-transform" />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* 5. Dyskretna strefa usuwania konta */}
+          <div className="pt-2 flex flex-col items-center text-center">
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="text-xs font-medium text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 transition-colors cursor-pointer py-2 px-3 rounded-lg hover:bg-rose-50/50 dark:hover:bg-rose-950/20"
+            >
+              {isDeleting ? t('social.profile.deletingAccount') : t('social.profile.deleteAccountBtn')}
+            </button>
+            <p className="text-[11px] text-zinc-400/80 dark:text-zinc-600 max-w-xs mt-0.5">
+              {t('social.profile.deleteAccountDesc')}
             </p>
           </div>
-          <Button 
-            variant="danger" 
-            className="flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
-            onClick={handleDeleteAccount}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            {isDeleting ? 'Usuwanie...' : 'Usuń konto na zawsze'}
-          </Button>
-        </Card>
-      </div>
+        </motion.div>
+      )}
+
+      {/* Tab 2: Embedded Stats View */}
+      {activeTab === 'stats' && (
+        <motion.div
+          key="stats-tab-content"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <StatsView embedded />
+        </motion.div>
+      )}
+
+      {/* Tab 3: Embedded Friends View */}
+      {activeTab === 'friends' && (
+        <motion.div
+          key="friends-tab-content"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <FriendsView embedded />
+        </motion.div>
+      )}
     </div>
   );
 };
 
-const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.ReactNode }> = ({ title, value, icon }) => (
-  <div>
-    <Card className="p-5 flex flex-col items-center justify-center text-center h-full">
-      <span className="text-zinc-400 dark:text-zinc-500 mb-2">{icon}</span>
-      <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">{title}</span>
-      <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 tabular-nums">{value}</span>
-    </Card>
-  </div>
-);
+

@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 // Removed unused validation import
-import { loadAllSessions } from './session';
-import { set } from 'idb-keyval';
+import { loadAllSessions, saveAllSessions } from './session';
 import { SyncResult, UserStats } from '../models/social';
 
 let syncInProgress = false;
@@ -88,8 +87,8 @@ export async function syncStatsToServer(): Promise<SyncResult | null> {
 
     if (error) throw error;
 
-    // 3. Save markers back to IndexedDB
-    await set('testownik_sessions_db', allSessions);
+    // 3. Save markers back to storage
+    await saveAllSessions(allSessions);
     
     lastSyncTime = Date.now();
     return { success: true, data: data as UserStats };

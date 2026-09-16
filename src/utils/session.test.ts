@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   buildInitialSession,
   processCorrectAnswer,
@@ -6,8 +6,33 @@ import {
   getChunkList,
   getChunkProgress,
   buildChunkQueue,
+  saveSession,
+  loadSession,
+  getAllSessionMetadata,
+  renameSession,
+  deleteSession,
+  _resetSessionStorageForTesting,
 } from './session';
 import { Question } from '../models/types';
+
+const idbMockStore = new Map<string, unknown>();
+vi.mock('idb-keyval', () => ({
+  get: vi.fn(async (key: string) => idbMockStore.get(key)),
+  set: vi.fn(async (key: string, val: unknown) => { idbMockStore.set(key, val); }),
+  del: vi.fn(async (key: string) => { idbMockStore.delete(key); }),
+  keys: vi.fn(async () => Array.from(idbMockStore.keys())),
+}));
+
+const lsStore: Record<string, string> = {};
+Object.defineProperty(globalThis, 'localStorage', {
+  value: {
+    getItem: (key: string) => lsStore[key] ?? null,
+    setItem: (key: string, val: string) => { lsStore[key] = val; },
+    removeItem: (key: string) => { delete lsStore[key]; },
+    clear: () => { Object.keys(lsStore).forEach(k => delete lsStore[k]); },
+  },
+  writable: true,
+});
 
 const mockQuestions: Question[] = [
   { id: 'q1', text: 'Q1', sourceFile: 'f1', answers: [], correctAnswerIndex: 0, correctAnswerIndices: [0] },
@@ -131,6 +156,89 @@ describe('session.ts', () => {
       expect(session.queue.length).toBe(0);
       // Phase should remain 'test' so completion modal can be shown!
       expect(session.phase).toBe('test');
+    });
+  });
+
+  describe('persistence & optimized IDB storage', () => {
+    beforeEach(() => {
+      idbMockStore.clear();
+      Object.keys(lsStore).forEach(k => delete lsStore[k]);
+      _resetSessionStorageForTesting();
+    });
+
+    it('saves a session with individual key and lightweight metadata index', async () => {
+      const session = buildInitialSession(mockQuestions, 1, 'Biologia 2026');
+      const sessionId = await saveSession(session, 'bio-1');
+
+      expect(sessionId).toBe('bio-1');
+      // Individual session saved
+      expect(idbMockStore.has('testownik_session_bio-1')).toBe(true);
+      // Metadata index saved
+      expect(idbMockStore.has('testownik_sessions_meta_v1')).toBe(true);
+
+      const metaList = await getAllSessionMetadata();
+      expect(metaList.length).toBe(1);
+      expect(metaList[0].id).toBe('bio-1');
+      expect(metaList[0].baseName).toBe('Biologia 2026');
+      expect(metaList[0].totalQuestions).toBe(3);
+    });
+
+    it('loads a saved session correctly', async () => {
+      const session = buildInitialSession(mockQuestions, 2, 'Chemia');
+      await saveSession(session, 'chem-1');
+
+      // Clear memory cache to verify read from IDB
+      _resetSessionStorageForTesting();
+
+      const loaded = await loadSession('chem-1');
+      expect(loaded).not.toBeNull();
+      expect(loaded?.baseName).toBe('Chemia');
+      expect(loaded?.repeatMode).toBe(2);
+      expect(loaded?.questions.length).toBe(3);
+    });
+
+    it('renames a session and updates metadata', async () => {
+      const session = buildInitialSession(mockQuestions, 1, 'Stara Nazwa');
+      await saveSession(session, 'rename-test');
+
+      await renameSession('rename-test', 'Nowa Nazwa');
+
+      const loaded = await loadSession('rename-test');
+      expect(loaded?.baseName).toBe('Nowa Nazwa');
+
+      const meta = await getAllSessionMetadata();
+      expect(meta.find(m => m.id === 'rename-test')?.baseName).toBe('Nowa Nazwa');
+    });
+
+    it('deletes a session from both storage and metadata index', async () => {
+      const session = buildInitialSession(mockQuestions, 1, 'Do usuniecia');
+      await saveSession(session, 'del-1');
+
+      expect(idbMockStore.has('testownik_session_del-1')).toBe(true);
+      await deleteSession('del-1');
+
+      expect(idbMockStore.has('testownik_session_del-1')).toBe(false);
+      const meta = await getAllSessionMetadata();
+      expect(meta.some(m => m.id === 'del-1')).toBe(false);
+      const loaded = await loadSession('del-1');
+      expect(loaded).toBeNull();
+    });
+
+    it('automatically migrates legacy bulk storage to individual keys', async () => {
+      // Simulate legacy testownik_sessions_db format
+      const sessionA = buildInitialSession(mockQuestions, 1, 'Legacy A');
+      const sessionB = buildInitialSession(mockQuestions, 1, 'Legacy B');
+      idbMockStore.set('testownik_sessions_db', {
+        'leg-a': sessionA,
+        'leg-b': sessionB,
+      });
+
+      const meta = await getAllSessionMetadata();
+      expect(meta.length).toBe(2);
+      expect(idbMockStore.has('testownik_session_leg-a')).toBe(true);
+      expect(idbMockStore.has('testownik_session_leg-b')).toBe(true);
+      // Old bulk key removed
+      expect(idbMockStore.has('testownik_sessions_db')).toBe(false);
     });
   });
 });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, CalendarDays, Calendar, Crown, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useLeaderboard } from '../../hooks/useLeaderboard';
 import { LeaderboardEntry } from '../../models/social';
@@ -14,12 +15,13 @@ interface LeaderboardViewProps {
 }
 
 export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = true }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const timeRanges: { id: LeaderboardTimeRange; label: string; icon: React.ReactNode }[] = [
-    { id: '7_days', label: '7 Dni', icon: <Clock className="w-4 h-4" /> },
-    { id: '30_days', label: '30 Dni', icon: <CalendarDays className="w-4 h-4" /> },
-    { id: 'all_time', label: 'Ogółem', icon: <Calendar className="w-4 h-4" /> },
+    { id: '7_days', label: t('social.leaderboard.ranges.sevenDays'), icon: <Clock className="w-4 h-4" /> },
+    { id: '30_days', label: t('social.leaderboard.ranges.thirtyDays'), icon: <CalendarDays className="w-4 h-4" /> },
+    { id: 'all_time', label: t('social.leaderboard.ranges.allTime'), icon: <Calendar className="w-4 h-4" /> },
   ];
 
   const [activeRange, setActiveRange] = useState<LeaderboardTimeRange>('7_days');
@@ -84,7 +86,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
             {place}
           </div>
           <div className="text-[10px] uppercase font-bold tracking-widest opacity-60">
-            miejsce
+            {t('social.leaderboard.place')}
           </div>
         </div>
       </div>
@@ -98,7 +100,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
           <div className="flex items-center justify-between mb-8 mt-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-3">
               <Trophy className="w-7 h-7 text-amber-500" />
-              Ranking Społeczności
+              {t('social.leaderboard.communityTitle')}
             </h1>
           </div>
         )}
@@ -131,7 +133,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
           </div>
 
           <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            {entries.length} {entries.length === 1 ? 'uczestnik' : 'uczestników'}
+            {t('social.leaderboard.participantsCount', { count: entries.length })}
           </div>
         </div>
 
@@ -203,7 +205,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
                             {entry.username}
                             {isMe && (
                               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-400">
-                                Ty
+                                {t('social.leaderboard.you')}
                               </span>
                             )}
                           </div>
@@ -224,7 +226,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
           </>
         ) : (
           <div className="text-center text-zinc-500 dark:text-zinc-400 py-16">
-            Brak wyników w tym przedziale czasowym.
+            {t('social.leaderboard.emptyRange')}
           </div>
         )}
       </div>

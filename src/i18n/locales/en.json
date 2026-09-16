@@ -142,6 +142,13 @@
     "cancel": "Cancel",
     "save": "Save"
   },
+  "common": {
+    "progress": "Progress",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "test": {
     "loading": "Loading question...",
     "quitConfirmPrompt": "Quit?",
@@ -184,7 +191,15 @@
     "toggleSidebar": "Toggle sidebar",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-    "or": "or"
+    "or": "or",
+    "afkTitle": "Study Time Paused",
+    "afkDesc": "Timer was paused due to inactivity.",
+    "afkResume": "Resume studying",
+    "chunkCompleted": "Part {{index}} completed",
+    "chunkMastered_one": "You mastered {{count}} question from this part.",
+    "chunkMastered_other": "You mastered all {{count}} questions from this part.",
+    "chunkNext": "Go to Part {{index}}",
+    "chunkSelectOther": "Choose another part"
   },
   "theme": {
     "colors": {
@@ -251,10 +266,10 @@
   "social": {
     "profile": {
       "title": "My Profile",
-      "joined": "Joined: {{date}}",
+      "joined": "Account since {{date}}",
       "syncBtn": "Sync",
-      "syncingBtn": "Syncing...",
-      "logoutBtn": "Logout",
+      "syncingBtn": "Saving...",
+      "logoutBtn": "Log Out",
       "xp": "XP Points",
       "sessions": "Completed Sessions",
       "streak": "Current Streak",
@@ -262,21 +277,60 @@
       "questions": "Questions Solved",
       "correct": "Correct (1st try)",
       "time": "Study Time",
-      "minutes": "{{count}} min"
+      "minutes": "{{count}} min",
+      "tabs": {
+        "account": "Account",
+        "stats": "Stats",
+        "friends": "Friends"
+      },
+      "headers": {
+        "accountTitle": "Account & Profile",
+        "accountSubtitle": "Manage your account, synchronization, and settings.",
+        "statsTitle": "Statistics",
+        "statsSubtitle": "Track your progress and compete on leaderboards.",
+        "friendsTitle": "Friends",
+        "friendsSubtitle": "Manage your friends and invitations."
+      },
+      "sections": {
+        "cloudData": "Cloud and data",
+        "preferences": "Preferences",
+        "session": "Session"
+      },
+      "syncTitle": "Cloud Sync",
+      "syncDesc": "Save progress and question decks",
+      "syncSuccess": "Data synchronized with the cloud",
+      "guestAccount": "Local account (Guest)",
+      "appSettingsTitle": "App Settings",
+      "appSettingsDesc": "Sounds, theme, notifications, and formats",
+      "deleteAccountBtn": "Delete account permanently",
+      "deletingAccount": "Deleting account...",
+      "deleteAccountDesc": "Permanently deletes account, statistics, and friends.",
+      "deleteConfirm": "Are you sure you want to delete your account? You will permanently lose all your statistics, progress, and friends. This action cannot be undone!",
+      "deleteSuccess": "Account was deleted successfully.",
+      "deleteError": "Error deleting account: {{message}}",
+      "checkConnection": "Make sure you have an internet connection."
     },
     "friends": {
       "title": "Friends",
-      "searchPlaceholder": "Search friends (min. 3 chars)...",
+      "subtitle": "Manage your friends and compete with each other on the leaderboard.",
+      "searchPlaceholder": "Search by username...",
       "searching": "Searching...",
+      "searchBtn": "Search",
       "noResults": "No users found.",
+      "addFriend": "Add friend",
       "addBtn": "Invite",
       "cancelBtn": "Cancel",
       "acceptBtn": "Accept",
       "rejectBtn": "Reject",
       "removeBtn": "Remove",
       "pending": "Pending invitations",
-      "list": "Your friends",
-      "noFriends": "You don't have any friends yet. Search for them above!",
+      "pendingCount_one": "{{count}} pending invitation",
+      "pendingCount_other": "{{count}} pending invitations",
+      "incomingRequest": "Pending invitation",
+      "outgoingRequest": "Invitation sent",
+      "list": "Your friends list",
+      "loadingList": "Loading friends list",
+      "noFriends": "You don't have any friends on your list yet.",
       "addedToast": "Invitation sent",
       "acceptedToast": "Invitation accepted",
       "removedToast": "Friend removed",
@@ -285,6 +339,18 @@
     },
     "leaderboard": {
       "title": "Friends Leaderboard",
+      "communityTitle": "Community Leaderboard",
+      "place": "place",
+      "you": "You",
+      "emptyRange": "No results in this time period.",
+      "ranges": {
+        "sevenDays": "7 Days",
+        "thirtyDays": "30 Days",
+        "allTime": "All time"
+      },
+      "participantsCount_one": "{{count}} participant",
+      "participantsCount_other": "{{count}} participants",
+      "loading": "Loading leaderboard...",
       "xpTab": "XP Points",
       "accTab": "Accuracy",
       "sessTab": "Sessions",
@@ -492,6 +558,20 @@
       },
       "playAgain": "Play again",
       "exit": "Exit to menu"
+    }
+  },
+  "multiplayer": {
+    "race": {
+      "finishedYou": "You crossed the finish line! 🏁",
+      "finishedOther": "{{name}} finished the race! 🏁",
+      "rankPlace": "Place {{rank}}",
+      "behindLeader": "Behind leader: -{{diff}}%",
+      "playersCount_one": "{{count}} player",
+      "playersCount_other": "{{count}} players",
+      "finishBadge": "FINISH 🏁",
+      "youBadge": "You",
+      "disconnected": "(Disconnected / DNF)",
+      "finished": "(Finished! 🏁)"
     }
   },
   "flashcards": {

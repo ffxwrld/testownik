@@ -10,6 +10,12 @@ const TURN_URL = import.meta.env.VITE_TURN_URL || 'openrelay.metered.ca';
 const TURN_USER = import.meta.env.VITE_TURN_USERNAME || 'openrelayproject';
 const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL || 'openrelayproject';
 
+if (import.meta.env.PROD && !import.meta.env.VITE_TURN_URL) {
+  console.warn(
+    '[WebRTC] Running in production without dedicated VITE_TURN_URL. Public OpenRelay fallback may be subject to rate-limiting.'
+  );
+}
+
 const ICE_GATHERING_TIMEOUT_MS = 1000;
 
 export class WebRTCManager {

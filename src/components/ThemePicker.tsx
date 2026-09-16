@@ -1,33 +1,12 @@
 import { type FC, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-
-const THEMES = [
-  { id: 'blue', name: 'Niebieski', colorClass: 'bg-blue-500' },
-  { id: 'violet', name: 'Fioletowy', colorClass: 'bg-violet-500' },
-  { id: 'rose', name: 'Różowy', colorClass: 'bg-rose-500' },
-  { id: 'emerald', name: 'Szmaragdowy', colorClass: 'bg-emerald-500' },
-  { id: 'amber', name: 'Bursztynowy', colorClass: 'bg-amber-500' },
-];
+import { useTheme } from '../hooks/useTheme';
 
 export const ThemePicker: FC = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'blue';
-    const stored = localStorage.getItem('testownik_theme');
-    return stored || 'blue';
-  });
+  const { theme, setTheme, themes } = useTheme();
   const pickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'blue') {
-      root.removeAttribute('data-theme');
-    } else {
-      root.setAttribute('data-theme', theme);
-    }
-    localStorage.setItem('testownik_theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -43,7 +22,7 @@ export const ThemePicker: FC = () => {
     };
   }, [isOpen]);
 
-  const activeThemeObj = THEMES.find(t => t.id === theme) || THEMES[0];
+  const activeThemeObj = themes.find(t => t.id === theme) || themes[0];
 
   return (
     <div className="relative flex items-center" ref={pickerRef}>
@@ -58,7 +37,7 @@ export const ThemePicker: FC = () => {
 
       {isOpen && (
         <div className="absolute bottom-full right-0 -translate-y-2 mb-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg p-2 flex gap-2 animate-fadeIn z-50">
-          {THEMES.map((themeItem) => (
+          {themes.map((themeItem) => (
             <button
               key={themeItem.id}
               onClick={() => {

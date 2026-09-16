@@ -11,9 +11,9 @@ export interface ElectronAPI {
     name: string;
   };
   updater: {
-    onUpdateAvailable: (callback: (info: ElectronUpdaterInfo) => void) => void;
-    onUpdateAvailableMac?: (callback: (info: ElectronUpdaterInfo) => void) => void;
-    onUpdateDownloaded: (callback: (info: ElectronUpdaterInfo) => void) => void;
+    onUpdateAvailable: (callback: (info: ElectronUpdaterInfo) => void) => () => void;
+    onUpdateAvailableMac?: (callback: (info: ElectronUpdaterInfo) => void) => () => void;
+    onUpdateDownloaded: (callback: (info: ElectronUpdaterInfo) => void) => () => void;
     restartApp: () => void;
   };
   zoom: {

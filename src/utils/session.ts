@@ -1,11 +1,38 @@
-import { get, set } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 import { SessionState, Question, QueueItem, DoneStat, SavedSessionMetadata, ChunkInfo } from '../models/types';
 import { shuffle, shuffleIndices } from './shuffle';
 import { deleteSessionImages } from './db';
 
 const SESSIONS_STORAGE_KEY = 'testownik_sessions_v2';
+const SESSIONS_IDB_KEY = 'testownik_sessions_db';
+const SESSIONS_META_IDB_KEY = 'testownik_sessions_meta_v1';
+const SESSION_PREFIX = 'testownik_session_';
 const CURRENT_SESSION_ID_KEY = 'testownik_current_session_id';
 const SCHEMA_VERSION = 1;
+
+const _sessionCache = new Map<string, SessionState>();
+let _metaCache: SavedSessionMetadata[] | null = null;
+let _idbMigrated = false;
+
+function extractMetadata(id: string, session: SessionState): SavedSessionMetadata {
+  return {
+    id,
+    baseName: session.baseName || 'Baza pytań',
+    createdAt: session.startedAt,
+    updatedAt: session.updatedAt || session.startedAt,
+    totalQuestions: session.questions?.length ?? 0,
+    completedQuestions: session.done?.length ?? 0,
+    currentPhase: (session.phase as 'test' | 'summary') || 'test',
+    targetDate: session.targetDate,
+    chunkConfig: session.chunkConfig,
+  };
+}
+
+export function _resetSessionStorageForTesting(): void {
+  _sessionCache.clear();
+  _metaCache = null;
+  _idbMigrated = false;
+}
 
 export function buildInitialSession(
   questions: Question[],
@@ -174,13 +201,86 @@ function generateSessionId(): string {
   return Date.now().toString(36);
 }
 
+async function ensureMigrated(): Promise<void> {
+  if (_idbMigrated) return;
+
+  try {
+    // 1. Check if metadata index already exists
+    const existingMeta = await get<SavedSessionMetadata[]>(SESSIONS_META_IDB_KEY);
+    if (existingMeta && Array.isArray(existingMeta)) {
+      _metaCache = existingMeta;
+      _idbMigrated = true;
+      return;
+    }
+
+    // 2. Check legacy unified IDB key
+    let oldSessions = await get<Record<string, SessionState>>(SESSIONS_IDB_KEY);
+
+    // 3. Check legacy localStorage key
+    if (!oldSessions) {
+      const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
+      if (raw) {
+        try {
+          oldSessions = JSON.parse(raw);
+          localStorage.removeItem(SESSIONS_STORAGE_KEY);
+        } catch (e) {
+          console.error('Migration from localStorage failed:', e);
+        }
+      }
+    }
+
+    // 4. Migrate old sessions into individual IDB records + metadata index
+    if (oldSessions && typeof oldSessions === 'object') {
+      const metaList: SavedSessionMetadata[] = [];
+      const promises: Promise<unknown>[] = [];
+
+      for (const [id, session] of Object.entries(oldSessions)) {
+        if (session && typeof session === 'object' && session.version === SCHEMA_VERSION) {
+          const meta = extractMetadata(id, session);
+          metaList.push(meta);
+          _sessionCache.set(id, session);
+          promises.push(set(`${SESSION_PREFIX}${id}`, session));
+        }
+      }
+
+      metaList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      _metaCache = metaList;
+      promises.push(set(SESSIONS_META_IDB_KEY, metaList));
+      promises.push(del(SESSIONS_IDB_KEY));
+      await Promise.all(promises);
+    } else {
+      _metaCache = [];
+      await set(SESSIONS_META_IDB_KEY, []);
+    }
+
+    _idbMigrated = true;
+  } catch (err) {
+    console.error('Session storage migration error:', err);
+    _idbMigrated = true;
+  }
+}
+
 export async function saveSession(session: SessionState, sessionId?: string): Promise<string> {
   try {
+    await ensureMigrated();
     const id = sessionId || generateSessionId();
     session.updatedAt = new Date().toISOString();
-    const sessions = await loadAllSessions();
-    sessions[id] = session;
-    await saveAllSessions(sessions);
+
+    _sessionCache.set(id, session);
+    await set(`${SESSION_PREFIX}${id}`, session);
+
+    const meta = extractMetadata(id, session);
+    const metaList = _metaCache ? [..._metaCache] : [];
+    const existingIdx = metaList.findIndex(m => m.id === id);
+    if (existingIdx >= 0) {
+      metaList[existingIdx] = meta;
+    } else {
+      metaList.unshift(meta);
+    }
+    metaList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    _metaCache = metaList;
+    await set(SESSIONS_META_IDB_KEY, metaList);
+
     localStorage.setItem(CURRENT_SESSION_ID_KEY, id);
     return id;
   } catch (err) {
@@ -193,64 +293,81 @@ export async function loadSession(sessionId?: string): Promise<SessionState | nu
   try {
     const id = sessionId || localStorage.getItem(CURRENT_SESSION_ID_KEY);
     if (!id) return null;
+
+    if (_sessionCache.has(id)) {
+      return _sessionCache.get(id)!;
+    }
+
+    await ensureMigrated();
+    let session = await get<SessionState>(`${SESSION_PREFIX}${id}`);
     
-    const sessions = await loadAllSessions();
-    const session = sessions[id];
-    if (!session) return null;
-    
-    if (session.version !== SCHEMA_VERSION) return null;
+    // Fallback check if migration hasn't converted this single session yet
+    if (!session) {
+      const oldSessions = await get<Record<string, SessionState>>(SESSIONS_IDB_KEY);
+      if (oldSessions && oldSessions[id]) {
+        session = oldSessions[id];
+        await set(`${SESSION_PREFIX}${id}`, session);
+      }
+    }
+
+    if (!session || session.version !== SCHEMA_VERSION) return null;
+    _sessionCache.set(id, session);
     return session;
   } catch {
     return null;
   }
 }
 
-const SESSIONS_IDB_KEY = 'testownik_sessions_db';
-let _sessionsCache: Record<string, SessionState> | null = null;
-let _idbMigrated = false;
-
 export async function loadAllSessions(): Promise<Record<string, SessionState>> {
-  if (_sessionsCache) return _sessionsCache;
-
   try {
-    let sessions = await get<Record<string, SessionState>>(SESSIONS_IDB_KEY);
-
-    if (!sessions && !_idbMigrated) {
-      const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          await set(SESSIONS_IDB_KEY, parsed);
-          sessions = parsed;
-          localStorage.removeItem(SESSIONS_STORAGE_KEY);
-        } catch (e) {
-          console.error('Migration failed:', e);
+    await ensureMigrated();
+    const metadata = await getAllSessionMetadata();
+    const result: Record<string, SessionState> = {};
+    await Promise.all(
+      metadata.map(async (meta) => {
+        const session = await loadSession(meta.id);
+        if (session) {
+          result[meta.id] = session;
         }
-      }
-      _idbMigrated = true;
-    }
-
-    if (!sessions) sessions = {};
-    _sessionsCache = sessions;
-    return sessions;
+      })
+    );
+    return result;
   } catch (err) {
     console.error('Failed to load sessions from IDB:', err);
-    return _sessionsCache || {};
+    return {};
   }
 }
 
-async function saveAllSessions(sessions: Record<string, SessionState>) {
-  _sessionsCache = sessions;
-  await set(SESSIONS_IDB_KEY, sessions);
-}
+export async function saveAllSessions(sessions: Record<string, SessionState>): Promise<void> {
+  await ensureMigrated();
+  const metaList: SavedSessionMetadata[] = [];
+  const promises: Promise<unknown>[] = [];
 
+  for (const [id, session] of Object.entries(sessions)) {
+    if (session && typeof session === 'object') {
+      _sessionCache.set(id, session);
+      promises.push(set(`${SESSION_PREFIX}${id}`, session));
+      metaList.push(extractMetadata(id, session));
+    }
+  }
+
+  metaList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  _metaCache = metaList;
+  promises.push(set(SESSIONS_META_IDB_KEY, metaList));
+  await Promise.all(promises);
+}
 
 export async function deleteSession(sessionId: string): Promise<void> {
   try {
-    const sessions = await loadAllSessions();
-    delete sessions[sessionId];
-    await saveAllSessions(sessions);
-    
+    await ensureMigrated();
+    _sessionCache.delete(sessionId);
+    await del(`${SESSION_PREFIX}${sessionId}`);
+
+    if (_metaCache) {
+      _metaCache = _metaCache.filter(m => m.id !== sessionId);
+      await set(SESSIONS_META_IDB_KEY, _metaCache);
+    }
+
     deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));
 
     const currentId = localStorage.getItem(CURRENT_SESSION_ID_KEY);
@@ -317,20 +434,11 @@ export function buildChunkQueue(
 
 export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
   try {
-    const sessions = await loadAllSessions();
-    return Object.entries(sessions)
-      .map(([id, session]) => ({
-        id,
-        baseName: session.baseName || 'Baza pytań',
-        createdAt: session.startedAt,
-        updatedAt: session.updatedAt || session.startedAt,
-        totalQuestions: session.questions.length,
-        completedQuestions: session.done.length,
-        currentPhase: session.phase as 'test' | 'summary',
-        targetDate: session.targetDate,
-        chunkConfig: session.chunkConfig,
-      }))
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    await ensureMigrated();
+    if (_metaCache) return _metaCache;
+    const meta = await get<SavedSessionMetadata[]>(SESSIONS_META_IDB_KEY);
+    _metaCache = meta || [];
+    return _metaCache;
   } catch {
     return [];
   }
@@ -338,10 +446,10 @@ export async function getAllSessionMetadata(): Promise<SavedSessionMetadata[]> {
 
 export async function renameSession(sessionId: string, newBaseName: string): Promise<void> {
   try {
-    const sessions = await loadAllSessions();
-    if (sessions[sessionId]) {
-      sessions[sessionId] = { ...sessions[sessionId], baseName: newBaseName };
-      await saveAllSessions(sessions);
+    const session = await loadSession(sessionId);
+    if (session) {
+      session.baseName = newBaseName;
+      await saveSession(session, sessionId);
     }
   } catch (err) {
     console.warn('Could not rename session:', err);

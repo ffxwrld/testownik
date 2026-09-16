@@ -8,14 +8,13 @@ import { Question, SavedSessionMetadata } from '../models/types';
 import { getAllSessionMetadata } from '../utils/session';
 import { Button } from './ui/Button';
 import { DatePicker } from './ui/DatePicker';
-import { PenTool, UploadCloud, Layers, Settings, BookOpen } from 'lucide-react';
+import { PenTool, UploadCloud, Layers, BookOpen } from 'lucide-react';
 import { SessionsList } from './SessionsList';
 import { ImportModal } from './common/ImportModal';
 import { PageHeader } from './common/PageHeader';
 import { cn } from '../utils/cn';
 
 interface LearnViewProps {
-  onOpenSettings?: () => void;
   activeTab?: 'new' | 'saved';
   onTabChange?: (tab: 'new' | 'saved') => void;
   onStartSession: (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob>, targetDate?: string) => void;
@@ -29,7 +28,6 @@ interface LearnViewProps {
 }
 
 export const LearnView: FC<LearnViewProps> = ({
-  onOpenSettings,
   onStartSession,
   onResumeSession,
   onDeleteSession,
@@ -201,16 +199,6 @@ export const LearnView: FC<LearnViewProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Mobile Settings Button */}
-      {onOpenSettings && (
-        <button 
-          onClick={onOpenSettings}
-          className="md:hidden fixed top-[max(1rem,env(safe-area-inset-top))] right-16 z-40 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-full shadow-xs border border-zinc-200/50 dark:border-zinc-800/50 active:scale-95 transition"
-          aria-label={t('nav.settings')}
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-      )}
 
       {/* Drag Overlay */}
       <AnimatePresence>

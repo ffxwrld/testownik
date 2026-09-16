@@ -513,6 +513,13 @@ export const useMultiplayer = () => {
     };
   }, [roomCode]);
 
+  // Teardown WebRTC peer connections and Supabase realtime channels on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
   const resetRace = useCallback(() => {
     setRaceStarted(false);
     raceStartedRef.current = false;

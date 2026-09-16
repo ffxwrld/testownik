@@ -15,6 +15,7 @@ import {
   getCurrentSessionId,
   renameSession,
 } from '../utils/session';
+import { useTheme } from './useTheme';
 
 export type AppPhase =
   | 'dashboard'
@@ -103,6 +104,8 @@ export function useAppOrchestrator() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
 
+  const themeControls = useTheme();
+
   const zoomIn = useCallback(() => {
     setZoomLevel(prev => applyZoom(prev + ZOOM_STEP));
   }, []);
@@ -115,38 +118,54 @@ export function useAppOrchestrator() {
     setZoomLevel(applyZoom(1));
   }, []);
 
-  // Electron auto-updater listeners
+  // Apply zoom factor to document and Electron process
   useEffect(() => {
     applyZoom(zoomLevel);
-    if (window.electron?.updater) {
-      window.electron.updater.onUpdateAvailable(() => {
-        toast.loading(t('updater.downloading'), { description: t('updater.downloadingDesc'), id: 'update-toast' });
+  }, [zoomLevel]);
+
+  // Electron auto-updater listeners with proper unsubscribe cleanup
+  useEffect(() => {
+    const updater = window.electron?.updater;
+    if (!updater) return;
+
+    const unsubs: Array<() => void> = [];
+
+    const unsubAvailable = updater.onUpdateAvailable(() => {
+      toast.loading(t('updater.downloading'), { description: t('updater.downloadingDesc'), id: 'update-toast' });
+    });
+    if (typeof unsubAvailable === 'function') unsubs.push(unsubAvailable);
+
+    const unsubDownloaded = updater.onUpdateDownloaded(() => {
+      toast.success(t('updater.ready'), {
+        description: t('updater.readyDesc'),
+        id: 'update-toast',
+        duration: Infinity,
+        action: {
+          label: t('updater.restartBtn'),
+          onClick: () => window.electron?.updater.restartApp(),
+        },
       });
-      window.electron.updater.onUpdateDownloaded(() => {
-        toast.success(t('updater.ready'), {
-          description: t('updater.readyDesc'),
-          id: 'update-toast',
+    });
+    if (typeof unsubDownloaded === 'function') unsubs.push(unsubDownloaded);
+
+    if (updater.onUpdateAvailableMac) {
+      const unsubMac = updater.onUpdateAvailableMac(() => {
+        toast.info(t('updater.macAvailable'), {
+          description: t('updater.macAvailableDesc'),
           duration: Infinity,
           action: {
-            label: t('updater.restartBtn'),
-            onClick: () => window.electron?.updater.restartApp(),
+            label: t('updater.downloadBtn'),
+            onClick: () => window.open('https://github.com/ffxwrld/testownik/releases/latest', '_blank'),
           },
         });
       });
-      if (window.electron.updater.onUpdateAvailableMac) {
-        window.electron.updater.onUpdateAvailableMac(() => {
-          toast.info(t('updater.macAvailable'), {
-            description: t('updater.macAvailableDesc'),
-            duration: Infinity,
-            action: {
-              label: t('updater.downloadBtn'),
-              onClick: () => window.open('https://github.com/ffxwrld/testownik/releases/latest', '_blank'),
-            },
-          });
-        });
-      }
+      if (typeof unsubMac === 'function') unsubs.push(unsubMac);
     }
-  }, [t, zoomLevel]);
+
+    return () => {
+      unsubs.forEach(unsub => unsub());
+    };
+  }, [t]);
 
   // Global zoom keyboard shortcuts
   useEffect(() => {
@@ -438,5 +457,6 @@ export function useAppOrchestrator() {
     handleRestartSession,
     handleRenameSession,
     handleFlashcards,
+    ...themeControls,
   };
 }

@@ -1,6 +1,7 @@
 import { FC, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from 'sonner';
 import { AuthGuard } from './components/auth/AuthGuard';
 
 // Primary landing views remain synchronous for zero-latency initial load
@@ -62,6 +63,7 @@ const App: FC = () => {
     setShowPrivacyPolicy,
     showMobileSettings,
     setShowMobileSettings,
+    isDark,
     handleStartSession,
     handleResetSession,
     handleResumeSession,
@@ -198,7 +200,6 @@ const App: FC = () => {
                 )}
                 {displayPhase === 'learn' && (
                   <HomeView
-                    onOpenSettings={() => setShowMobileSettings(true)}
                     activeTab={homeTab}
                     onTabChange={setHomeTab}
                     onStartSession={handleStartSession}
@@ -254,6 +255,7 @@ const App: FC = () => {
 
   return (
     <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}>
+      <Toaster theme={isDark ? 'dark' : 'light'} richColors position="top-center" />
       <div 
         className={`flex-1 flex flex-col pb-0 md:pb-[40px] ${displayPhase === 'creator' ? 'min-h-0' : ''}`}
       >

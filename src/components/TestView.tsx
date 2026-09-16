@@ -100,10 +100,10 @@ export const TestView: FC<TestViewProps> = ({
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4">
                 <Moon className="w-7 h-7" />
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">Czas nauki wstrzymany</h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">Timer został zatrzymany z powodu braku aktywności.</p>
+              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">{t('test.afkTitle')}</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">{t('test.afkDesc')}</p>
               <Button onClick={() => engine.dismissAfk()} variant="primary" className="w-full py-3 rounded-xl">
-                Wracam do nauki
+                {t('test.afkResume')}
               </Button>
             </motion.div>
           </motion.div>
@@ -123,15 +123,14 @@ export const TestView: FC<TestViewProps> = ({
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={isMultiplayer ? undefined : handleToggleSidebar}
         hideProgressBar={Boolean(roomCode && players.length > 1)}
-      />
-
-      {roomCode && players.length > 1 && (
-        <MultiplayerRaceTrack
-          players={players}
-          currentUserId={currentUserId}
-          className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70"
-        />
-      )}
+      >
+        {roomCode && players.length > 1 && (
+          <MultiplayerRaceTrack
+            players={players}
+            currentUserId={currentUserId}
+          />
+        )}
+      </TestHeader>
 
       <main className="flex-1 flex items-start py-8 pb-40 md:pb-16 w-full">
         {engine.isChunkCompleted && engine.activeChunk ? (
@@ -145,10 +144,10 @@ export const TestView: FC<TestViewProps> = ({
               <Trophy className="w-7 h-7" strokeWidth={2.2} />
             </div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight mb-2">
-              Część {engine.activeChunk.index + 1} ukończona
+              {t('test.chunkCompleted', { index: engine.activeChunk.index + 1 })}
             </h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-sm leading-relaxed">
-              Opanowałeś wszystkie <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{engine.activeChunk.totalQuestions} pytań</strong> z tej części.
+              {t('test.chunkMastered', { count: engine.activeChunk.totalQuestions })}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-xs">
               {engine.activeChunk.index + 1 < engine.chunks.length && (
@@ -157,7 +156,7 @@ export const TestView: FC<TestViewProps> = ({
                   className="rounded-xl py-3 shadow-lg shadow-primary-600/20"
                   onClick={() => engine.switchChunk(engine.activeChunk!.index + 1)}
                 >
-                  Przejdź do Części {engine.activeChunk.index + 2}
+                  {t('test.chunkNext', { index: engine.activeChunk.index + 2 })}
                 </Button>
               )}
               <Button
@@ -165,7 +164,7 @@ export const TestView: FC<TestViewProps> = ({
                 className="rounded-xl py-3"
                 onClick={() => setShowChunkSelector(true)}
               >
-                Wybierz inną część
+                {t('test.chunkSelectOther')}
               </Button>
             </div>
           </motion.div>
@@ -257,7 +256,7 @@ export const TestView: FC<TestViewProps> = ({
       <ChunkPromptModal
         isOpen={showChunkPrompt}
         totalQuestions={session.questions.length}
-        baseName={session.baseName || 'Baza pytań'}
+        baseName={session.baseName || t('sessionsList.defaultBaseName', 'Baza pytań')}
         onConfirm={async (chunkSize) => {
           setShowChunkPrompt(false);
           await engine.configureChunking(chunkSize);
@@ -272,7 +271,7 @@ export const TestView: FC<TestViewProps> = ({
         activeChunkIndex={engine.activeChunkIndex}
         questions={session.questions}
         doneIds={session.done}
-        baseName={session.baseName || 'Baza pytań'}
+        baseName={session.baseName || t('sessionsList.defaultBaseName', 'Baza pytań')}
         onSelectChunk={async (chunkIndex) => {
           setShowChunkSelector(false);
           await engine.switchChunk(chunkIndex);

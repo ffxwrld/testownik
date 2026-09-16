@@ -1,4 +1,5 @@
 import { type FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 import { motion } from 'framer-motion';
 
@@ -9,6 +10,7 @@ interface ProgressBarProps {
   size?: 'sm' | 'md' | 'lg';
   animated?: boolean;
   showLabel?: boolean;
+  label?: string;
 }
 
 const colors = {
@@ -31,14 +33,17 @@ export const ProgressBar: FC<ProgressBarProps> = ({
   size = 'md',
   animated = true,
   showLabel = false,
+  label,
 }) => {
+  const { t } = useTranslation();
   const clamped = Math.min(100, Math.max(0, value));
+  const displayLabel = label ?? t('common.progress', 'Postęp');
 
   return (
     <div className={cn('w-full', className)}>
       {showLabel && (
         <div className="flex justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
-          <span>Postęp</span>
+          <span>{displayLabel}</span>
           <span>{Math.round(clamped)}%</span>
         </div>
       )}

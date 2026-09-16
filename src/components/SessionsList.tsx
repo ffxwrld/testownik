@@ -1,10 +1,11 @@
-import { FC, useState, ReactNode, useEffect } from 'react';
+import { FC, useState, ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { SavedSessionMetadata } from '../models/types';
 import { Button } from './ui/Button';
-import { Badge } from './ui/Badge';
+import { SessionCard } from './sessions/SessionCard';
+import { loadSession, saveSession } from '../utils/session';
 
 interface SessionsListProps {
   mode?: 'test' | 'flashcards';
@@ -15,6 +16,7 @@ interface SessionsListProps {
   onRestart: (sessionId: string, newRepeatMode?: number) => void;
   onEditInCreator: (sessionId: string) => void;
   onFlashcards: (sessionId: string) => void;
+  onUpdateTargetDate?: (sessionId: string, newDate: string | undefined) => void | Promise<void>;
   prependItem?: ReactNode;
 }
 
@@ -27,6 +29,7 @@ export const SessionsList: FC<SessionsListProps> = ({
   onRestart,
   onEditInCreator,
   onFlashcards,
+  onUpdateTargetDate,
   prependItem,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,19 +37,55 @@ export const SessionsList: FC<SessionsListProps> = ({
   const [restartingId, setRestartingId] = useState<string | null>(null);
   const [restartRepeatMode, setRestartRepeatMode] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
-  const startEdit = (session: SavedSessionMetadata) => {
+  const startEdit = useCallback((session: SavedSessionMetadata) => {
     setEditingId(session.id);
     setEditValue(session.baseName || '');
-  };
+  }, []);
 
-  const commitEdit = (sessionId: string) => {
+  const commitEdit = useCallback((sessionId: string) => {
     if (editValue.trim()) {
       onRename(sessionId, editValue.trim());
     }
     setEditingId(null);
-  };
+  }, [editValue, onRename]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  const handleUpdateTargetDate = useCallback(async (session: SavedSessionMetadata) => {
+    const dateStr = window.prompt(t('sessionsList.examPrompt'), session.targetDate || '');
+    if (dateStr !== null) {
+      const newDate = dateStr.trim() || undefined;
+      if (onUpdateTargetDate) {
+        await onUpdateTargetDate(session.id, newDate);
+      } else {
+        try {
+          const s = await loadSession(session.id);
+          if (s) {
+            s.targetDate = newDate;
+            await saveSession(s, session.id);
+            window.location.reload();
+          }
+        } catch (e) {
+          console.error('Failed to update session target date:', e);
+        }
+      }
+    }
+  }, [onUpdateTargetDate, t]);
+
+  const handleExportPdf = useCallback((session: SavedSessionMetadata) => {
+    const exportType = window.confirm(t('sessionsList.printConfirm')) ? 'compendium' : 'study';
+    import('../utils/pdfExport').then(({ exportSessionToPrint }) => {
+      loadSession(session.id).then((fullSession) => {
+        if (fullSession) {
+          exportSessionToPrint(session.baseName, fullSession.questions, exportType);
+        }
+      });
+    });
+  }, [t]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -62,398 +101,100 @@ export const SessionsList: FC<SessionsListProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {prependItem}
       <AnimatePresence mode="popLayout" initial={false}>
-
-      {sessions.map((session) => {
-        const progress = session.totalQuestions > 0
-          ? Math.round((session.completedQuestions / session.totalQuestions) * 100)
-          : 0;
-        const isCompleted = session.currentPhase === 'summary';
-        const locale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
-        const date = new Date(session.updatedAt);
-        const dateStr = date.toLocaleDateString(locale);
-        const timeStr = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
-        const isEditing = editingId === session.id;
-
-        return (
-          <motion.div
-            layout
-            initial={false}
-            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15, ease: [0.32, 0, 0.67, 0] } }}
+        {sessions.map((session) => (
+          <SessionCard
             key={session.id}
-            className={`p-5 bg-white dark:bg-zinc-900 rounded-2xl border transition-[border-color,box-shadow] duration-150 shadow-xs hover:shadow-sm ${
-              isCompleted
-                ? 'border-emerald-200/80 dark:border-emerald-800/50'
-                : 'border-zinc-200/80 dark:border-zinc-800/80'
-            }`}
-          >
-            <div className="flex items-start gap-3 mb-3">
-              {isEditing ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={e => setEditValue(e.target.value)}
-                    onBlur={() => commitEdit(session.id)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') commitEdit(session.id);
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    autoFocus
-                    className="flex-1 px-3 py-1 text-sm font-semibold bg-white dark:bg-zinc-900 border-2 border-primary-400 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-                    placeholder={t('sessionsList.placeholderName')}
-                  />
-                  <button
-                    onClick={() => commitEdit(session.id)}
-                    className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex-shrink-0"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors flex-shrink-0"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 group">
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight truncate">
-                      {session.baseName || t('sessionsList.defaultBaseName')}
-                    </span>
-                    <button
-                      onClick={() => startEdit(session)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition flex-shrink-0"
-                      title={t('sessionsList.rename')}
-                    >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                      </svg>
-                    </button>
-                  </div>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
-                    {t('sessionsList.dateAt', { date: dateStr, time: timeStr })}
-                  </p>
-                  {session.targetDate && (
-                    <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {t('sessionsList.exam')}: {new Date(session.targetDate).toLocaleDateString(locale)}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!isEditing && (
-                <Badge variant={isCompleted ? 'success' : 'info'}>
-                  {isCompleted ? t('sessionsList.completed') : t('sessionsList.inProgress')}
-                </Badge>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2 mb-3">
-              <div className="flex flex-wrap items-center justify-between gap-1">
-                <span className={`text-sm font-bold flex-shrink-0 ${
-                  isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'
-                }`}>
-                  {isCompleted ? t('sessionsList.mastered100') : t('sessionsList.masteryDegree')}
-                </span>
-                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 text-right">
-                  {t('sessionsList.questionsProgress', { completed: session.completedQuestions, total: session.totalQuestions })}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden shadow-inner">
-                  <div
-                    className={`h-full rounded-full transition duration-200 ${
-                      isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
-                    }`}
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${
-                  isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary-600 dark:text-primary-400'
-                }`}>
-                  {progress}%
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              {isCompleted ? (
-                <>
-                  {mode === 'test' ? (
-                    <Button
-                      onClick={() => setRestartingId(session.id)}
-                      size="sm"
-                      variant="primary"
-                      className="flex-1"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                      </svg>
-                      {t('sessionsList.startOver')}
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => onFlashcards(session.id)}
-                        size="sm"
-                        variant="primary"
-                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700"
-                        title={t('sessionsList.startFlashcards')}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                        </svg>
-                        {t('sessionsList.studyWithFlashcards')}
-                      </Button>
-                      <button
-                        onClick={() => setRestartingId(session.id)}
-                        className="px-3 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700/40"
-                        title={t('sessionsList.startOver')}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  {mode === 'test' ? (
-                    <Button
-                      onClick={() => onResume(session.id)}
-                      size="sm"
-                      variant="primary"
-                      className="flex-1"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
-                      </svg>
-                      {t('sessionsList.resume', 'Rozpocznij Test')}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => onFlashcards(session.id)}
-                      size="sm"
-                      variant="primary"
-                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700"
-                      title={t('sessionsList.startFlashcards')}
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                      </svg>
-                      {t('sessionsList.studyWithFlashcards')}
-                    </Button>
-                  )}
-                  <button
-                    onClick={() => setRestartingId(session.id)}
-                    className="px-3 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700/40"
-                    title={t('sessionsList.startOver')}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                    </svg>
-                  </button>
-                </>
-              )}
-
-              <div className="relative more-options-menu">
-                <button
-                  onClick={() => setOpenMenuId(openMenuId === session.id ? null : session.id)}
-                  className="px-2 py-1.5 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors focus:outline-none"
-                  title={t('sessionsList.packageSettings')}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
-
-                <AnimatePresence>
-                  {openMenuId === session.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 bottom-full mb-1 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden z-20 py-1"
-                    >
-                      <button
-                        onClick={() => {
-                          setOpenMenuId(null);
-                          if (window.confirm(t('sessionsList.editWarning'))) {
-                            onEditInCreator(session.id);
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                        </svg>
-                        {t('sessionsList.edit')}
-                      </button>
-
-                      <button
-                        onClick={async () => {
-                          setOpenMenuId(null);
-                          const dateStr = window.prompt(t('sessionsList.examPrompt'), session.targetDate || '');
-                          if (dateStr !== null) {
-                            try {
-                              const { loadSession, saveSession } = await import('../utils/session');
-                              const s = await loadSession(session.id);
-                              if (s) {
-                                s.targetDate = dateStr || undefined;
-                                await saveSession(s, session.id);
-                                window.location.reload(); // Proste odświeżenie dla aktualizacji list
-                              }
-                            } catch (e) {
-                              console.error(e);
-                            }
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                        </svg>
-                        {t('sessionsList.setDate')}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setOpenMenuId(null);
-                          if (window.confirm(t('sessionsList.printConfirm'))) {
-                            import('../utils/pdfExport').then(({ exportSessionToPrint }) => {
-                              import('../utils/session').then(({ loadSession }) => {
-                                loadSession(session.id).then(fullSession => {
-                                  if (fullSession) {
-                                    exportSessionToPrint(session.baseName, fullSession.questions, 'compendium');
-                                  }
-                                });
-                              });
-                            });
-                          } else {
-                            import('../utils/pdfExport').then(({ exportSessionToPrint }) => {
-                              import('../utils/session').then(({ loadSession }) => {
-                                loadSession(session.id).then(fullSession => {
-                                  if (fullSession) {
-                                    exportSessionToPrint(session.baseName, fullSession.questions, 'study');
-                                  }
-                                });
-                              });
-                            });
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v-2.94a2.25 2.25 0 012.25-2.25h6a2.25 2.25 0 012.25 2.25v2.94z" />
-                        </svg>
-                        {t('sessionsList.print')}
-                      </button>
-
-                      <div className="h-px bg-zinc-200 dark:bg-zinc-700 my-1 mx-2" />
-
-                      <button
-                        onClick={() => {
-                          setOpenMenuId(null);
-                          if (window.confirm(t('sessionsList.deleteWarning'))) {
-                            onDelete(session.id);
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                        {t('sessionsList.delete')}
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
+            session={session}
+            mode={mode}
+            isEditing={editingId === session.id}
+            editValue={editingId === session.id ? editValue : ''}
+            onStartEdit={() => startEdit(session)}
+            onEditChange={setEditValue}
+            onCommitEdit={() => commitEdit(session.id)}
+            onCancelEdit={cancelEdit}
+            onResume={() => onResume(session.id)}
+            onFlashcards={() => onFlashcards(session.id)}
+            onStartRestart={() => setRestartingId(session.id)}
+            onEditInCreator={() => onEditInCreator(session.id)}
+            onDelete={() => onDelete(session.id)}
+            onUpdateTargetDate={() => handleUpdateTargetDate(session)}
+            onExportPdf={() => handleExportPdf(session)}
+            isMenuOpen={openMenuId === session.id}
+            onToggleMenu={() => setOpenMenuId((prev) => (prev === session.id ? null : session.id))}
+            onCloseMenu={() => setOpenMenuId(null)}
+          />
+        ))}
       </AnimatePresence>
 
-      {restartingId && createPortal(
-        <AnimatePresence>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 md:bg-black/60 md:backdrop-blur-sm p-4"
-          onClick={() => setRestartingId(null)}
-        >
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="restart-title"
-            className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="restart-title" className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-              {t('sessionsList.restartModalTitle')}
-            </h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-              {t('sessionsList.restartModalDesc')}
-            </p>
-            
-            <div className="flex gap-2 mb-6">
-              {[1, 2, 3].map(num => (
-                <button
-                  key={num}
-                  onClick={() => setRestartRepeatMode(num)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition border-2 ${
-                    restartRepeatMode === num
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                      : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
-                  }`}
-                >
-                  {num}x
-                </button>
-              ))}
-            </div>
+      {restartingId &&
+        createPortal(
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 md:bg-black/60 md:backdrop-blur-sm p-4"
+              onClick={() => setRestartingId(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="restart-title"
+                className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 id="restart-title" className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                  {t('sessionsList.restartModalTitle')}
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+                  {t('sessionsList.restartModalDesc')}
+                </p>
 
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                className="flex-1"
-                onClick={() => setRestartingId(null)}
-                autoFocus
-              >
-                {t('sessionsList.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                className="flex-1"
-                onClick={() => {
-                  onRestart(restartingId, restartRepeatMode);
-                  setRestartingId(null);
-                }}
-              >
-                {t('sessionsList.restartBtn')}
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
-        </AnimatePresence>,
-        document.body
-      )}
+                <div className="flex gap-2 mb-6">
+                  {[1, 2, 3].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setRestartRepeatMode(num)}
+                      className={`flex-1 py-2 rounded-xl text-sm font-semibold transition border-2 cursor-pointer ${
+                        restartRepeatMode === num
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
+                      }`}
+                    >
+                      {num}x
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    className="flex-1 cursor-pointer"
+                    onClick={() => setRestartingId(null)}
+                    autoFocus
+                  >
+                    {t('sessionsList.cancel')}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      onRestart(restartingId, restartRepeatMode);
+                      setRestartingId(null);
+                    }}
+                  >
+                    {t('sessionsList.restartBtn')}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 };

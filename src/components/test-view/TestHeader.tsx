@@ -20,6 +20,7 @@ interface TestHeaderProps {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   hideProgressBar?: boolean;
+  children?: React.ReactNode;
 }
 
 export const TestHeader: FC<TestHeaderProps> = ({
@@ -36,13 +37,14 @@ export const TestHeader: FC<TestHeaderProps> = ({
   isSidebarCollapsed = false,
   onToggleSidebar,
   hideProgressBar = false,
+  children,
 }) => {
   const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-zinc-900">
-      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-3">
-        <div className={cn("flex items-center justify-between gap-2 sm:gap-4", !hideProgressBar && "mb-2.5")}>
+      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-2.5 sm:py-3">
+        <div className={cn("flex items-center justify-between gap-2 sm:gap-4", (!hideProgressBar || Boolean(children)) && "mb-2")}>
           <div className="flex items-center gap-2">
             {confirmQuit ? (
               <>
@@ -140,6 +142,8 @@ export const TestHeader: FC<TestHeaderProps> = ({
         {!hideProgressBar && (
           <ProgressBar value={progressPercent} size="sm" color="emerald" />
         )}
+
+        {children}
       </div>
     </header>
   );
