@@ -286,44 +286,44 @@ const QuestionCardComponent: FC<QuestionCardProps> = ({
             </div>
 
             {/* Apple HIG Keyboard hints */}
-            <div className="hidden md:flex items-center justify-center gap-x-6 gap-y-2.5 pb-6 pt-2 flex-wrap px-4 text-xs text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-800/60 mt-2">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-zinc-500 dark:text-zinc-400">{t('test.keyboard')}</span>
-                <div className="flex items-center gap-1">
-                  {currentQuestion.answers.map((_, i) => (
-                    <kbd
-                      key={i}
-                      className="bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs"
-                    >
-                      {ANSWER_KEYS[i]}
-                    </kbd>
-                  ))}
+            {!hideNavigationHints && (
+              <div className="hidden md:flex items-center justify-center gap-x-6 gap-y-2.5 pb-6 pt-2 flex-wrap px-4 text-xs text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-800/60 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-zinc-500 dark:text-zinc-400">{t('test.keyboard')}</span>
+                  <div className="flex items-center gap-1">
+                    {currentQuestion.answers.map((_, i) => (
+                      <kbd
+                        key={i}
+                        className="bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs"
+                      >
+                        {ANSWER_KEYS[i]}
+                      </kbd>
+                    ))}
+                  </div>
+                  <span className="opacity-75">{isMultiAnswer ? t('test.mark') : t('test.select')}</span>
                 </div>
-                <span className="opacity-75">{isMultiAnswer ? t('test.mark') : t('test.select')}</span>
-              </div>
 
-              <div className="flex items-center gap-1.5">
-                <kbd className="bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
-                  {t('test.space')}
-                </kbd>
-                <span className="opacity-40">/</span>
-                <kbd className="bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
-                  Enter
-                </kbd>
-                <span className="opacity-75 font-medium text-zinc-600 dark:text-zinc-300">
-                  {feedback ? t('test.nextBtn') : t('test.confirmBtn')}
-                </span>
-              </div>
+                <div className="flex items-center gap-1.5">
+                  <kbd className="bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
+                    {t('test.space')}
+                  </kbd>
+                  <span className="opacity-40">/</span>
+                  <kbd className="bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
+                    Enter
+                  </kbd>
+                  <span className="opacity-75 font-medium text-zinc-600 dark:text-zinc-300">
+                    {feedback ? t('test.nextBtn') : t('test.confirmBtn')}
+                  </span>
+                </div>
 
-              {!hideNavigationHints && (
                 <div className="flex items-center gap-1.5">
                   <kbd className="bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
                     Backspace
                   </kbd>
                   <span className="opacity-75">{t('test.prevQuestion')}</span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
         </motion.div>
       </AnimatePresence>

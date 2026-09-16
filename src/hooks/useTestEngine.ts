@@ -250,8 +250,9 @@ export function useTestEngine({
   );
 
   const handleConfirm = useCallback(() => {
+    if (instantMode && selectedIndices.length === 0) return;
     evaluateAnswer(selectedIndices);
-  }, [evaluateAnswer, selectedIndices]);
+  }, [instantMode, evaluateAnswer, selectedIndices]);
 
   const handleToggleAnswer = useCallback(
     (shuffledIndex: number) => {

@@ -37,7 +37,8 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
   // Detect when a player crosses the finish line
   useEffect(() => {
     players.forEach((p) => {
-      if (p.progress >= 100 && !finishedIdsRef.current.has(p.userId)) {
+      const isFinished = p.progress >= 100 || Boolean(p.finishedAt);
+      if (isFinished && !finishedIdsRef.current.has(p.userId)) {
         finishedIdsRef.current.add(p.userId);
         const isMe = p.userId === currentUserId;
         const msg = isMe
@@ -108,26 +109,33 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
         </div>
 
         {/* The Track */}
-        <div className="relative h-9 sm:h-11 w-full bg-zinc-100/90 dark:bg-zinc-800/60 rounded-xl px-2 sm:px-3 flex items-center overflow-hidden border border-zinc-200/40 dark:border-zinc-700/40">
+        <div className="relative h-11 sm:h-12 w-full bg-zinc-100/90 dark:bg-zinc-800/60 rounded-xl flex items-center overflow-hidden border border-zinc-200/50 dark:border-zinc-700/50 shadow-inner">
+          {/* Start Line Marker */}
+          <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-zinc-300 dark:bg-zinc-600 rounded-full pointer-events-none" />
+
           {/* Milestone markers */}
-          <div className="absolute inset-0 flex justify-between px-6 pointer-events-none items-center opacity-25">
+          <div className="absolute left-10 right-14 inset-y-0 flex justify-between pointer-events-none items-center opacity-25">
             <div className="w-px h-3 bg-zinc-400" />
             <div className="w-px h-4 bg-zinc-400" />
             <div className="w-px h-3 bg-zinc-400" />
             <div className="w-px h-4 bg-zinc-400" />
           </div>
+
+          {/* Finish Line (Checkered pattern) */}
+          <div className="absolute right-9 sm:right-10 top-0 bottom-0 w-2.5 flex flex-col justify-between overflow-hidden opacity-50 dark:opacity-75 pointer-events-none border-x border-zinc-400/40 dark:border-zinc-500/40 bg-[linear-gradient(45deg,#18181b_25%,transparent_25%),linear-gradient(-45deg,#18181b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#18181b_75%),linear-gradient(-45deg,transparent_75%,#18181b_75%)] dark:bg-[linear-gradient(45deg,#f4f4f5_25%,transparent_25%),linear-gradient(-45deg,#f4f4f5_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f4f4f5_75%),linear-gradient(-45deg,transparent_75%,#f4f4f5_75%)] [background-size:6px_6px] [background-position:0_0,0_3px,3px_-3px,-3px_0]" />
 
           {/* Finish Line Flag */}
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 select-none">
-            <span className="text-xs sm:text-sm">🏁</span>
+          <div className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 select-none pointer-events-none">
+            <span className="text-sm sm:text-base filter drop-shadow-xs">🏁</span>
           </div>
 
-          {/* Moving Avatars */}
-          <div className="relative w-[calc(100%-2.5rem)] h-full">
+          {/* Moving Avatars (From start at left-4 to finish line at right-9/10) */}
+          <div className="absolute left-4 right-9 sm:right-10 top-0 bottom-0">
             {players.map((p) => {
               const isMe = p.userId === currentUserId;
               const isDisconnected = p.status === 'disconnected' || p.isDNF;
-              const clampedProgress = Math.min(98, Math.max(0, p.progress));
+              const isFinished = p.progress >= 100 || Boolean(p.finishedAt);
+              const progressValue = isFinished ? 100 : Math.max(0, Math.min(100, p.progress));
               const initial = p.username.charAt(0).toUpperCase();
               const hue =
                 p.username
@@ -138,9 +146,9 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                 <motion.div
                   key={p.userId}
                   className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 ${
-                    isMe ? 'z-20' : 'z-10'
+                    isFinished ? 'z-30' : isMe ? 'z-20' : 'z-10'
                   }`}
-                  animate={{ left: `${clampedProgress}%` }}
+                  animate={{ left: `${progressValue}%` }}
                   transition={{ type: 'spring', damping: 28, stiffness: 220 }}
                 >
                   <div className={`relative group cursor-pointer ${isDisconnected ? 'opacity-40 grayscale' : ''}`}>
@@ -148,16 +156,20 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                       <img
                         src={p.avatarUrl}
                         alt={p.username}
-                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shadow-sm transition-transform ${
-                          isMe
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shadow-sm transition-all ${
+                          isFinished
+                            ? 'ring-2 ring-amber-400 dark:ring-amber-300 ring-offset-2 dark:ring-offset-zinc-900 shadow-amber-500/30 shadow-md scale-110'
+                            : isMe
                             ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-zinc-900 scale-110'
                             : 'border border-white dark:border-zinc-700'
                         }`}
                       />
                     ) : (
                       <div
-                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-bold text-[10px] sm:text-xs text-white shadow-sm transition-transform ${
-                          isMe
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-bold text-[10px] sm:text-xs text-white shadow-sm transition-all ${
+                          isFinished
+                            ? 'ring-2 ring-amber-400 dark:ring-amber-300 ring-offset-2 dark:ring-offset-zinc-900 shadow-amber-500/30 shadow-md scale-110'
+                            : isMe
                             ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-zinc-900 scale-110'
                             : 'border border-white dark:border-zinc-700'
                         }`}
@@ -167,8 +179,15 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                       </div>
                     )}
 
-                    {/* "Ty" Badge */}
-                    {isMe && !isDisconnected && (
+                    {/* Finished Badge */}
+                    {isFinished && (
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter shadow-xs flex items-center gap-0.5 whitespace-nowrap">
+                        META 🏁
+                      </div>
+                    )}
+
+                    {/* "Ty" Badge (when not finished) */}
+                    {isMe && !isDisconnected && !isFinished && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary-600 text-white text-[9px] font-extrabold px-1 py-0.2 rounded-full uppercase tracking-tighter shadow-xs">
                         Ty
                       </div>
@@ -182,8 +201,8 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                     )}
 
                     {/* Hover tooltip with name & progress */}
-                    <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 text-white text-[10px] font-medium py-0.5 px-1.5 rounded-md whitespace-nowrap transition-opacity z-30 shadow-md">
-                      {p.username} {isDisconnected ? '(Rozłączony / DNF)' : `(${Math.round(p.progress)}%)`}
+                    <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 text-white text-[10px] font-medium py-0.5 px-1.5 rounded-md whitespace-nowrap transition-opacity z-40 shadow-md">
+                      {p.username} {isDisconnected ? '(Rozłączony / DNF)' : isFinished ? '(Ukończono! 🏁)' : `(${Math.round(p.progress)}%)`}
                     </div>
                   </div>
                 </motion.div>

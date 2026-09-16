@@ -1,6 +1,6 @@
 import { type FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Moon } from 'lucide-react';
+import { Trophy, Moon, Check } from 'lucide-react';
 import { useMultiplayerContext } from '../contexts/MultiplayerContext';
 import { MultiplayerRaceTrack } from './multiplayer/MultiplayerRaceTrack';
 import { Button } from './ui/Button';
@@ -121,7 +121,7 @@ export const TestView: FC<TestViewProps> = ({
         chunkLabel={engine.chunkLabel}
         onOpenChunkSelector={() => setShowChunkSelector(true)}
         isSidebarCollapsed={isSidebarCollapsed}
-        onToggleSidebar={handleToggleSidebar}
+        onToggleSidebar={isMultiplayer ? undefined : handleToggleSidebar}
         hideProgressBar={Boolean(roomCode && players.length > 1)}
       />
 
@@ -170,14 +170,16 @@ export const TestView: FC<TestViewProps> = ({
             </div>
           </motion.div>
         ) : engine.currentQuestion ? (
-          <div className={`w-full mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 items-stretch md:items-center pb-12 transition-all duration-300 ${
-            isSidebarCollapsed ? 'max-w-4xl justify-center' : 'max-w-5xl'
-          }`}>
+          <div className={`w-full mx-auto px-4 md:px-8 flex flex-col ${
+            isMultiplayer
+              ? 'max-w-3xl items-center'
+              : (isSidebarCollapsed ? 'max-w-4xl md:flex-row gap-8 items-stretch md:items-center justify-center' : 'max-w-5xl md:flex-row gap-8 items-stretch md:items-center')
+          } pb-12 transition-all duration-300`}>
             <motion.div
               key={engine.shakeKey}
               animate={engine.shakeKey > 0 ? { x: [0, -10, 10, -6, 6, -3, 3, 0] } : {}}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="flex-1 min-w-0"
+              className="w-full flex-1 min-w-0"
             >
               <QuestionCard
                 questionKey={engine.questionKey}
@@ -192,22 +194,44 @@ export const TestView: FC<TestViewProps> = ({
                 onToggleAnswer={engine.handleToggleAnswer}
                 hideNavigationHints={isMultiplayer}
               />
+
+              {/* In multiplayer race, show confirm button ONLY for multi-answer questions */}
+              {isMultiplayer && engine.isMultiAnswer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 flex justify-center w-full"
+                >
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    disabled={engine.isTransitioning || engine.selectedIndices.length === 0}
+                    onClick={engine.handleConfirm}
+                    className="px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-primary-600/25 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>{t('games.solo.confirmAnswer', 'Zatwierdź odpowiedź (Spacja / Enter)')}</span>
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
 
-            <TestSidebar
-              requiredStreak={engine.requiredStreak}
-              consecutiveCorrect={engine.consecutiveCorrect}
-              feedback={engine.feedback}
-              isTransitioning={engine.isTransitioning}
-              selectedIndices={engine.selectedIndices}
-              canConfirm={engine.canConfirm}
-              hasPreviousQuestion={engine.previousQuestion !== null}
-              onConfirm={engine.handleConfirm}
-              onNext={engine.handleNext}
-              onShowPrevious={() => setShowingPrevious(true)}
-              isCollapsed={isSidebarCollapsed}
-              onExpand={handleToggleSidebar}
-            />
+            {!isMultiplayer && (
+              <TestSidebar
+                requiredStreak={engine.requiredStreak}
+                consecutiveCorrect={engine.consecutiveCorrect}
+                feedback={engine.feedback}
+                isTransitioning={engine.isTransitioning}
+                selectedIndices={engine.selectedIndices}
+                canConfirm={engine.canConfirm}
+                hasPreviousQuestion={engine.previousQuestion !== null}
+                onConfirm={engine.handleConfirm}
+                onNext={engine.handleNext}
+                onShowPrevious={() => setShowingPrevious(true)}
+                isCollapsed={isSidebarCollapsed}
+                onExpand={handleToggleSidebar}
+              />
+            )}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
