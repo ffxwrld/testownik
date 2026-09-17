@@ -138,9 +138,9 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
               const isDisconnected = p.status === 'disconnected' || p.isDNF;
               const isFinished = p.progress >= 100 || Boolean(p.finishedAt);
               const progressValue = isFinished ? 100 : Math.max(0, Math.min(100, p.progress));
-              const initial = p.username.charAt(0).toUpperCase();
+              const initial = (p.username || 'Gracz').charAt(0).toUpperCase();
               const hue =
-                p.username
+                (p.username || 'Gracz')
                   .split('')
                   .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 

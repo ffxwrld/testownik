@@ -131,7 +131,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                       : 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200/70 text-zinc-700 dark:text-zinc-300'
                   }`}
                   title={showQr ? t('share.hideQr', 'Ukryj kod QR') : t('share.showQr', 'Pokaż kod QR')}
-                  aria-label="Pokaż kod QR"
+                  aria-label={showQr ? t('share.hideQr', 'Ukryj kod QR') : t('share.showQr', 'Pokaż kod QR')}
                 >
                   <QrCode className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 </button>
@@ -157,7 +157,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                       {qrDataUrl ? (
                         <img
                           src={qrDataUrl}
-                          alt="Kod QR paczki"
+                          alt={t('share.qrCodeAlt', 'Kod QR paczki')}
                           className="w-44 h-44 sm:w-48 sm:h-48 select-none object-contain rounded-lg"
                         />
                       ) : (
@@ -179,7 +179,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                           toast.success(t('share.linkCopied', 'Skopiowano link!'));
                           setTimeout(() => setLinkCopied(false), 2000);
                         } catch {
-                          toast.error('Nie udało się skopiować linku');
+                          toast.error(t('share.copyLinkFailed', 'Nie udało się skopiować linku'));
                         }
                       }}
                       className="text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer"

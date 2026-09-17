@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
 import { formatTime } from '../../utils/session';
 import { playGameOverSound } from '../../utils/sound';
@@ -48,6 +49,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
   onBackToLobby,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const announcedFinishedIdsRef = useRef<Set<string>>(new Set());
 
@@ -114,11 +116,12 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
         announcedFinishedIdsRef.current.add(p.userId);
         if (p.userId !== currentUserId) {
           const rank = finishedPlayers.findIndex((fp) => fp.userId === p.userId) + 1;
-          toast.info(`🏁 ${p.username} ukończył wyścig na ${rank}. miejscu!`);
+          const defaultName = t('multiplayer.podium.player', 'Gracz');
+          toast.info(t('multiplayer.podium.playerFinished', '🏁 {{username}} ukończył wyścig na {{rank}}. miejscu!', { username: p.username || defaultName, rank }));
         }
       }
     });
-  }, [finishedPlayers, currentUserId]);
+  }, [finishedPlayers, currentUserId, t]);
 
   // Canvas Confetti
   useEffect(() => {
@@ -216,17 +219,17 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-semibold uppercase tracking-wider mb-3"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Finał wyścigu wieloosobowego</span>
+          <span>{t('multiplayer.podium.finalBadge', 'Finał wyścigu wieloosobowego')}</span>
         </motion.div>
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Podium Wyścigu
+          {t('multiplayer.podium.title', 'Podium Wyścigu')}
         </h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
           {isMeWinner
-            ? '🏆 Gratulacje! Wygrałeś wyścig!'
+            ? t('multiplayer.podium.winnerYou', '🏆 Gratulacje! Wygrałeś wyścig!')
             : myRank > 0
-            ? `Ukończyłeś rywalizację na ${myRank}. miejscu!`
-            : 'Znakomita walka do samego końca!'}
+            ? t('multiplayer.podium.rankYou', 'Ukończyłeś rywalizację na {{rank}}. miejscu!', { rank: myRank })
+            : t('multiplayer.podium.goodFight', 'Znakomita walka do samego końca!')}
         </p>
         {racingPlayers.length > 0 && (
           <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1 flex items-center justify-center gap-1.5">
@@ -234,7 +237,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-            Trwa rywalizacja o kolejne miejsca na podium...
+            {t('multiplayer.podium.ongoingBattle', 'Trwa rywalizacja o kolejne miejsca na podium...')}
           </p>
         )}
       </div>
@@ -263,7 +266,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[120px]">
                     {second.username}
-                    {second.userId === currentUserId && ' (Ty)'}
+                    {second.userId === currentUserId && ` ${t('multiplayer.podium.youTag', '(Ty)')}`}
                   </span>
                   <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
                     {second.accuracy !== undefined && <span>{second.accuracy}%</span>}
@@ -287,10 +290,10 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                     <Loader2 className="w-5 h-5 animate-spin" />
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500">
-                    Oczekiwanie...
+                    {t('multiplayer.podium.waiting', 'Oczekiwanie...')}
                   </span>
                   <span className="text-[10px] text-zinc-400/80 dark:text-zinc-600 font-medium">
-                    Walka o 2. miejsce
+                    {t('multiplayer.podium.battleForSecond', 'Walka o 2. miejsce')}
                   </span>
                 </motion.div>
               )}
@@ -304,7 +307,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
             >
               <span className="text-3xl font-black text-slate-400 dark:text-slate-500">2</span>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
-                2. Miejsce
+                {t('multiplayer.podium.secondPlace', '2. Miejsce')}
               </span>
             </div>
           </div>
@@ -337,10 +340,10 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
               </div>
               <span className="mt-2 text-sm sm:text-base font-extrabold text-zinc-900 dark:text-zinc-50 truncate max-w-[150px]">
                 {winner.username}
-                {winner.userId === currentUserId && ' (Ty)'}
+                {winner.userId === currentUserId && ` ${t('multiplayer.podium.youTag', '(Ty)')}`}
               </span>
               <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                {winner.accuracy !== undefined && <span>{winner.accuracy}% celności</span>}
+                {winner.accuracy !== undefined && <span>{t('multiplayer.podium.accuracy', '{{val}}% celności', { val: winner.accuracy })}</span>}
                 {winner.timeSeconds !== undefined && (
                   <>
                     <span>•</span>
@@ -355,7 +358,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
               <div className="absolute inset-0 bg-gradient-to-t from-amber-400/5 to-transparent pointer-events-none" />
               <span className="text-4xl sm:text-5xl font-black text-amber-500 dark:text-amber-400">1</span>
               <span className="text-[11px] uppercase tracking-widest font-extrabold text-amber-600 dark:text-amber-400">
-                Zwycięzca
+                {t('multiplayer.podium.winner', 'Zwycięzca')}
               </span>
             </div>
           </motion.div>
@@ -383,7 +386,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[120px]">
                     {third.username}
-                    {third.userId === currentUserId && ' (Ty)'}
+                    {third.userId === currentUserId && ` ${t('multiplayer.podium.youTag', '(Ty)')}`}
                   </span>
                   <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
                     {third.accuracy !== undefined && <span>{third.accuracy}%</span>}
@@ -407,10 +410,10 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                     <Loader2 className="w-5 h-5 animate-spin" />
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500">
-                    Oczekiwanie...
+                    {t('multiplayer.podium.waiting', 'Oczekiwanie...')}
                   </span>
                   <span className="text-[10px] text-zinc-400/80 dark:text-zinc-600 font-medium">
-                    Walka o 3. miejsce
+                    {t('multiplayer.podium.battleForThird', 'Walka o 3. miejsce')}
                   </span>
                 </motion.div>
               )}
@@ -424,7 +427,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
             >
               <span className="text-3xl font-black text-amber-700 dark:text-amber-600">3</span>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-amber-700 dark:text-amber-500">
-                3. Miejsce
+                {t('multiplayer.podium.thirdPlace', '3. Miejsce')}
               </span>
             </div>
           </div>
@@ -440,10 +443,10 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
-              W trakcie wyścigu ({racingPlayers.length})
+              {t('multiplayer.podium.inRaceTitle', 'W trakcie wyścigu ({{count}})', { count: racingPlayers.length })}
             </h3>
             <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">
-              Postęp na żywo
+              {t('multiplayer.podium.liveProgress', 'Postęp na żywo')}
             </span>
           </div>
 
@@ -470,9 +473,11 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate flex items-center gap-1.5">
                           <span>{p.username}</span>
-                          {isMe && <span className="text-xs text-primary-500 font-bold">(Ty)</span>}
+                          {isMe && <span className="text-xs text-primary-500 font-bold">{t('multiplayer.podium.youTag', '(Ty)')}</span>}
                         </div>
-                        <div className="text-[11px] text-zinc-400">Na trasie wyścigu...</div>
+                        <div className="text-[11px] text-zinc-400">
+                          {t('multiplayer.podium.onTrack', 'Na trasie wyścigu...')}
+                        </div>
                       </div>
                     </div>
 
@@ -500,7 +505,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
           className="relative z-10 mt-6 py-2 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold text-center flex items-center justify-center gap-2"
         >
           <span>🏁</span>
-          <span>Wszyscy uczestnicy ukończyli wyścig!</span>
+          <span>{t('multiplayer.podium.allFinished', 'Wszyscy uczestnicy ukończyli wyścig!')}</span>
         </motion.div>
       )}
 
@@ -508,7 +513,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
       {others.length > 0 && (
         <div className="relative z-10 mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3 text-center">
-            Pozostali uczestnicy którzy ukończyli wyścig
+            {t('multiplayer.podium.othersTitle', 'Pozostali uczestnicy którzy ukończyli wyścig')}
           </h3>
           <div className="space-y-2">
             {others.map((p, idx) => {
@@ -534,14 +539,14 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                     />
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
                       {p.username}
-                      {isMe && ' (Ty)'}
+                      {isMe && ` ${t('multiplayer.podium.youTag', '(Ty)')}`}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 flex-shrink-0">
                     {p.accuracy !== undefined && (
                       <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                        {p.accuracy}% celności
+                        {t('multiplayer.podium.accuracy', '{{val}}% celności', { val: p.accuracy })}
                       </span>
                     )}
                     {p.timeSeconds !== undefined && (
@@ -561,7 +566,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
       {dnfPlayers.length > 0 && (
         <div className="relative z-10 mt-4 pt-3 border-t border-zinc-200/60 dark:border-zinc-800/60">
           <h4 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2 text-center">
-            Nie ukończyli (Rozłączeni / DNF)
+            {t('multiplayer.podium.dnfTitle', 'Nie ukończyli (Rozłączeni / DNF)')}
           </h4>
           <div className="space-y-1.5 opacity-60">
             {dnfPlayers.map((p) => (
@@ -590,7 +595,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
             onClick={onRematch}
           >
             <RotateCcw className="w-4 h-4" />
-            <span>{isHost ? 'Rozpocznij rewanż' : 'Zagraj rewanż'}</span>
+            <span>{isHost ? t('multiplayer.podium.rematchHost', 'Rozpocznij rewanż') : t('multiplayer.podium.rematchGuest', 'Zagraj rewanż')}</span>
           </Button>
         )}
         <Button
@@ -600,7 +605,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
           onClick={onBackToLobby}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Wróć do lobby</span>
+          <span>{t('multiplayer.podium.backToLobby', 'Wróć do lobby')}</span>
         </Button>
       </div>
     </div>

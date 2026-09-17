@@ -108,10 +108,24 @@
     "clickToSee": "— click to see the correct answer",
     "correctAnswers": "Correct answers:",
     "correctAnswer": "Correct answer:",
-    "goHome": "Go back to home page"
+    "goHome": "Go back to home page",
+    "backToLobby": "Back to lobby",
+    "xpGained": "Earned XP",
+    "xpSyncNotice": "Will be added after sync",
+    "badges": {
+      "flawless": "Flawless",
+      "flawlessDesc": "100% accuracy",
+      "sprinter": "Sprinter",
+      "sprinterDesc": "< 5s per question",
+      "tenacious": "Tenacious",
+      "tenaciousDesc": "100+ questions in session"
+    }
   },
   "creator": {
     "defaultNewName": "New database from creator",
+    "packNamePlaceholder": "Database name...",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
     "errorNoQuestions": "No valid questions found in this ZIP archive.",
     "errorReadZip": "Error reading ZIP: {{message}}",
     "errorCreateZip": "Error creating ZIP: {{message}}",
@@ -153,7 +167,16 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "exit": "Exit",
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "desc": "An unexpected error occurred while rendering the view. Your saved data is safe.",
+      "reload": "Reload page",
+      "home": "Main menu"
+    }
   },
   "test": {
     "loading": "Loading question...",
@@ -205,7 +228,48 @@
     "chunkMastered_one": "You mastered {{count}} question from this part.",
     "chunkMastered_other": "You mastered all {{count}} questions from this part.",
     "chunkNext": "Go to Part {{index}}",
-    "chunkSelectOther": "Choose another part"
+    "chunkSelectOther": "Choose another part",
+    "chunkPrompt": {
+      "title": "Split test into parts",
+      "questionsCount": "{{count}} questions in base",
+      "description": "Base <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200\">{{baseName}}</strong> contains <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} questions</strong>. Solving it in smaller parts improves focus and helps you master material in blocks.",
+      "recommendedBadge": "Recommended",
+      "opt50": "Packs of 50 questions",
+      "opt50Desc": "{{chunks}} parts • optimal for 15–20 min study",
+      "optHalf": "Split into 2 equal parts",
+      "optHalfDesc": "2 parts of approx. {{count}} questions",
+      "opt30": "Smaller packs (30 questions)",
+      "opt30Desc": "{{chunks}} parts • quick revisions",
+      "optAll": "Entire base at once ({{count}} questions)",
+      "optAllDesc": "No splitting • classic mode",
+      "startChunk1": "Start Part 1",
+      "startAll": "Start full test"
+    },
+    "chunkCompletionModal": {
+      "title": "Part {{index}} completed",
+      "desc": "You mastered all <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} questions</strong> in this part ({{index}} of {{total}}).",
+      "nextChunk": "Proceed to Part {{next}}",
+      "finishAndResults": "Finish test & view results",
+      "chooseOther": "Choose another part",
+      "repeatChunk": "Repeat this part",
+      "summary": "Session summary"
+    },
+    "chunkSelectorModal": {
+      "title": "Choose part",
+      "subtitle": "{{baseName}} • Mastered {{done}}/{{total}} ({{percent}}%)",
+      "part": "Part {{index}}",
+      "active": "Active",
+      "completed": "Completed",
+      "wholeTest": "Whole test together",
+      "wholeTestDesc": "Practice all questions in one unified test",
+      "questionsCount": "({{count}} questions)",
+      "reconfigure": "Change pack size or disable splitting"
+    },
+    "note": {
+      "myNote": "Your note",
+      "addNote": "Add note",
+      "placeholder": "Write your own note for this question (e.g. mnemonic or explanation)..."
+    }
   },
   "theme": {
     "colors": {
@@ -267,7 +331,14 @@
     "usernamePlaceholder": "e.g. test_master",
     "usernameRules": "3 to 20 characters, only letters, numbers, and underscores (_).",
     "saveProfile": "Save profile",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "almostDone": "Almost done!",
+    "setupSubtitle": "Signed in successfully. Choose your unique nickname visible to friends and on leaderboards.",
+    "usernameAllowedHint": "Only letters, numbers, and underscores are allowed.",
+    "loggedAsOther": "Signed in as a different user?",
+    "signOut": "Sign out",
+    "guestLogin": "Create local account (Guest)",
+    "guestError": "Error creating local account"
   },
   "social": {
     "profile": {
@@ -424,6 +495,7 @@
     "dragDropTitle": "Drop .zip file with test here",
     "newSessionModal": {
       "title": "Start learning",
+      "questionsLoaded": "{{count}} questions loaded",
       "sessionName": "Session name",
       "sessionNamePlaceholder": "e.g. Biology Exam",
       "targetDate": "Exam date (optional)",
@@ -450,8 +522,10 @@
     "showQr": "Show QR code",
     "hideQr": "Hide QR code",
     "qrHint": "Scan with your phone camera to receive the question deck without typing the code.",
+    "qrCodeAlt": "Question deck QR code",
     "copyLink": "Copy receive link",
-    "linkCopied": "Link copied!"
+    "linkCopied": "Link copied!",
+    "copyLinkFailed": "Failed to copy link"
   },
   "receive": {
     "title": "Receive Deck via Code",
@@ -466,6 +540,7 @@
     "successTitle": "Deck successfully received!",
     "savedNotice": "The test is now ready for practice in your test list.",
     "successToast": "Successfully received deck '{{name}}'",
+    "receivingWithCode": "Receiving deck with code {{code}}...",
     "errorTitle": "Transfer error",
     "errorGeneric": "Ensure the code is correct and the sender has their share window open.",
     "cancel": "Cancel",
@@ -576,7 +651,12 @@
         "questionsCount": "{{count}} questions"
       },
       "confirmAnswer": "Confirm answer (Space / Enter)",
-      "finishSession": "Finish session"
+      "finishSession": "Finish session",
+      "noQuestionsToast": "No saved questions. Import or create a question pack in Creator.",
+      "deckEmptyToast": "The selected question pack is empty.",
+      "deckLoadErrorToast": "Failed to load questions from this pack.",
+      "comboFootnote": "Every correct answer builds combo multiplier (up to x5)",
+      "savedPacksFootnote": "Saved question packs: {{count}}"
     },
     "multiplayerPrompt": "Multiplayer mode requires login to manage P2P rooms and synchronize race progress.",
     "multiplayerLogin": "Log in to play",
@@ -611,6 +691,74 @@
     }
   },
   "multiplayer": {
+    "menu": {
+      "title": "Play with friends",
+      "hostTitle": "Create Room",
+      "hostDesc": "Choose a question pack from your device and share it with friends via WebRTC. Be the race host.",
+      "joinTitle": "Join friends",
+      "joinDesc": "Enter a 6-digit room code to download the pack via P2P and start live competition."
+    },
+    "hostSelect": {
+      "title": "Choose pack for room",
+      "questionsCount": "{{count}} questions",
+      "generateCodeBtn": "Generate Room Code"
+    },
+    "join": {
+      "title": "Enter room code",
+      "joinBtn": "Join"
+    },
+    "lobby": {
+      "leaveRoom": "Leave room",
+      "roomCode": "Room Code",
+      "copyCodeSuccess": "Room code copied to clipboard",
+      "copyTooltip": "Click to copy code",
+      "qrTooltip": "Show QR code",
+      "playersCount": "Players ({{count}})",
+      "startRace": "Start Race!",
+      "sendPackage": "Send package",
+      "resendPackage": "Send again",
+      "sendingPackage": "Sending...",
+      "hostBadge": "Host",
+      "statusInLobby": "In lobby",
+      "statusDownloading": "Downloading pack...",
+      "statusReady": "Ready"
+    },
+    "toasts": {
+      "packageDownloaded": "Question pack downloaded! Unpacking...",
+      "unpacking": "Unpacking question base...",
+      "readyForRace": "Question base ready for race!",
+      "importError": "Failed to import question base: {{error}}",
+      "selectSessionFirst": "First select a question base for the room",
+      "memoryLoadFailed": "Could not load question base from memory",
+      "prepError": "Error preparing question base: {{error}}",
+      "allSentSuccess": "Package sent to all players!"
+    },
+    "podium": {
+      "finalBadge": "Multiplayer race final",
+      "title": "Race Podium",
+      "winnerYou": "🏆 Congratulations! You won the race!",
+      "rankYou": "You finished in {{rank}} place!",
+      "goodFight": "Great fight until the very end!",
+      "ongoingBattle": "Battle for podium spots in progress...",
+      "waiting": "Waiting...",
+      "battleForSecond": "Battle for 2nd place",
+      "battleForThird": "Battle for 3rd place",
+      "secondPlace": "2nd Place",
+      "thirdPlace": "3rd Place",
+      "winner": "Winner",
+      "youTag": "(You)",
+      "accuracy": "{{val}}% accuracy",
+      "inRaceTitle": "Racing now ({{count}})",
+      "liveProgress": "Live progress",
+      "onTrack": "On the track...",
+      "allFinished": "All players finished the race!",
+      "othersTitle": "Other finishers",
+      "dnfTitle": "Did not finish (Disconnected / DNF)",
+      "rematchHost": "Start rematch",
+      "rematchGuest": "Play rematch",
+      "backToLobby": "Back to lobby",
+      "playerFinished": "🏁 {{username}} finished in {{rank}} place!"
+    },
     "race": {
       "finishedYou": "You crossed the finish line! 🏁",
       "finishedOther": "{{name}} finished the race! 🏁",
@@ -628,8 +776,36 @@
       "copyLink": "Copy direct link",
       "copied": "Link copied!",
       "close": "Close",
-      "codeLabel": "ROOM CODE"
+      "codeLabel": "ROOM CODE",
+      "generating": "Generating QR...",
+      "generateError": "Failed to generate QR code",
+      "copyCodeOnly": "Copy code only",
+      "codeCopied": "Room code copied!",
+      "copyLinkFailed": "Failed to copy link to clipboard"
     }
+  },
+  "importModal": {
+    "title": "Import questions",
+    "desc": "Paste text copied from Quizlet, Excel (CSV), or generated by AI below. The app will detect the format automatically.",
+    "placeholder": "Copy and paste questions here...",
+    "defaultNewPack": "New pack",
+    "defaultImported": "Imported questions",
+    "termSepLabel": "Between term and definition",
+    "rowSepLabel": "Between rows (flashcards)",
+    "autoSep": "Auto (Magic)",
+    "tabSep": "Tab (\\t)",
+    "commaSep": "Comma (,)",
+    "dashSep": "Dash (-)",
+    "customSep": "Custom...",
+    "customPlaceholder": "Enter separator",
+    "newlineSep": "New line (\\n)",
+    "doubleNewlineSep": "Two new lines (\\n\\n)",
+    "semicolonSep": "Semicolon (;)",
+    "previewTitle": "Preview (found {{count}} questions)",
+    "packNamePlaceholder": "Deck name...",
+    "moreQuestions": "+ {{count}} more questions...",
+    "cancel": "Cancel",
+    "importBtn": "Import {{count}} questions"
   },
   "flashcards": {
     "title": "Flashcards",

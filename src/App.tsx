@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'sonner';
 import { AuthGuard } from './components/auth/AuthGuard';
+import { GlobalErrorBoundary } from './components/common/GlobalErrorBoundary';
 
 // Primary landing views remain synchronous for zero-latency initial load
 import { DashboardView } from './components/DashboardView';
@@ -120,7 +121,10 @@ const App: FC = () => {
       );
     }
 
-    if (displayPhase === 'test' && session && currentSessionId) {
+    if (displayPhase === 'test') {
+      if (!session || !currentSessionId) {
+        return <ViewLoadingFallback />;
+      }
       return (
         <motion.div key="test" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
           <TestView
@@ -133,7 +137,10 @@ const App: FC = () => {
         </motion.div>
       );
     }
-    if (displayPhase === 'summary' && session && currentSessionId) {
+    if (displayPhase === 'summary') {
+      if (!session || !currentSessionId) {
+        return <ViewLoadingFallback />;
+      }
       return (
         <motion.div key="summary" initial="initial" animate="animate" exit="exit" variants={pageVariants} transition={pageTransition} className="flex-1 flex flex-col">
           <SummaryView
@@ -251,10 +258,13 @@ const App: FC = () => {
         </motion.div>
       );
     }
+
+    return <ViewLoadingFallback />;
   })();
 
   return (
-    <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}>
+    <GlobalErrorBoundary>
+      <div className={`flex flex-col ${displayPhase === 'creator' ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'}`}>
       <Toaster theme={isDark ? 'dark' : 'light'} richColors position="top-center" />
       <div 
         className={`flex-1 flex flex-col pb-0 md:pb-[40px] ${displayPhase === 'creator' ? 'min-h-0' : ''}`}
@@ -386,6 +396,7 @@ const App: FC = () => {
       </AnimatePresence>
       <CommandPalette />
     </div>
+  </GlobalErrorBoundary>
   );
 };
 

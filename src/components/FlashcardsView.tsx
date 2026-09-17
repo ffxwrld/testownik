@@ -113,7 +113,7 @@ export const FlashcardsView: React.FC<Props> = ({ session, sessionId, onExit }) 
     <div className="flex flex-col h-screen bg-zinc-50 dark:bg-black overflow-hidden relative">
       {/* Header */}
       <header className="flex-shrink-0 flex items-center p-3 sm:p-4">
-        <BackButton onClick={onExit} label="Wyjdź" variant="ghost" className="px-2" />
+        <BackButton onClick={onExit} label={t('common.exit', 'Wyjdź')} variant="ghost" className="px-2" />
         <div className="flex-1 px-3 sm:px-4">
           <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden w-full max-w-md mx-auto">
             <div 

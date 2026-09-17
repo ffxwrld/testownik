@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StickyNote, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useQuestionNote } from '../../hooks/useQuestionNote';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const QuestionNoteEditor: React.FC<Props> = ({ sessionId, questionId }) => {
+  const { t } = useTranslation();
   const { note, saveNote, isLoaded } = useQuestionNote(sessionId, questionId);
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -48,7 +50,7 @@ export const QuestionNoteEditor: React.FC<Props> = ({ sessionId, questionId }) =
         }`}
       >
         <StickyNote className="w-4 h-4" />
-        {hasNote ? 'Twoja notatka' : 'Dodaj notatkę'}
+        {hasNote ? t('test.note.myNote', 'Twoja notatka') : t('test.note.addNote', 'Dodaj notatkę')}
         {saved && <Check className="w-3 h-3 text-emerald-500" />}
       </button>
 
@@ -65,7 +67,7 @@ export const QuestionNoteEditor: React.FC<Props> = ({ sessionId, questionId }) =
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Wpisz własną notatkę do tego pytania (np. skojarzenie lub wyjaśnienie)..."
+                placeholder={t('test.note.placeholder', 'Wpisz własną notatkę do tego pytania (np. skojarzenie lub wyjaśnienie)...')}
                 className="w-full min-h-[100px] p-4 text-sm bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-amber-950 dark:text-amber-100 resize-none placeholder:text-amber-700/40 dark:placeholder:text-amber-400/40"
               />
             </div>

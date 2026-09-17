@@ -83,7 +83,7 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 transition={{ type: 'spring', bounce: 0, duration: 0.18 }}
                 onClick={onOpenChunkSelector}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors border border-zinc-200/80 dark:border-zinc-700/80 cursor-pointer shadow-xs select-none tabular-nums"
-                title="Wybierz część"
+                title={t('test.chunkSelectorModal.title', 'Wybierz część')}
               >
                 <Layers className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
                 <span>{chunkLabel}</span>

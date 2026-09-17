@@ -76,7 +76,7 @@ export const LearnView: FC<LearnViewProps> = ({
           window.history.replaceState({}, document.title, window.location.pathname);
           setInitialReceiveCode(clean);
           setShowReceiveModal(true);
-          toast.info(`Odbieranie bazy pytań kodem ${clean}...`);
+          toast.info(t('receive.receivingWithCode', 'Odbieranie bazy pytań kodem {{code}}...', { code: clean }));
         }
       } catch {
         // ignore
@@ -402,8 +402,12 @@ export const LearnView: FC<LearnViewProps> = ({
               </button>
 
               <div className="mb-6">
-                <span className="text-xs font-bold text-primary-500 uppercase tracking-widest">{questions.length} pytań załadowano</span>
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">Skonfiguruj nową sesję</h3>
+                <span className="text-xs font-bold text-primary-500 uppercase tracking-widest">
+                  {t('learn.newSessionModal.questionsLoaded', '{{count}} pytań załadowano', { count: questions.length })}
+                </span>
+                <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">
+                  {t('learn.newSessionModal.title', 'Skonfiguruj nową sesję')}
+                </h3>
               </div>
               
               <div className="space-y-6">

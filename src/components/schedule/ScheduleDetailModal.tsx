@@ -153,7 +153,7 @@ export const ScheduleDetailModal: React.FC<ScheduleDetailModalProps> = ({
                   }}
                   className="px-2.5 py-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                 >
-                  Usuń termin
+                  {t('schedule.detailsModal.removeDate', 'Usuń termin')}
                 </button>
                 <button
                   type="button"

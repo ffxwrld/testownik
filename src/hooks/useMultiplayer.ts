@@ -167,13 +167,17 @@ export const useMultiplayer = () => {
       }
     });
 
+    let lastSentWebRTCPercent = 0;
     manager.onProgress = (percent) => {
       setPlayers(prev => prev.map(p => p.userId === profile?.id ? { ...p, progress: percent, status: 'downloading' } : p));
-      channelRef.current?.send({
-        type: 'broadcast',
-        event: 'progress_update',
-        payload: { userId: profile?.id, progress: percent, status: 'downloading' }
-      });
+      if (percent === 100 || percent - lastSentWebRTCPercent >= 10) {
+        lastSentWebRTCPercent = percent;
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'progress_update',
+          payload: { userId: profile?.id, progress: percent, status: 'downloading' }
+        });
+      }
     };
 
     manager.onFileReceived = (blob) => {
@@ -254,7 +258,7 @@ export const useMultiplayer = () => {
     
     setIsHost(hostMode);
     setRoomCode(code);
-    setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: raceStartedRef.current });
+    setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: false });
     
     const channel = supabase.channel(`room:${code}`, {
       config: { presence: { key: profile.id }, broadcast: { ack: true } }
@@ -394,11 +398,13 @@ export const useMultiplayer = () => {
         const percent = Math.min(100, Math.round((current.chunks.size / current.totalChunks) * 100));
         setPlayers(prev => prev.map(p => p.userId === profile.id ? { ...p, progress: percent, status: 'downloading' } : p));
         
-        channelRef.current?.send({
-          type: 'broadcast',
-          event: 'progress_update',
-          payload: { userId: profile.id, progress: percent, status: 'downloading' }
-        });
+        if (current.chunks.size === current.totalChunks || current.chunks.size % 5 === 0) {
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'progress_update',
+            payload: { userId: profile.id, progress: percent, status: 'downloading' }
+          });
+        }
 
         if (current.chunks.size === current.totalChunks) {
           const completeArray = new Uint8Array(current.totalSize);

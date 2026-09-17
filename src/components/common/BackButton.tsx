@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface BackButtonProps {
   onClick: () => void;
@@ -14,13 +15,15 @@ export interface BackButtonProps {
 
 export const BackButton: React.FC<BackButtonProps> = ({
   onClick,
-  label = 'Wróć',
+  label,
   showLabel = true,
   className = '',
   enableEscapeKey = true,
   ariaLabel,
   variant = 'default',
 }) => {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t('common.back', 'Wróć');
   useEffect(() => {
     if (!enableEscapeKey) return;
 
@@ -59,12 +62,12 @@ export const BackButton: React.FC<BackButtonProps> = ({
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', bounce: 0, duration: 0.18 }}
       onClick={onClick}
-      aria-label={ariaLabel || label}
+      aria-label={ariaLabel || displayLabel}
       className={`min-w-[44px] min-h-[44px] inline-flex items-center justify-center gap-2 text-sm font-medium tracking-tight transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/70 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950 cursor-pointer ${variantClasses[variant]} ${className}`}
     >
       <ArrowLeft className="w-4 h-4 shrink-0" strokeWidth={2.25} />
-      {showLabel && label && (
-        <span className="truncate">{label}</span>
+      {showLabel && displayLabel && (
+        <span className="truncate">{displayLabel}</span>
       )}
     </motion.button>
   );

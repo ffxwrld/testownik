@@ -116,7 +116,7 @@ try { toast.success(t('auth.codeSent')); } catch(e){}
                   try {
                     await signInAnonymously();
                   } catch (err: unknown) {
-                    const msg = (err as Error)?.message || 'Błąd tworzenia konta lokalnego';
+                    const msg = (err as Error)?.message || t('auth.guestError', 'Błąd tworzenia konta lokalnego');
                     setError(msg);
                     toast.error(msg);
                   } finally {
@@ -126,7 +126,7 @@ try { toast.success(t('auth.codeSent')); } catch(e){}
                 disabled={loading}
                 className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-50 font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-zinc-200 dark:border-zinc-700"
               >
-                Utwórz konto lokalne (Gość)
+                {t('auth.guestLogin', 'Utwórz konto lokalne (Gość)')}
               </button>
             </form>
             </motion.div>

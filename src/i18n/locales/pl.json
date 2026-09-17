@@ -108,10 +108,24 @@
     "clickToSee": "— kliknij, aby zobaczyć poprawną odpowiedź",
     "correctAnswers": "Poprawne odpowiedzi:",
     "correctAnswer": "Poprawna odpowiedź:",
-    "goHome": "Wróć do strony głównej"
+    "goHome": "Wróć do strony głównej",
+    "backToLobby": "Wróć do lobby",
+    "xpGained": "Zdobyte XP",
+    "xpSyncNotice": "Zostaną dodane po synchronizacji",
+    "badges": {
+      "flawless": "Nieskazitelny",
+      "flawlessDesc": "100% poprawności",
+      "sprinter": "Sprinter",
+      "sprinterDesc": "< 5s na pytanie",
+      "tenacious": "Wytrwały",
+      "tenaciousDesc": "100+ pytań w sesji"
+    }
   },
   "creator": {
     "defaultNewName": "Nowa baza z kreatora",
+    "packNamePlaceholder": "Nazwa bazy...",
+    "duplicate": "Duplikuj",
+    "delete": "Usuń",
     "errorNoQuestions": "Nie znaleziono prawidłowych pytań w tym archiwum ZIP.",
     "errorReadZip": "Błąd odczytu ZIP: {{message}}",
     "errorCreateZip": "Błąd tworzenia ZIP: {{message}}",
@@ -153,7 +167,16 @@
     "loading": "Ładowanie...",
     "error": "Wystąpił błąd",
     "save": "Zapisz",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "back": "Wróć",
+    "close": "Zamknij",
+    "exit": "Wyjdź",
+    "errorBoundary": {
+      "title": "Coś poszło nie tak",
+      "desc": "Wystąpił nieoczekiwany błąd podczas wyświetlania widoku. Twoje zapisane dane są bezpieczne.",
+      "reload": "Odśwież stronę",
+      "home": "Menu główne"
+    }
   },
   "test": {
     "loading": "Ładowanie pytania…",
@@ -207,7 +230,48 @@
     "chunkMastered_many": "Opanowałeś wszystkie {{count}} pytań z tej części.",
     "chunkMastered_other": "Opanowałeś wszystkie {{count}} pytań z tej części.",
     "chunkNext": "Przejdź do Części {{index}}",
-    "chunkSelectOther": "Wybierz inną część"
+    "chunkSelectOther": "Wybierz inną część",
+    "chunkPrompt": {
+      "title": "Podziel test na części",
+      "questionsCount": "{{count}} pytań w bazie",
+      "description": "Baza <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200\">{{baseName}}</strong> liczy <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} pytań</strong>. Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.",
+      "recommendedBadge": "Polecane",
+      "opt50": "Paczki po 50 pytań",
+      "opt50Desc": "{{chunks}} części • optymalne na 15–20 min nauki",
+      "optHalf": "Podział na 2 równe części",
+      "optHalfDesc": "2 części po ok. {{count}} pytań",
+      "opt30": "Mniejsze paczki (po 30 pytań)",
+      "opt30Desc": "{{chunks}} części • szybkie powtórki",
+      "optAll": "Cała baza na raz ({{count}} pytań)",
+      "optAllDesc": "Bez dzielenia na partie • klasyczny tryb",
+      "startChunk1": "Rozpocznij Część 1",
+      "startAll": "Rozpocznij cały test"
+    },
+    "chunkCompletionModal": {
+      "title": "Część {{index}} ukończona",
+      "desc": "Opanowałeś wszystkie <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} pytań</strong> z tej części ({{index}} z {{total}}).",
+      "nextChunk": "Przejdź do Części {{next}}",
+      "finishAndResults": "Zakończ test i zobacz wyniki",
+      "chooseOther": "Wybierz inną część",
+      "repeatChunk": "Powtórz tę część",
+      "summary": "Podsumowanie sesji"
+    },
+    "chunkSelectorModal": {
+      "title": "Wybierz część",
+      "subtitle": "{{baseName}} • Opanowano {{done}}/{{total}} ({{percent}}%)",
+      "part": "Część {{index}}",
+      "active": "Aktywna",
+      "completed": "Ukończona",
+      "wholeTest": "Cała baza razem",
+      "wholeTestDesc": "Rozwiązuj wszystkie pytania w jednym wspólnym teście",
+      "questionsCount": "({{count}} pytań)",
+      "reconfigure": "Zmień wielkość paczek lub wyłącz podział"
+    },
+    "note": {
+      "myNote": "Twoja notatka",
+      "addNote": "Dodaj notatkę",
+      "placeholder": "Wpisz własną notatkę do tego pytania (np. skojarzenie lub wyjaśnienie)..."
+    }
   },
   "theme": {
     "colors": {
@@ -269,7 +333,14 @@
     "usernamePlaceholder": "np. mistrz_testow",
     "usernameRules": "Od 3 do 20 znaków, tylko litery, cyfry i podkreślenia (_).",
     "saveProfile": "Zapisz profil",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "almostDone": "Prawie gotowe!",
+    "setupSubtitle": "Zalogowano pomyślnie. Wybierz swój unikalny nick, który będzie widoczny dla znajomych i w rankingach.",
+    "usernameAllowedHint": "Dozwolone są tylko litery (bez polskich znaków), cyfry i znak podkreślenia.",
+    "loggedAsOther": "Zalogowano jako inny użytkownik?",
+    "signOut": "Wyloguj się",
+    "guestLogin": "Utwórz konto lokalne (Gość)",
+    "guestError": "Błąd tworzenia konta lokalnego"
   },
   "social": {
     "profile": {
@@ -430,6 +501,7 @@
     "dragDropTitle": "Upuść plik .zip z testem tutaj",
     "newSessionModal": {
       "title": "Rozpocznij naukę",
+      "questionsLoaded": "{{count}} pytań załadowano",
       "sessionName": "Nazwa sesji",
       "sessionNamePlaceholder": "np. Egzamin z Biologii",
       "targetDate": "Data egzaminu (opcjonalnie)",
@@ -456,8 +528,10 @@
     "showQr": "Pokaż kod QR",
     "hideQr": "Ukryj kod QR",
     "qrHint": "Zeskanuj kod aparatem telefonu, aby odebrać bazę pytań bez przepisywania kodu.",
+    "qrCodeAlt": "Kod QR paczki",
     "copyLink": "Kopiuj link do odbioru",
-    "linkCopied": "Skopiowano link!"
+    "linkCopied": "Skopiowano link!",
+    "copyLinkFailed": "Nie udało się skopiować linku"
   },
   "receive": {
     "title": "Odbierz bazę pytań kodem",
@@ -472,6 +546,7 @@
     "successTitle": "Baza została pomyślnie odebrana!",
     "savedNotice": "Test jest już gotowy do nauki w Twoich testach.",
     "successToast": "Pomyślnie odebrano bazę „{{name}}”",
+    "receivingWithCode": "Odbieranie bazy pytań kodem {{code}}...",
     "errorTitle": "Błąd transferu",
     "errorGeneric": "Upewnij się, że kod jest poprawny i nadawca ma otwarte okno udostępniania.",
     "cancel": "Anuluj",
@@ -582,7 +657,12 @@
         "questionsCount": "{{count}} pytań"
       },
       "confirmAnswer": "Zatwierdź odpowiedź (Spacja / Enter)",
-      "finishSession": "Zakończ sesję"
+      "finishSession": "Zakończ sesję",
+      "noQuestionsToast": "Brak zapisanych pytań. Zaimportuj lub stwórz bazę w Kreatorze.",
+      "deckEmptyToast": "Wybrana paczka nie zawiera pytań.",
+      "deckLoadErrorToast": "Nie udało się wczytać pytań z tej paczki.",
+      "comboFootnote": "Każda poprawna odpowiedź buduje mnożnik combo (do x5)",
+      "savedPacksFootnote": "Zapisane bazy pytań: {{count}}"
     },
     "multiplayerPrompt": "Tryb wieloosobowy wymaga zalogowania, aby zarządzać pokojami P2P i synchronizować wyścig.",
     "multiplayerLogin": "Zaloguj się, aby zagrać",
@@ -617,6 +697,74 @@
     }
   },
   "multiplayer": {
+    "menu": {
+      "title": "Graj ze znajomymi",
+      "hostTitle": "Stwórz Pokój",
+      "hostDesc": "Wybierz paczkę ze swojego telefonu i udostępnij ją znajomym przez WebRTC. Bądź hostem wyścigu.",
+      "joinTitle": "Dołącz do znajomych",
+      "joinDesc": "Wpisz 6-cyfrowy kod pokoju, aby pobrać paczkę P2P i rozpocząć rywalizację na żywo."
+    },
+    "hostSelect": {
+      "title": "Wybierz paczkę dla pokoju",
+      "questionsCount": "{{count}} pytań",
+      "generateCodeBtn": "Generuj Kod Pokoju"
+    },
+    "join": {
+      "title": "Wpisz kod pokoju",
+      "joinBtn": "Dołącz"
+    },
+    "lobby": {
+      "leaveRoom": "Opuść pokój",
+      "roomCode": "Kod Pokoju",
+      "copyCodeSuccess": "Skopiowano kod do schowka",
+      "copyTooltip": "Kliknij, aby skopiować kod",
+      "qrTooltip": "Pokaż kod QR",
+      "playersCount": "Gracze ({{count}})",
+      "startRace": "Rozpocznij Wyścig!",
+      "sendPackage": "Wyślij paczkę",
+      "resendPackage": "Wyślij ponownie",
+      "sendingPackage": "Wysyłanie...",
+      "hostBadge": "Host",
+      "statusInLobby": "W poczekalni",
+      "statusDownloading": "Pobieranie paczki...",
+      "statusReady": "Gotowy"
+    },
+    "toasts": {
+      "packageDownloaded": "Paczka pytań pobrana! Rozpakowywanie...",
+      "unpacking": "Rozpakowywanie bazy pytań...",
+      "readyForRace": "Baza pytań gotowa do wyścigu!",
+      "importError": "Błąd importu bazy pytań: {{error}}",
+      "selectSessionFirst": "Wybierz najpierw bazę pytań dla pokoju",
+      "memoryLoadFailed": "Nie udało się wczytać bazy pytań z pamięci",
+      "prepError": "Błąd przygotowania bazy pytań: {{error}}",
+      "allSentSuccess": "Paczka została wysłana do wszystkich graczy!"
+    },
+    "podium": {
+      "finalBadge": "Finał wyścigu wieloosobowego",
+      "title": "Podium Wyścigu",
+      "winnerYou": "🏆 Gratulacje! Wygrałeś wyścig!",
+      "rankYou": "Ukończyłeś rywalizację na {{rank}}. miejscu!",
+      "goodFight": "Znakomita walka do samego końca!",
+      "ongoingBattle": "Trwa rywalizacja o kolejne miejsca na podium...",
+      "waiting": "Oczekiwanie...",
+      "battleForSecond": "Walka o 2. miejsce",
+      "battleForThird": "Walka o 3. miejsce",
+      "secondPlace": "2. Miejsce",
+      "thirdPlace": "3. Miejsce",
+      "winner": "Zwycięzca",
+      "youTag": "(Ty)",
+      "accuracy": "{{val}}% celności",
+      "inRaceTitle": "W trakcie wyścigu ({{count}})",
+      "liveProgress": "Postęp na żywo",
+      "onTrack": "Na trasie wyścigu...",
+      "allFinished": "Wszyscy uczestnicy ukończyli wyścig!",
+      "othersTitle": "Pozostali uczestnicy którzy ukończyli wyścig",
+      "dnfTitle": "Nie ukończyli (Rozłączeni / DNF)",
+      "rematchHost": "Rozpocznij rewanż",
+      "rematchGuest": "Zagraj rewanż",
+      "backToLobby": "Wróć do lobby",
+      "playerFinished": "🏁 {{username}} ukończył wyścig na {{rank}}. miejscu!"
+    },
     "race": {
       "finishedYou": "Przekroczyłeś linię mety! 🏁",
       "finishedOther": "{{name}} ukończył wyścig! 🏁",
@@ -636,8 +784,36 @@
       "copyLink": "Kopiuj bezpośredni link",
       "copied": "Skopiowano link!",
       "close": "Zamknij",
-      "codeLabel": "KOD POKOJU"
+      "codeLabel": "KOD POKOJU",
+      "generating": "Generowanie QR...",
+      "generateError": "Nie udało się wygenerować kodu QR",
+      "copyCodeOnly": "Kopiuj sam kod",
+      "codeCopied": "Skopiowano kod pokoju!",
+      "copyLinkFailed": "Nie udało się skopiować linku do schowka"
     }
+  },
+  "importModal": {
+    "title": "Importuj pytania",
+    "desc": "Wklej poniżej tekst skopiowany z Quizleta, pliku Excel (CSV) lub wygenerowany przez AI. Apka sama rozpozna format.",
+    "placeholder": "Skopiuj i wklej tutaj pytania...",
+    "defaultNewPack": "Nowa paczka",
+    "defaultImported": "Importowane pytania",
+    "termSepLabel": "Pomiędzy pojęciem a definicją",
+    "rowSepLabel": "Między rzędami (fiszki)",
+    "autoSep": "Automatycznie (Magia)",
+    "tabSep": "Tabulator (\\t)",
+    "commaSep": "Przecinek (,)",
+    "dashSep": "Myślnik (-)",
+    "customSep": "Niestandardowy...",
+    "customPlaceholder": "Wpisz separator",
+    "newlineSep": "Nowa linia (\\n)",
+    "doubleNewlineSep": "Dwie nowe linie (\\n\\n)",
+    "semicolonSep": "Średnik (;)",
+    "previewTitle": "Podgląd (znaleziono {{count}} pytań)",
+    "packNamePlaceholder": "Nazwa paczki...",
+    "moreQuestions": "+ {{count}} kolejnych pytań...",
+    "cancel": "Anuluj",
+    "importBtn": "Importuj {{count}} pytań"
   },
   "flashcards": {
     "title": "Fiszki",

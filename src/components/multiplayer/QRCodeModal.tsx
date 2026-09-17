@@ -52,14 +52,14 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
         console.error('Błąd generowania kodu QR:', err);
         if (isMounted) {
           setIsGenerating(false);
-          toast.error('Nie udało się wygenerować kodu QR');
+          toast.error(t('multiplayer.qr.generateError', 'Nie udało się wygenerować kodu QR'));
         }
       });
 
     return () => {
       isMounted = false;
     };
-  }, [joinUrl]);
+  }, [joinUrl, t]);
 
   // Obsługa klawisza Escape
   useEffect(() => {
@@ -80,14 +80,14 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
       toast.success(t('multiplayer.qr.copied', 'Skopiowano link!'));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Nie udało się skopiować linku do schowka');
+      toast.error(t('multiplayer.qr.copyLinkFailed', 'Nie udało się skopiować linku do schowka'));
     }
   };
 
   const handleCopyCodeOnly = async () => {
     try {
       await navigator.clipboard.writeText(roomCode);
-      toast.success('Skopiowano kod pokoju!');
+      toast.success(t('multiplayer.qr.codeCopied', 'Skopiowano kod pokoju!'));
     } catch {
       // ignore
     }
@@ -141,7 +141,7 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center gap-2 text-zinc-400">
                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                <span className="text-xs font-medium">Generowanie QR...</span>
+                <span className="text-xs font-medium">{t('multiplayer.qr.generating', 'Generowanie QR...')}</span>
               </div>
             ) : qrDataUrl ? (
               <img
@@ -151,7 +151,7 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
                 draggable={false}
               />
             ) : (
-              <div className="text-xs text-red-500">Nie udało się wygenerować kodu</div>
+              <div className="text-xs text-red-500">{t('multiplayer.qr.generateError', 'Nie udało się wygenerować kodu')}</div>
             )}
           </div>
 
@@ -164,7 +164,7 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
               type="button"
               onClick={handleCopyCodeOnly}
               className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-750 transition-colors cursor-pointer"
-              title="Kopiuj sam kod"
+              title={t('multiplayer.qr.copyCodeOnly', 'Kopiuj sam kod')}
             >
               <span className="font-mono text-2xl sm:text-3xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">
                 {formattedCode}

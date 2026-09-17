@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Question } from '../../models/types';
 import { Button } from '../ui/Button';
 import { parseMagicText, parseCustomTextSync } from '../../utils/importers/magicImporter';
@@ -14,6 +15,7 @@ interface ImportModalProps {
 }
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImportComplete }) => {
+  const { t } = useTranslation();
   const [pasteText, setPasteText] = useState('');
   const [preview, setPreview] = useState<Question[]>([]);
   const [title, setTitle] = useState('');
@@ -51,17 +53,17 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         setPreview([]);
       } else {
         setPreview(res.questions);
-        setTitle(res.title || 'Nowa paczka');
+        setTitle(res.title || t('importModal.defaultNewPack', 'Nowa paczka'));
         setError('');
       }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [pasteText, termSep, customTermSep, rowSep, customRowSep]);
+  }, [pasteText, termSep, customTermSep, rowSep, customRowSep, t]);
 
   const handleImport = () => {
     if (preview.length > 0) {
-      onImportComplete(preview, title || 'Importowane pytania', {});
+      onImportComplete(preview, title || t('importModal.defaultImported', 'Importowane pytania'), {});
       setPasteText('');
       onClose();
     }
@@ -87,9 +89,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
               className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden pointer-events-auto flex flex-col max-h-[85vh] border border-zinc-200 dark:border-zinc-800"
             >
               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
-                <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">Importuj pytania</h2>
+                <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                  {t('importModal.title', 'Importuj pytania')}
+                </h2>
                 <p className="text-sm text-zinc-500 mt-1">
-                  Wklej poniżej tekst skopiowany z Quizleta, pliku Excel (CSV) lub wygenerowany przez AI. Apka sama rozpozna format.
+                  {t('importModal.desc', 'Wklej poniżej tekst skopiowany z Quizleta, pliku Excel (CSV) lub wygenerowany przez AI. Apka sama rozpozna format.')}
                 </p>
               </div>
 
@@ -97,53 +101,57 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 <textarea
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
-                  placeholder="Skopiuj i wklej tutaj pytania..."
+                  placeholder={t('importModal.placeholder', 'Skopiuj i wklej tutaj pytania...')}
                   className="w-full h-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-zinc-800 dark:text-zinc-200 mb-4"
                 />
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-4">
                   <div className="flex-1">
-                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1">Pomiędzy pojęciem a definicją</label>
+                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1">
+                      {t('importModal.termSepLabel', 'Pomiędzy pojęciem a definicją')}
+                    </label>
                     <select
                       value={termSep}
                       onChange={(e) => setTermSep(e.target.value)}
                       className="w-full text-sm bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 text-zinc-900 dark:text-white"
                     >
-                      <option value="auto">Automatycznie (Magia)</option>
-                      <option value="\t">Tabulator (\t)</option>
-                      <option value=",">Przecinek (,)</option>
-                      <option value="-">Myślnik (-)</option>
-                      <option value="custom">Niestandardowy...</option>
+                      <option value="auto">{t('importModal.autoSep', 'Automatycznie (Magia)')}</option>
+                      <option value="\t">{t('importModal.tabSep', 'Tabulator (\\t)')}</option>
+                      <option value=",">{t('importModal.commaSep', 'Przecinek (,)')}</option>
+                      <option value="-">{t('importModal.dashSep', 'Myślnik (-)')}</option>
+                      <option value="custom">{t('importModal.customSep', 'Niestandardowy...')}</option>
                     </select>
                     {termSep === 'custom' && (
                       <input 
                         type="text" 
                         value={customTermSep}
                         onChange={(e) => setCustomTermSep(e.target.value)}
-                        placeholder="Wpisz separator"
+                        placeholder={t('importModal.customPlaceholder', 'Wpisz separator')}
                         className="mt-2 w-full text-sm bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 text-zinc-900 dark:text-white"
                       />
                     )}
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1">Między rzędami (fiszki)</label>
+                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1">
+                      {t('importModal.rowSepLabel', 'Między rzędami (fiszki)')}
+                    </label>
                     <select
                       value={rowSep}
                       onChange={(e) => setRowSep(e.target.value)}
                       className="w-full text-sm bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 text-zinc-900 dark:text-white"
                     >
-                      <option value="auto">Automatycznie (Magia)</option>
-                      <option value="\n">Nowa linia (\n)</option>
-                      <option value="\n\n">Dwie nowe linie (\n\n)</option>
-                      <option value=";">Średnik (;)</option>
-                      <option value="custom">Niestandardowy...</option>
+                      <option value="auto">{t('importModal.autoSep', 'Automatycznie (Magia)')}</option>
+                      <option value="\n">{t('importModal.newlineSep', 'Nowa linia (\\n)')}</option>
+                      <option value="\n\n">{t('importModal.doubleNewlineSep', 'Dwie nowe linie (\\n\\n)')}</option>
+                      <option value=";">{t('importModal.semicolonSep', 'Średnik (;)')}</option>
+                      <option value="custom">{t('importModal.customSep', 'Niestandardowy...')}</option>
                     </select>
                     {rowSep === 'custom' && (
                       <input 
                         type="text" 
                         value={customRowSep}
                         onChange={(e) => setCustomRowSep(e.target.value)}
-                        placeholder="Wpisz separator"
+                        placeholder={t('importModal.customPlaceholder', 'Wpisz separator')}
                         className="mt-2 w-full text-sm bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 text-zinc-900 dark:text-white"
                       />
                     )}
@@ -155,12 +163,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 {preview.length > 0 && (
                   <motion.div layout className="mt-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-bold text-zinc-900 dark:text-white">Podgląd (znaleziono {preview.length} pytań)</h3>
+                      <h3 className="font-bold text-zinc-900 dark:text-white">
+                        {t('importModal.previewTitle', 'Podgląd (znaleziono {{count}} pytań)', { count: preview.length })}
+                      </h3>
                       <input 
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="text-sm bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-primary-500 w-48 text-zinc-900 dark:text-white font-medium"
-                        placeholder="Nazwa paczki..."
+                        placeholder={t('importModal.packNamePlaceholder', 'Nazwa paczki...')}
                       />
                     </div>
                     <div className="bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -180,7 +190,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                       ))}
                       {preview.length > 3 && (
                         <div className="p-3 text-center text-xs text-zinc-500 font-medium bg-zinc-100 dark:bg-zinc-900">
-                          + {preview.length - 3} kolejnych pytań...
+                          {t('importModal.moreQuestions', '+ {{count}} kolejnych pytań...', { count: preview.length - 3 })}
                         </div>
                       )}
                     </div>
@@ -189,9 +199,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
               </div>
 
               <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3 bg-zinc-50 dark:bg-zinc-950">
-                <Button variant="secondary" onClick={onClose}>Anuluj</Button>
+                <Button variant="secondary" onClick={onClose}>
+                  {t('common.cancel', 'Anuluj')}
+                </Button>
                 <Button variant="primary" disabled={preview.length === 0} onClick={handleImport}>
-                  Importuj {preview.length > 0 ? `${preview.length} pytań` : ''}
+                  {preview.length > 0 
+                    ? t('importModal.importBtn', 'Importuj {{count}} pytań', { count: preview.length })
+                    : t('importModal.title', 'Importuj pytania')}
                 </Button>
               </div>
             </motion.div>

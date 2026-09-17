@@ -327,7 +327,9 @@ export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: 
   const session: SessionState = JSON.parse(metaContent);
   
   // Generate a new Session ID for this imported session (so it doesn't collide if they already have it)
-  const newSessionId = crypto.randomUUID();
+  const newSessionId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    ? crypto.randomUUID()
+    : `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   session.synced = false; // reset synced flag
   
   const images: Record<string, Blob> = {};

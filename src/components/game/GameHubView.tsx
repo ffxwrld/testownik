@@ -91,7 +91,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
 
   const handleSelectMode = (mode: SoloGameMode) => {
     if (sessions.length === 0) {
-      toast.error('Brak zapisanych pytań. Zaimportuj lub stwórz bazę w Kreatorze.');
+      toast.error(t('games.solo.noQuestionsToast', 'Brak zapisanych pytań. Zaimportuj lub stwórz bazę w Kreatorze.'));
       return;
     }
     setSelectedModeForDeckPicker(mode);
@@ -103,14 +103,14 @@ export const GameHubView: FC<GameHubViewProps> = ({
       setLoadingDeckId(sessionId);
       const sessionData = await loadSession(sessionId);
       if (!sessionData || !sessionData.questions || sessionData.questions.length === 0) {
-        toast.error('Wybrana paczka nie zawiera pytań.');
+        toast.error(t('games.solo.deckEmptyToast', 'Wybrana paczka nie zawiera pytań.'));
         return;
       }
       setSelectedModeForDeckPicker(null);
       onStartSoloGame(selectedModeForDeckPicker, sessionData.questions, sessionId);
     } catch (e) {
       console.error('Failed to load session questions', e);
-      toast.error('Nie udało się wczytać pytań z tej paczki.');
+      toast.error(t('games.solo.deckLoadErrorToast', 'Nie udało się wczytać pytań z tej paczki.'));
     } finally {
       setLoadingDeckId(null);
     }
@@ -312,11 +312,11 @@ export const GameHubView: FC<GameHubViewProps> = ({
               <div className="pt-2 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Każda poprawna odpowiedź buduje mnożnik combo (do x5)</span>
+                  <span>{t('games.solo.comboFootnote', 'Każda poprawna odpowiedź buduje mnożnik combo (do x5)')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
                   <Layers className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Zapisane bazy pytań: {sessions.length}</span>
+                  <span>{t('games.solo.savedPacksFootnote', 'Zapisane bazy pytań: {{count}}', { count: sessions.length })}</span>
                 </div>
               </div>
           </div>

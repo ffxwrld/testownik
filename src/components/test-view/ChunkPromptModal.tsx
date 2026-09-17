@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, Check, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button';
 
 interface ChunkPromptModalProps {
@@ -16,28 +17,29 @@ export const ChunkPromptModal: React.FC<ChunkPromptModalProps> = ({
   baseName,
   onConfirm,
 }) => {
+  const { t } = useTranslation();
   const half = Math.ceil(totalQuestions / 2);
   const options = [
     {
       size: 50,
-      label: 'Paczki po 50 pytań',
-      badge: 'Polecane',
-      description: `${Math.ceil(totalQuestions / 50)} części • optymalne na 15–20 min nauki`,
+      label: t('test.chunkPrompt.opt50', 'Paczki po 50 pytań'),
+      badge: t('test.chunkPrompt.recommendedBadge', 'Polecane'),
+      description: t('test.chunkPrompt.opt50Desc', '{{chunks}} części • optymalne na 15–20 min nauki', { chunks: Math.ceil(totalQuestions / 50) }),
     },
     {
       size: half,
-      label: 'Podział na 2 równe części',
-      description: `2 części po ok. ${half} pytań`,
+      label: t('test.chunkPrompt.optHalf', 'Podział na 2 równe części'),
+      description: t('test.chunkPrompt.optHalfDesc', '2 części po ok. {{count}} pytań', { count: half }),
     },
     {
       size: 30,
-      label: 'Mniejsze paczki (po 30 pytań)',
-      description: `${Math.ceil(totalQuestions / 30)} części • szybkie powtórki`,
+      label: t('test.chunkPrompt.opt30', 'Mniejsze paczki (po 30 pytań)'),
+      description: t('test.chunkPrompt.opt30Desc', '{{chunks}} części • szybkie powtórki', { chunks: Math.ceil(totalQuestions / 30) }),
     },
     {
       size: null,
-      label: `Cała baza na raz (${totalQuestions} pytań)`,
-      description: 'Bez dzielenia na partie • klasyczny tryb',
+      label: t('test.chunkPrompt.optAll', 'Cała baza na raz ({{count}} pytań)', { count: totalQuestions }),
+      description: t('test.chunkPrompt.optAllDesc', 'Bez dzielenia na partie • klasyczny tryb'),
     },
   ];
 
@@ -64,18 +66,18 @@ export const ChunkPromptModal: React.FC<ChunkPromptModalProps> = ({
             </div>
             <div>
               <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                Podziel test na części
+                {t('test.chunkPrompt.title', 'Podziel test na części')}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
-                {totalQuestions} pytań w bazie
+                {t('test.chunkPrompt.questionsCount', '{{count}} pytań w bazie', { count: totalQuestions })}
               </p>
             </div>
           </div>
 
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 mb-5 leading-relaxed">
-            Baza <strong className="font-semibold text-zinc-800 dark:text-zinc-200">{baseName}</strong> liczy{' '}
-            <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{totalQuestions} pytań</strong>.
-            Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.
+            <span dangerouslySetInnerHTML={{
+              __html: t('test.chunkPrompt.description', 'Baza <strong class="font-semibold text-zinc-800 dark:text-zinc-200">{{baseName}}</strong> liczy <strong class="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{{count}} pytań</strong>. Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.', { baseName, count: totalQuestions })
+            }} />
           </p>
 
           <div className="space-y-2 mb-6">
@@ -131,7 +133,7 @@ export const ChunkPromptModal: React.FC<ChunkPromptModalProps> = ({
               onClick={() => onConfirm(selectedSize)}
               className="rounded-xl shadow-lg shadow-primary-600/20 py-3.5"
             >
-              <span>{selectedSize ? 'Rozpocznij Część 1' : 'Rozpocznij cały test'}</span>
+              <span>{selectedSize ? t('test.chunkPrompt.startChunk1', 'Rozpocznij Część 1') : t('test.chunkPrompt.startAll', 'Rozpocznij cały test')}</span>
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </div>

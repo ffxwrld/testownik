@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, ArrowRight, RotateCcw, Layers } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../ui/Button';
 
 interface ChunkCompletionModalProps {
@@ -26,6 +27,8 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
   onOpenSelector,
   onFinishTest,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -47,11 +50,21 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
           </div>
 
           <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight mb-2">
-            Część {chunkIndex + 1} ukończona
+            {t('test.chunkCompletionModal.title', 'Część {{index}} ukończona', { index: chunkIndex + 1 })}
           </h3>
 
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-            Opanowałeś wszystkie <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{chunkQuestionsCount} pytań</strong> z tej części ({chunkIndex + 1} z {totalChunks}).
+            <Trans
+              i18nKey="test.chunkCompletionModal.desc"
+              values={{
+                count: chunkQuestionsCount,
+                index: chunkIndex + 1,
+                total: totalChunks,
+              }}
+              components={{
+                strong: <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums" />,
+              }}
+            />
           </p>
 
           <div className="space-y-2.5">
@@ -63,7 +76,9 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                 onClick={onNextChunk}
                 className="rounded-xl shadow-lg shadow-primary-600/20 py-3.5"
               >
-                <span>Przejdź do Części {chunkIndex + 2}</span>
+                <span>
+                  {t('test.chunkCompletionModal.nextChunk', 'Przejdź do Części {{next}}', { next: chunkIndex + 2 })}
+                </span>
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
@@ -74,7 +89,9 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                 onClick={onFinishTest}
                 className="rounded-xl shadow-lg shadow-emerald-600/20 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                <span>Zakończ test i zobacz wyniki</span>
+                <span>
+                  {t('test.chunkCompletionModal.finishAndResults', 'Zakończ test i zobacz wyniki')}
+                </span>
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
@@ -87,7 +104,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
               className="rounded-xl py-3"
             >
               <Layers className="w-4 h-4 mr-2" />
-              Wybierz inną część
+              {t('test.chunkCompletionModal.chooseOther', 'Wybierz inną część')}
             </Button>
 
             <div className="flex gap-2 pt-1">
@@ -99,7 +116,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                Powtórz tę część
+                {t('test.chunkCompletionModal.repeatChunk', 'Powtórz tę część')}
               </motion.button>
               {hasNextChunk && (
                 <motion.button
@@ -109,7 +126,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                   onClick={onFinishTest}
                   className="flex-1 py-2.5 px-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition cursor-pointer"
                 >
-                  Podsumowanie sesji
+                  {t('test.chunkCompletionModal.summary', 'Podsumowanie sesji')}
                 </motion.button>
               )}
             </div>

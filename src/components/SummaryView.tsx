@@ -142,13 +142,13 @@ export const SummaryView: FC<SummaryViewProps> = ({
       )}
       </AnimatePresence>
 
-       <div className="w-full max-w-2xl flex items-center justify-between mb-4 z-10">
-         <BackButton
-           onClick={onNewTest}
-           label={roomCode ? 'Wróć do lobby' : (t('common.back', 'Wróć') || 'Wróć')}
-           enableEscapeKey={!showBeerModal}
-         />
-       </div>
+        <div className="w-full max-w-2xl flex items-center justify-between mb-4 z-10">
+          <BackButton
+            onClick={onNewTest}
+            label={roomCode ? t('summary.backToLobby', 'Wróć do lobby') : (t('common.back', 'Wróć') || 'Wróć')}
+            enableEscapeKey={!showBeerModal}
+          />
+        </div>
 
         {isMultiplayerGame && (
           <div className="w-full max-w-3xl mb-8 z-10">
@@ -205,8 +205,12 @@ export const SummaryView: FC<SummaryViewProps> = ({
               <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/10 border border-amber-200 dark:border-amber-800/50 px-4 py-2 rounded-full shadow-sm">
                 <span className="text-xl">🏆</span>
                 <div>
-                  <div className="text-sm font-bold text-amber-900 dark:text-amber-100">Nieskazitelny</div>
-                  <div className="text-[10px] uppercase tracking-wider text-amber-700/70 dark:text-amber-400/70 font-semibold">100% poprawności</div>
+                  <div className="text-sm font-bold text-amber-900 dark:text-amber-100">
+                    {t('summary.badges.flawless', 'Nieskazitelny')}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-amber-700/70 dark:text-amber-400/70 font-semibold">
+                    {t('summary.badges.flawlessDesc', '100% poprawności')}
+                  </div>
                 </div>
               </div>
             )}
@@ -214,8 +218,12 @@ export const SummaryView: FC<SummaryViewProps> = ({
               <div className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-blue-900/10 border border-blue-200 dark:border-blue-800/50 px-4 py-2 rounded-full shadow-sm">
                 <span className="text-xl">⚡️</span>
                 <div>
-                  <div className="text-sm font-bold text-blue-900 dark:text-blue-100">Sprinter</div>
-                  <div className="text-[10px] uppercase tracking-wider text-blue-700/70 dark:text-blue-400/70 font-semibold">&lt; 5s na pytanie</div>
+                  <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                    {t('summary.badges.sprinter', 'Sprinter')}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-blue-700/70 dark:text-blue-400/70 font-semibold">
+                    {t('summary.badges.sprinterDesc', '< 5s na pytanie')}
+                  </div>
                 </div>
               </div>
             )}
@@ -223,8 +231,12 @@ export const SummaryView: FC<SummaryViewProps> = ({
               <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 px-4 py-2 rounded-full shadow-xs">
                 <span className="text-xl">🏔️</span>
                 <div>
-                  <div className="text-sm font-bold text-indigo-950 dark:text-indigo-100">Wytrwały</div>
-                  <div className="text-[10px] uppercase tracking-wider text-indigo-700/70 dark:text-indigo-300/70 font-semibold">100+ pytań w sesji</div>
+                  <div className="text-sm font-bold text-indigo-950 dark:text-indigo-100">
+                    {t('summary.badges.tenacious', 'Wytrwały')}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-indigo-700/70 dark:text-indigo-300/70 font-semibold">
+                    {t('summary.badges.tenaciousDesc', '100+ pytań w sesji')}
+                  </div>
                 </div>
               </div>
             )}
@@ -248,12 +260,16 @@ export const SummaryView: FC<SummaryViewProps> = ({
           <Card className="text-center md:col-span-1 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
             <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-500 mb-2">
               <Trophy className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Zdobyte XP</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                {t('summary.xpGained', 'Zdobyte XP')}
+              </span>
             </div>
             <p className="text-3xl font-bold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
               +{session.totalFirstCorrect * 10 + 5}
             </p>
-            <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">Zostaną dodane po synchronizacji</p>
+            <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">
+              {t('summary.xpSyncNotice', 'Zostaną dodane po synchronizacji')}
+            </p>
           </Card>
 
           <Card className="text-center col-span-2 md:col-span-1">
@@ -436,7 +452,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
           </svg>
-          {roomCode ? 'Wróć do lobby' : t('summary.goHome')}
+          {roomCode ? t('summary.backToLobby', 'Wróć do lobby') : t('summary.goHome')}
         </Button>
       </motion.div>
     </div>

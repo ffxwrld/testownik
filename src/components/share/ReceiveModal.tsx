@@ -167,7 +167,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
                 {t('receive.successTitle', 'Baza została pomyślnie odebrana!')}
               </h4>
               <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                {receivedSession.baseName} ({receivedSession.questions.length} pytań)
+                {receivedSession.baseName} ({t('home.questionsCount', '{{count}} pytań', { count: receivedSession.questions.length })})
               </p>
               <p className="text-xs text-zinc-400 dark:text-zinc-500">
                 {t('receive.savedNotice', 'Test jest już gotowy do nauki w Twoich testach.')}

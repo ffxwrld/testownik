@@ -46,7 +46,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   onChange,
   minDate,
   maxDate,
-  placeholder = 'Wybierz datę...',
+  placeholder,
   className = '',
   disabled = false,
   allowClear = true,
@@ -56,6 +56,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const { t, i18n } = useTranslation();
   const currentLocale = i18n.language === 'en' ? enUS : pl;
   const isEn = i18n.language === 'en';
+  const defaultPlaceholder = isEn ? 'Select date...' : 'Wybierz datę...';
 
   const presets: PresetOption[] = useMemo(() => [
     { label: isEn ? 'Tomorrow' : 'Jutro', days: 1 },
@@ -202,18 +203,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <CalendarIcon className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" />
           <span className={cn('truncate', !selectedDate ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-900 dark:text-zinc-100 font-semibold')}>
-            {displayLabel || placeholder}
+            {displayLabel || placeholder || defaultPlaceholder}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 ml-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {allowClear && selectedDate && !disabled && (
             <span
               role="button"
               tabIndex={0}
               onClick={handleClear}
               className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-              title="Wyczyść datę"
+              title={isEn ? 'Clear date' : 'Wyczyść datę'}
             >
               <X className="w-3.5 h-3.5" />
             </span>

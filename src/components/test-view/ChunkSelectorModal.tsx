@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, X, Play, CheckCircle2, SlidersHorizontal, BookOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ChunkInfo, Question } from '../../models/types';
 import { getChunkProgress } from '../../utils/session';
 
@@ -27,6 +28,8 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
   onSelectChunk,
   onReconfigureChunks,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   const totalDone = doneIds.length;
@@ -54,17 +57,23 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                  Wybierz część
+                  {t('test.chunkSelectorModal.title', 'Wybierz część')}
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate max-w-xs md:max-w-md tabular-nums">
-                  {baseName} • Opanowano {totalDone}/{totalQuestions} ({overallPercent}%)
+                  {t('test.chunkSelectorModal.subtitle', '{{baseName}} • Opanowano {{done}}/{{total}} ({{percent}}%)', {
+                    baseName,
+                    done: totalDone,
+                    total: totalQuestions,
+                    percent: overallPercent,
+                  })}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-              title="Zamknij"
+              title={t('common.close', 'Zamknij')}
+              aria-label={t('common.close', 'Zamknij')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -95,14 +104,14 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
-                        Część {chunk.index + 1}
+                        {t('test.chunkSelectorModal.part', 'Część {{index}}', { index: chunk.index + 1 })}
                       </span>
                       <span className="text-xs text-zinc-400 font-medium tabular-nums">
                         ({chunk.startIndex + 1}–{chunk.endIndex + 1})
                       </span>
                       {isActive && (
                         <span className="text-[10px] font-semibold text-primary-700 dark:text-primary-300 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-full">
-                          Aktywna
+                          {t('test.chunkSelectorModal.active', 'Aktywna')}
                         </span>
                       )}
                     </div>
@@ -111,7 +120,7 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
                       {isFinished ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          Ukończona
+                          {t('test.chunkSelectorModal.completed', 'Ukończona')}
                         </span>
                       ) : (
                         <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
@@ -158,19 +167,19 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
-                      Cała baza razem
+                      {t('test.chunkSelectorModal.wholeTest', 'Cała baza razem')}
                     </span>
                     <span className="text-xs text-zinc-400 font-medium tabular-nums">
-                      ({totalQuestions} pytań)
+                      {t('test.chunkSelectorModal.questionsCount', '({{count}} pytań)', { count: totalQuestions })}
                     </span>
                     {activeChunkIndex === null && (
                       <span className="text-[10px] font-semibold text-primary-700 dark:text-primary-300 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-full">
-                        Aktywna
+                        {t('test.chunkSelectorModal.active', 'Aktywna')}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Rozwiązuj wszystkie pytania w jednym wspólnym teście
+                    {t('test.chunkSelectorModal.wholeTestDesc', 'Rozwiązuj wszystkie pytania w jednym wspólnym teście')}
                   </p>
                 </div>
               </div>
@@ -187,7 +196,7 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
                 className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium cursor-pointer transition-colors"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
-                Zmień wielkość paczek lub wyłącz podział
+                {t('test.chunkSelectorModal.reconfigure', 'Zmień wielkość paczek lub wyłącz podział')}
               </button>
             </div>
           )}

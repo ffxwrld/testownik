@@ -57,7 +57,7 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Nazwa bazy..."
+            placeholder={t('creator.packNamePlaceholder', 'Nazwa bazy...')}
             value={baseName}
             onChange={(e) => setBaseName(e.target.value)}
             className="w-full max-w-[200px] sm:max-w-[300px] text-center sm:text-left text-lg font-bold bg-transparent border-none rounded-md px-2 py-1 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
@@ -67,7 +67,7 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({
 
       <div className="flex items-center gap-2 sm:gap-3">
         <span className="hidden sm:inline-block text-xs font-semibold px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-md whitespace-nowrap">
-          {questionsCount} {questionsCount === 1 ? 'pytanie' : (questionsCount >= 2 && questionsCount <= 4 ? 'pytania' : 'pytań')}
+          {t('home.questionsCount', '{{count}} pytań', { count: questionsCount })}
         </span>
         {onExportZip && (
           <Button

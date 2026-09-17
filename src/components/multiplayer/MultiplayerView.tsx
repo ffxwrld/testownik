@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
 import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
@@ -14,6 +15,7 @@ interface MultiplayerViewProps {
 }
 
 export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession }) => {
+  const { t } = useTranslation();
   const { 
     roomCode, 
     isHost, 
@@ -109,22 +111,18 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
 
   useEffect(() => {
     if (receivedFile && !isHost) {
-      console.log('Paczka pytań pobrana! Rozpakowywanie...');
-      toast.info('Rozpakowywanie bazy pytań...');
+      toast.info(t('multiplayer.toasts.unpacking', 'Rozpakowywanie bazy pytań...'));
       importSessionFromZip(receivedFile).then(({ sessionId }) => {
-        console.log('Rozpakowano do sesji:', sessionId);
         setImportedSessionId(sessionId);
         markPlayerReady();
-        toast.success('Baza pytań gotowa do wyścigu!');
+        toast.success(t('multiplayer.toasts.readyForRace', 'Baza pytań gotowa do wyścigu!'));
       }).catch(err => {
         console.error('Błąd importu paczki:', err);
-        toast.error('Błąd importu bazy pytań: ' + ((err as Error).message || err));
+        toast.error(t('multiplayer.toasts.importError', 'Błąd importu bazy pytań: {{error}}', { error: (err as Error).message || err }));
       });
     }
-  }, [receivedFile, isHost, markPlayerReady]);
+  }, [receivedFile, isHost, markPlayerReady, t]);
 
-
-  
   useEffect(() => {
     if (raceStarted) {
       if (isHost && selectedSessionId) {
@@ -156,13 +154,13 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
 
   const handleStartTransfer = async () => {
     if (!selectedSessionId) {
-      toast.error('Wybierz najpierw bazę pytań dla pokoju');
+      toast.error(t('multiplayer.toasts.selectSessionFirst', 'Wybierz najpierw bazę pytań dla pokoju'));
       return;
     }
     try {
       const session = await loadSession(selectedSessionId);
       if (!session) {
-        toast.error('Nie udało się wczytać bazy pytań z pamięci');
+        toast.error(t('multiplayer.toasts.memoryLoadFailed', 'Nie udało się wczytać bazy pytań z pamięci'));
         return;
       }
       
@@ -181,7 +179,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
       await sendFileToAll(blob);
     } catch (err) {
       console.error('Błąd eksportu bazy pytań:', err);
-      toast.error('Błąd przygotowania bazy pytań: ' + ((err as Error).message || err));
+      toast.error(t('multiplayer.toasts.prepError', 'Błąd przygotowania bazy pytań: {{error}}', { error: (err as Error).message || err }));
     }
   };
 
@@ -192,7 +190,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
             <div key="menu">
               <div className="mb-8 mt-2">
                 <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                  Graj ze znajomymi
+                  {t('multiplayer.menu.title', 'Graj ze znajomymi')}
                 </h1>
               </div>
 
@@ -201,16 +199,24 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                   <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-6 group-hover:scale-110 transition-transform">
                     <Play className="w-8 h-8 ml-1" fill="currentColor" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Stwórz Pokój</h2>
-                  <p className="text-zinc-500">Wybierz paczkę ze swojego telefonu i udostępnij ją znajomym przez WebRTC. Bądź hostem wyścigu.</p>
+                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">
+                    {t('multiplayer.menu.hostTitle', 'Stwórz Pokój')}
+                  </h2>
+                  <p className="text-zinc-500">
+                    {t('multiplayer.menu.hostDesc', 'Wybierz paczkę ze swojego telefonu i udostępnij ją znajomym przez WebRTC. Bądź hostem wyścigu.')}
+                  </p>
                 </div>
                 
                 <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-blue-500 transition-colors group" onClick={() => setView('join')}>
                   <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
                     <Users className="w-8 h-8" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Dołącz do znajomych</h2>
-                  <p className="text-zinc-500">Wpisz 6-cyfrowy kod pokoju, aby pobrać paczkę P2P i rozpocząć rywalizację na żywo.</p>
+                  <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">
+                    {t('multiplayer.menu.joinTitle', 'Dołącz do znajomych')}
+                  </h2>
+                  <p className="text-zinc-500">
+                    {t('multiplayer.menu.joinDesc', 'Wpisz 6-cyfrowy kod pokoju, aby pobrać paczkę P2P i rozpocząć rywalizację na żywo.')}
+                  </p>
                 </div>
               </div>
             </div>
@@ -220,7 +226,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
             <motion.div key="host_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="flex items-center gap-4 mb-6">
                 <BackButton onClick={() => setView('menu')} />
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Wybierz paczkę dla pokoju</h2>
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+                  {t('multiplayer.hostSelect.title', 'Wybierz paczkę dla pokoju')}
+                </h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {savedSessions.map(s => (
@@ -230,7 +238,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                     onClick={() => setSelectedSessionId(s.id)}
                   >
                     <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white">{s.baseName}</h3>
-                    <p className="text-sm text-zinc-500">{s.totalQuestions} pytań</p>
+                    <p className="text-sm text-zinc-500">
+                      {t('multiplayer.hostSelect.questionsCount', '{{count}} pytań', { count: s.totalQuestions })}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -239,9 +249,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 <button 
                   disabled={!selectedSessionId}
                   onClick={handleHost}
-                  className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-primary-700 transition"
+                  className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-primary-700 transition cursor-pointer"
                 >
-                  Generuj Kod Pokoju
+                  {t('multiplayer.hostSelect.generateCodeBtn', 'Generuj Kod Pokoju')}
                 </button>
               </div>
             </motion.div>
@@ -252,7 +262,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
               <div className="text-left mb-6">
                 <BackButton onClick={() => setView('menu')} />
               </div>
-              <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">Wpisz kod pokoju</h2>
+              <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
+                {t('multiplayer.join.title', 'Wpisz kod pokoju')}
+              </h2>
               <input 
                 type="text" 
                 maxLength={6}
@@ -264,9 +276,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
               <button 
                 disabled={joinCode.length !== 6}
                 onClick={handleJoin}
-                className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 hover:bg-blue-700 transition shadow-lg shadow-blue-500/30"
+                className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 cursor-pointer"
               >
-                Dołącz
+                {t('multiplayer.join.joinBtn', 'Dołącz')}
               </button>
             </motion.div>
           )}
@@ -274,20 +286,22 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
           {view === 'lobby' && (
             <motion.div key="lobby" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-4 relative">
               <div className="flex items-center justify-between mb-6">
-                <BackButton onClick={handleLeaveLobby} label="Opuść pokój" />
+                <BackButton onClick={handleLeaveLobby} label={t('multiplayer.lobby.leaveRoom', 'Opuść pokój')} />
               </div>
               <div className="mb-12">
-                <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-2">Kod Pokoju</p>
+                <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                  {t('multiplayer.lobby.roomCode', 'Kod Pokoju')}
+                </p>
                 <div className="flex items-center justify-center gap-3">
                   <div 
                     className="inline-flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800 px-7 sm:px-8 py-3.5 sm:py-4 rounded-3xl cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition shadow-inner" 
                     onClick={() => {
                       if (roomCode) {
                         navigator.clipboard.writeText(roomCode);
-                        toast.success('Skopiowano kod do schowka');
+                        toast.success(t('multiplayer.lobby.copyCodeSuccess', 'Skopiowano kod do schowka'));
                       }
                     }}
-                    title="Kliknij, aby skopiować kod"
+                    title={t('multiplayer.lobby.copyTooltip', 'Kliknij, aby skopiować kod')}
                   >
                     <span className="text-4xl sm:text-5xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">{roomCode}</span>
                     <Copy className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-400" />
@@ -297,8 +311,8 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                     type="button"
                     onClick={() => setShowQrModal(true)}
                     className="p-3.5 sm:p-4 rounded-3xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition shadow-inner flex items-center justify-center cursor-pointer group"
-                    title="Pokaż kod QR"
-                    aria-label="Pokaż kod QR"
+                    title={t('multiplayer.lobby.qrTooltip', 'Pokaż kod QR')}
+                    aria-label={t('multiplayer.lobby.qrTooltip', 'Pokaż kod QR')}
                   >
                     <QrCode className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform text-primary-600 dark:text-primary-400" />
                   </button>
@@ -307,79 +321,89 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
 
               <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm mb-8">
                 <h3 className="text-left font-bold text-lg mb-6 flex items-center justify-between text-zinc-900 dark:text-white">
-                  <span>Gracze ({players.length})</span>
+                  <span>{t('multiplayer.lobby.playersCount', 'Gracze ({{count}})', { count: players.length })}</span>
                   <div className="flex items-center gap-2">
                     {isHost && players.length > 1 && players.every(p => p.status === 'ready' || p.isHost) && (
-                      <button onClick={startRace} className="text-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition">
-                        Rozpocznij Wyścig!
+                      <button onClick={startRace} className="text-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition cursor-pointer">
+                        {t('multiplayer.lobby.startRace', 'Rozpocznij Wyścig!')}
                       </button>
                     )}
                     {isHost && players.length > 1 && (
                       <button 
                         disabled={isSendingPackage}
                         onClick={handleStartTransfer} 
-                        className="text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-2 rounded-lg font-bold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition flex items-center gap-2 disabled:opacity-50"
+                        className="text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-2 rounded-lg font-bold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                       >
                         {isSendingPackage && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {isSendingPackage ? 'Wysyłanie...' : players.some(p => !p.isHost && p.status === 'ready') ? 'Wyślij ponownie' : 'Wyślij paczkę'}
+                        {isSendingPackage 
+                          ? t('multiplayer.lobby.sendingPackage', 'Wysyłanie...') 
+                          : players.some(p => !p.isHost && p.status === 'ready') 
+                          ? t('multiplayer.lobby.resendPackage', 'Wyślij ponownie') 
+                          : t('multiplayer.lobby.sendPackage', 'Wyślij paczkę')}
                       </button>
                     )}
                   </div>
                 </h3>
                 
                 <div className="space-y-4">
-                  {players.map(p => (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={p.userId} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-                      <div className="flex items-center gap-4">
-                        {p.avatarUrl ? (
-                            <img src={p.avatarUrl} alt={p.username} className="w-12 h-12 rounded-full border-2 border-zinc-200 dark:border-zinc-700 object-cover" />
-                        ) : (
-                            <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-zinc-500">
-                                {p.username.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                        <div className="text-left">
-                          <p className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                            {p.username} {p.isHost && <span className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider">Host</span>}
-                          </p>
-                          <p className="text-xs text-zinc-500 font-medium">
-                            {p.status === 'joined' && 'W poczekalni'}
-                            {p.status === 'downloading' && 'Pobieranie paczki...'}
-                            {p.status === 'ready' && 'Gotowy'}
-                          </p>
+                  {players.map(p => {
+                    const defaultName = t('multiplayer.podium.player', 'Gracz');
+                    const displayName = p.username || defaultName;
+                    const safeProgress = Math.min(100, Math.max(0, Math.round(Number(p.progress) || 0)));
+
+                    return (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={p.userId} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                        <div className="flex items-center gap-4">
+                          {p.avatarUrl ? (
+                              <img src={p.avatarUrl} alt={displayName} className="w-12 h-12 rounded-full border-2 border-zinc-200 dark:border-zinc-700 object-cover" />
+                          ) : (
+                              <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-zinc-500">
+                                  {displayName.charAt(0).toUpperCase()}
+                              </div>
+                          )}
+                          <div className="text-left">
+                            <p className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                              {displayName} {p.isHost && <span className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('multiplayer.lobby.hostBadge', 'Host')}</span>}
+                            </p>
+                            <p className="text-xs text-zinc-500 font-medium">
+                              {p.status === 'joined' && t('multiplayer.lobby.statusInLobby', 'W poczekalni')}
+                              {p.status === 'downloading' && t('multiplayer.lobby.statusDownloading', 'Pobieranie paczki...')}
+                              {p.status === 'ready' && t('multiplayer.lobby.statusReady', 'Gotowy')}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="w-32 flex flex-col items-end">
-                        {p.status === 'downloading' && (
-                          <>
-                            <span className="text-xs font-bold text-primary-500 mb-1">{p.progress}%</span>
-                            <div className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                              <motion.div 
-                                className="h-full bg-primary-500 rounded-full"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${p.progress}%` }}
-                              />
-                            </div>
-                          </>
-                        )}
-                        {p.status === 'ready' && (
-                          <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                        )}
-                        {p.status === 'joined' && !p.isHost && (
-                          <Download className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                        
+                        <div className="w-32 flex flex-col items-end">
+                          {p.status === 'downloading' && (
+                            <>
+                              <span className="text-xs font-bold text-primary-500 mb-1">{safeProgress}%</span>
+                              <div className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                                <motion.div 
+                                  className="h-full bg-primary-500 rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${safeProgress}%` }}
+                                />
+                              </div>
+                            </>
+                          )}
+                          {p.status === 'ready' && (
+                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                          )}
+                          {p.status === 'joined' && !p.isHost && (
+                            <Download className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
 
               <button 
                 onClick={() => { cleanup(); setView('menu'); }}
-                className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-bold transition-colors"
+                className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-bold transition-colors cursor-pointer"
               >
-                Opuść pokój
+                {t('multiplayer.lobby.leaveRoom', 'Opuść pokój')}
               </button>
             </motion.div>
           )}
