@@ -114,7 +114,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                   className="group relative cursor-pointer inline-flex items-center justify-center gap-3 px-5 sm:px-6 py-3.5 sm:py-4 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200/70 dark:hover:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl transition-all"
                   title={t('share.clickToCopy', 'Kliknij, aby skopiować')}
                 >
-                  <span className="text-3xl sm:text-4xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 font-mono">
+                  <span className="text-3xl sm:text-4xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 font-mono notranslate" translate="no">
                     {formattedCode}
                   </span>
                   <div className="p-2 rounded-xl bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform shadow-xs">

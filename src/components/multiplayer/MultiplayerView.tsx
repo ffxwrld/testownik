@@ -270,7 +270,12 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 maxLength={6}
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                className="w-full text-center text-2xl sm:text-4xl font-black tracking-[0.25em] sm:tracking-[0.5em] p-4 sm:p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border-2 border-zinc-200 dark:border-zinc-700 focus:border-primary-500 focus:outline-none transition mb-6 uppercase text-zinc-900 dark:text-white"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                spellCheck="false"
+                className="w-full text-center text-2xl sm:text-4xl font-black tracking-[0.25em] sm:tracking-[0.5em] p-4 sm:p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border-2 border-zinc-200 dark:border-zinc-700 focus:border-primary-500 focus:outline-none transition mb-6 uppercase text-zinc-900 dark:text-white font-mono notranslate"
+                translate="no"
                 placeholder="------"
               />
               <button 
@@ -303,7 +308,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                     }}
                     title={t('multiplayer.lobby.copyTooltip', 'Kliknij, aby skopiować kod')}
                   >
-                    <span className="text-4xl sm:text-5xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">{roomCode}</span>
+                    <span className="text-4xl sm:text-5xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 font-mono notranslate" translate="no">{roomCode}</span>
                     <Copy className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-400" />
                   </div>
 
@@ -363,20 +368,21 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                           )}
                           <div className="text-left">
                             <p className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                              {displayName} {p.isHost && <span className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('multiplayer.lobby.hostBadge', 'Host')}</span>}
+                              <span>{displayName}</span>
+                              {p.isHost && <span className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('multiplayer.lobby.hostBadge', 'Host')}</span>}
                             </p>
-                            <p className="text-xs text-zinc-500 font-medium">
-                              {p.status === 'joined' && t('multiplayer.lobby.statusInLobby', 'W poczekalni')}
-                              {p.status === 'downloading' && t('multiplayer.lobby.statusDownloading', 'Pobieranie paczki...')}
-                              {p.status === 'ready' && t('multiplayer.lobby.statusReady', 'Gotowy')}
-                            </p>
+                            <div className="text-xs text-zinc-500 font-medium">
+                              {p.status === 'joined' && <span key="status-joined">{t('multiplayer.lobby.statusInLobby', 'W poczekalni')}</span>}
+                              {p.status === 'downloading' && <span key="status-downloading">{t('multiplayer.lobby.statusDownloading', 'Pobieranie paczki...')}</span>}
+                              {p.status === 'ready' && <span key="status-ready">{t('multiplayer.lobby.statusReady', 'Gotowy')}</span>}
+                            </div>
                           </div>
                         </div>
                         
                         <div className="w-32 flex flex-col items-end">
                           {p.status === 'downloading' && (
-                            <>
-                              <span className="text-xs font-bold text-primary-500 mb-1">{safeProgress}%</span>
+                            <div key="progress-wrap" className="w-full flex flex-col items-end">
+                              <span className="text-xs font-bold text-primary-500 mb-1 tabular-nums">{safeProgress}%</span>
                               <div className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                                 <motion.div 
                                   className="h-full bg-primary-500 rounded-full"
@@ -384,13 +390,17 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                                   animate={{ width: `${safeProgress}%` }}
                                 />
                               </div>
-                            </>
+                            </div>
                           )}
                           {p.status === 'ready' && (
-                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                            <div key="ready-wrap">
+                              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                            </div>
                           )}
                           {p.status === 'joined' && !p.isHost && (
-                            <Download className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
+                            <div key="joined-wrap">
+                              <Download className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
+                            </div>
                           )}
                         </div>
                       </motion.div>

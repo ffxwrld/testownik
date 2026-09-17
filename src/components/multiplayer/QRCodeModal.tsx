@@ -166,7 +166,7 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
               className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-750 transition-colors cursor-pointer"
               title={t('multiplayer.qr.copyCodeOnly', 'Kopiuj sam kod')}
             >
-              <span className="font-mono text-2xl sm:text-3xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">
+              <span className="font-mono text-2xl sm:text-3xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 notranslate" translate="no">
                 {formattedCode}
               </span>
               <Copy className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors" />

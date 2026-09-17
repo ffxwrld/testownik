@@ -1,14 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="pl" class="notranslate" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="google" content="notranslate" />
+    <meta name="googlebot" content="notranslate" />
+    <meta name="format-detection" content="telephone=no" />
     <title>Testownik</title>
     <link rel="icon" type="image/png" href="/logo.png" />
     <script>
-      // Prevent flash of wrong theme or dark mode by applying attributes synchronously
+      // Prevent flash of wrong theme, language, or dark mode by applying attributes synchronously
       (function() {
         try {
+          var storedLang = localStorage.getItem('testownik_language') || 'pl';
+          document.documentElement.lang = storedLang;
+
           var storedDark = localStorage.getItem('testownik_dark');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           var dark = storedDark !== null ? storedDark === 'true' : prefersDark;
