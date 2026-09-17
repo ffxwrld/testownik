@@ -446,7 +446,12 @@
     "errorGeneric": "Failed to establish connection.",
     "tryAgain": "Try again",
     "close": "Close",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "showQr": "Show QR code",
+    "hideQr": "Hide QR code",
+    "qrHint": "Scan with your phone camera to receive the question deck without typing the code.",
+    "copyLink": "Copy receive link",
+    "linkCopied": "Link copied!"
   },
   "receive": {
     "title": "Receive Deck via Code",
@@ -615,8 +620,15 @@
       "playersCount_other": "{{count}} players",
       "finishBadge": "FINISH 🏁",
       "youBadge": "You",
-      "disconnected": "(Disconnected / DNF)",
-      "finished": "(Finished! 🏁)"
+      "disconnected": "(Disconnected / DNF)"
+    },
+    "qr": {
+      "title": "Room QR Code",
+      "scanHint": "Scan with your phone camera to join the room instantly.",
+      "copyLink": "Copy direct link",
+      "copied": "Link copied!",
+      "close": "Close",
+      "codeLabel": "ROOM CODE"
     }
   },
   "flashcards": {

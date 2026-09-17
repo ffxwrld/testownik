@@ -54,16 +54,32 @@ export function useAppOrchestrator() {
   const [location, setLocation] = useLocation();
 
   const getPhaseFromLocation = (loc: string): AppPhase => {
-    if (loc === '/nauka') return 'learn';
-    if (loc === '/test') return 'test';
-    if (loc === '/fiszki') return 'flashcards';
-    if (loc === '/podsumowanie') return 'summary';
-    if (loc === '/kreator') return 'creator';
-    if (loc === '/profil') return 'profile';
-    if (loc === '/statystyki') return 'stats';
-    if (loc === '/multiplayer') return 'multiplayer';
-    if (loc === '/znajomi') return 'friends';
-    if (loc === '/harmonogram') return 'schedule';
+    const cleanLoc = loc.split('?')[0];
+    if (cleanLoc === '/nauka') return 'learn';
+    if (cleanLoc === '/test') return 'test';
+    if (cleanLoc === '/fiszki') return 'flashcards';
+    if (cleanLoc === '/podsumowanie') return 'summary';
+    if (cleanLoc === '/kreator') return 'creator';
+    if (cleanLoc === '/profil') return 'profile';
+    if (cleanLoc === '/statystyki') return 'stats';
+    if (cleanLoc === '/multiplayer') return 'multiplayer';
+    if (cleanLoc === '/znajomi') return 'friends';
+    if (cleanLoc === '/harmonogram') return 'schedule';
+
+    if (typeof window !== 'undefined') {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.has('room') || searchParams.has('code')) {
+          return 'multiplayer';
+        }
+        if (searchParams.has('share') || searchParams.has('receive')) {
+          return 'learn';
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     return 'dashboard';
   };
 

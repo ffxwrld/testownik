@@ -37,13 +37,49 @@ export const GameHubView: FC<GameHubViewProps> = ({
   onNavigateToAuth,
 }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'solo' | 'multiplayer'>('solo');
+  const [activeTab, setActiveTab] = useState<'solo' | 'multiplayer'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room') || params.get('code');
+        if (room) {
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('testownik_pending_room', room.trim().toUpperCase());
+          }
+          return 'multiplayer';
+        }
+        if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('testownik_pending_room')) {
+          return 'multiplayer';
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return 'solo';
+  });
   const [sessions, setSessions] = useState<SavedSessionMetadata[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [selectedModeForDeckPicker, setSelectedModeForDeckPicker] = useState<SoloGameMode | null>(null);
   const [loadingDeckId, setLoadingDeckId] = useState<string | null>(null);
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room') || params.get('code');
+        if (room) {
+          setActiveTab('multiplayer');
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('testownik_pending_room', room.trim().toUpperCase());
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   useEffect(() => {
     setLoadingSessions(true);

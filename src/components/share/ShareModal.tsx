@@ -1,10 +1,13 @@
 import { FC, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Copy, Check, Radio, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Copy, Check, Radio, CheckCircle2, AlertCircle, Loader2, QrCode } from 'lucide-react';
+import QRCode from 'qrcode';
 import { SavedSessionMetadata } from '../../models/types';
 import { useP2PTransfer } from '../../hooks/useP2PTransfer';
+import { getShareJoinUrl } from '../../utils/url';
 import { Button } from '../ui/Button';
+import { toast } from 'sonner';
 
 interface ShareModalProps {
   session: SavedSessionMetadata;
@@ -14,6 +17,9 @@ interface ShareModalProps {
 export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const { status, progress, errorMessage, roomCode, startSending, cancel } = useP2PTransfer();
 
   useEffect(() => {
@@ -22,6 +28,29 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
       cancel();
     };
   }, [session, startSending, cancel]);
+
+  const shareUrl = getShareJoinUrl(roomCode || '');
+
+  useEffect(() => {
+    if (!shareUrl) return;
+    let isMounted = true;
+    QRCode.toDataURL(shareUrl, {
+      width: 280,
+      margin: 1,
+      color: { dark: '#09090b', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url) => {
+        if (isMounted) setQrDataUrl(url);
+      })
+      .catch((err) => {
+        console.error('Błąd generowania QR dla udostępniania:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [shareUrl]);
 
   const handleCopyCode = async () => {
     if (!roomCode) return;
@@ -78,18 +107,34 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                 {t('share.codeSubtitle', 'Podaj poniższy 6-cyfrowy kod osobie, która ma odebrać ten test:')}
               </p>
 
-              {/* Code Display */}
-              <div 
-                onClick={handleCopyCode}
-                className="group relative cursor-pointer inline-flex items-center justify-center gap-3 px-6 py-4 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200/70 dark:hover:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl transition-all"
-                title={t('share.clickToCopy', 'Kliknij, aby skopiować')}
-              >
-                <span className="text-3xl sm:text-4xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 font-mono">
-                  {formattedCode}
-                </span>
-                <div className="p-2 rounded-xl bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform shadow-xs">
-                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {/* Code & QR Display */}
+              <div className="flex items-center justify-center gap-2.5">
+                <div 
+                  onClick={handleCopyCode}
+                  className="group relative cursor-pointer inline-flex items-center justify-center gap-3 px-5 sm:px-6 py-3.5 sm:py-4 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200/70 dark:hover:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl transition-all"
+                  title={t('share.clickToCopy', 'Kliknij, aby skopiować')}
+                >
+                  <span className="text-3xl sm:text-4xl font-black tracking-widest text-zinc-900 dark:text-zinc-50 font-mono">
+                    {formattedCode}
+                  </span>
+                  <div className="p-2 rounded-xl bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform shadow-xs">
+                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowQr(prev => !prev)}
+                  className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer group ${
+                    showQr 
+                      ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-500 text-primary-600 dark:text-primary-400 shadow-sm' 
+                      : 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200/70 text-zinc-700 dark:text-zinc-300'
+                  }`}
+                  title={showQr ? t('share.hideQr', 'Ukryj kod QR') : t('share.showQr', 'Pokaż kod QR')}
+                  aria-label="Pokaż kod QR"
+                >
+                  <QrCode className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                </button>
               </div>
 
               {copied && (
@@ -97,6 +142,54 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                   {t('share.copiedNotice', 'Skopiowano do schowka!')}
                 </p>
               )}
+
+              {/* QR Section */}
+              <AnimatePresence>
+                {showQr && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                    exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden flex flex-col items-center pt-2 space-y-3"
+                  >
+                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-zinc-200/80 inline-flex items-center justify-center">
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="Kod QR paczki"
+                          className="w-44 h-44 sm:w-48 sm:h-48 select-none object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-44 h-44 flex items-center justify-center text-zinc-400 text-xs">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
+                      {t('share.qrHint', 'Zeskanuj kod aparatem telefonu, aby odebrać bazę pytań bez przepisywania kodu.')}
+                    </p>
+                    <Button
+                      variant={linkCopied ? 'success' : 'secondary'}
+                      onClick={async () => {
+                        if (!shareUrl) return;
+                        try {
+                          await navigator.clipboard.writeText(shareUrl);
+                          setLinkCopied(true);
+                          toast.success(t('share.linkCopied', 'Skopiowano link!'));
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        } catch {
+                          toast.error('Nie udało się skopiować linku');
+                        }
+                      }}
+                      className="text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{linkCopied ? t('share.linkCopied', 'Skopiowano link!') : t('share.copyLink', 'Kopiuj link do odbioru')}</span>
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="flex items-center justify-center gap-2 pt-2 text-xs text-zinc-400 dark:text-zinc-500">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

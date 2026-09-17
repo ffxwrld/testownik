@@ -452,7 +452,12 @@
     "errorGeneric": "Nie udało się nawiązać połączenia.",
     "tryAgain": "Spróbuj ponownie",
     "close": "Zamknij",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "showQr": "Pokaż kod QR",
+    "hideQr": "Ukryj kod QR",
+    "qrHint": "Zeskanuj kod aparatem telefonu, aby odebrać bazę pytań bez przepisywania kodu.",
+    "copyLink": "Kopiuj link do odbioru",
+    "linkCopied": "Skopiowano link!"
   },
   "receive": {
     "title": "Odbierz bazę pytań kodem",
@@ -623,8 +628,15 @@
       "playersCount_other": "{{count}} graczy",
       "finishBadge": "META 🏁",
       "youBadge": "Ty",
-      "disconnected": "(Rozłączony / DNF)",
-      "finished": "(Ukończono! 🏁)"
+      "disconnected": "(Rozłączony / DNF)"
+    },
+    "qr": {
+      "title": "Kod QR Pokoju",
+      "scanHint": "Zeskanuj kod aparatem telefonu, aby natychmiast dołączyć do pokoju.",
+      "copyLink": "Kopiuj bezpośredni link",
+      "copied": "Skopiowano link!",
+      "close": "Zamknij",
+      "codeLabel": "KOD POKOJU"
     }
   },
   "flashcards": {

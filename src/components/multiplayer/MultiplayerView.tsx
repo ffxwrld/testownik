@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
 import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
-import { Users, Play, Download, CheckCircle2, Copy, Loader2 } from 'lucide-react';
+import { Users, Play, Download, CheckCircle2, Copy, Loader2, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { BackButton } from '../common/BackButton';
+import { QRCodeModal } from './QRCodeModal';
 
 interface MultiplayerViewProps {
   onStartSession: (sessionId: string) => void;
@@ -18,6 +19,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     isHost, 
     isSendingPackage,
     players, 
+    profile,
     joinRoom, 
     cleanup, 
     sendFileToAll, 
@@ -32,8 +34,66 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   });
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('room') || params.get('code');
+        if (code) return code.trim().toUpperCase();
+      } catch {
+        // ignore
+      }
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      const pending = sessionStorage.getItem('testownik_pending_room');
+      if (pending) return pending.trim().toUpperCase();
+    }
+    return '';
+  });
   const [importedSessionId, setImportedSessionId] = useState<string | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const autoJoinAttemptedRef = useRef(false);
+
+  // Automatyczne dołączanie z linku (parametr ?room=XXXXXX lub ?code=XXXXXX)
+  useEffect(() => {
+    if (autoJoinAttemptedRef.current || roomCode || !profile) return;
+
+    let targetCode: string | null = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        targetCode = params.get('room') || params.get('code');
+      } catch {
+        // ignore
+      }
+    }
+    if (!targetCode && typeof sessionStorage !== 'undefined') {
+      targetCode = sessionStorage.getItem('testownik_pending_room');
+    }
+
+    if (targetCode) {
+      const clean = targetCode.trim().toUpperCase();
+      if (clean.length === 6) {
+        autoJoinAttemptedRef.current = true;
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('testownik_pending_room');
+        }
+        if (typeof window !== 'undefined' && window.location.search) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        toast.info(`Dołączanie do pokoju ${clean}...`);
+        joinRoom(clean, false)
+          .then(() => {
+            setView('lobby');
+            toast.success(`Dołączono do pokoju ${clean}`);
+          })
+          .catch((err) => {
+            console.error('Błąd auto-dołączania:', err);
+            toast.error('Nie udało się dołączyć do pokoju z linku');
+          });
+      }
+    }
+  }, [roomCode, profile, joinRoom]);
 
   useEffect(() => {
     if (roomCode && view === 'menu') {
@@ -218,9 +278,30 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
               </div>
               <div className="mb-12">
                 <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-2">Kod Pokoju</p>
-                <div className="inline-flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800 px-8 py-4 rounded-3xl cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition shadow-inner" onClick={() => navigator.clipboard.writeText(roomCode || '')}>
-                  <span className="text-5xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">{roomCode}</span>
-                  <Copy className="w-6 h-6 text-zinc-400" />
+                <div className="flex items-center justify-center gap-3">
+                  <div 
+                    className="inline-flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800 px-7 sm:px-8 py-3.5 sm:py-4 rounded-3xl cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition shadow-inner" 
+                    onClick={() => {
+                      if (roomCode) {
+                        navigator.clipboard.writeText(roomCode);
+                        toast.success('Skopiowano kod do schowka');
+                      }
+                    }}
+                    title="Kliknij, aby skopiować kod"
+                  >
+                    <span className="text-4xl sm:text-5xl font-black tracking-widest text-zinc-900 dark:text-zinc-50">{roomCode}</span>
+                    <Copy className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-400" />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowQrModal(true)}
+                    className="p-3.5 sm:p-4 rounded-3xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition shadow-inner flex items-center justify-center cursor-pointer group"
+                    title="Pokaż kod QR"
+                    aria-label="Pokaż kod QR"
+                  >
+                    <QrCode className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform text-primary-600 dark:text-primary-400" />
+                  </button>
                 </div>
               </div>
 
@@ -303,6 +384,12 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
             </motion.div>
           )}
         </AnimatePresence>
-    </div>
+
+        <AnimatePresence>
+          {showQrModal && roomCode && (
+            <QRCodeModal roomCode={roomCode} onClose={() => setShowQrModal(false)} />
+          )}
+        </AnimatePresence>
+      </div>
   );
 };

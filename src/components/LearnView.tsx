@@ -59,9 +59,29 @@ export const LearnView: FC<LearnViewProps> = ({
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [sharingSession, setSharingSession] = useState<SavedSessionMetadata | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [initialReceiveCode, setInitialReceiveCode] = useState<string | null>(null);
 
   useEffect(() => {
     getAllSessionMetadata().then(setSavedSessions);
+  }, []);
+
+  // Automatyczne wykrywanie kodu odebrania paczki z URL (?share=XXXXXX lub ?receive=XXXXXX)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('share') || params.get('receive');
+        if (code && code.trim().length === 6) {
+          const clean = code.trim().toUpperCase();
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setInitialReceiveCode(clean);
+          setShowReceiveModal(true);
+          toast.info(`Odbieranie bazy pytań kodem ${clean}...`);
+        }
+      } catch {
+        // ignore
+      }
+    }
   }, []);
 
   const REPEAT_OPTIONS = useMemo(() => [
@@ -475,9 +495,15 @@ export const LearnView: FC<LearnViewProps> = ({
 
       {showReceiveModal && createPortal(
         <ReceiveModal 
-          onClose={() => setShowReceiveModal(false)}
+          initialCode={initialReceiveCode || undefined}
+          autoStart={Boolean(initialReceiveCode)}
+          onClose={() => {
+            setShowReceiveModal(false);
+            setInitialReceiveCode(null);
+          }}
           onSuccess={async (newSession) => {
             setShowReceiveModal(false);
+            setInitialReceiveCode(null);
             const fresh = await getAllSessionMetadata();
             setSavedSessions(fresh);
             toast.success(t('receive.successToast', { name: newSession.baseName }));

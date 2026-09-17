@@ -1,4 +1,4 @@
-import { FC, useState, FormEvent, useEffect } from 'react';
+import { FC, useState, FormEvent, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { X, ArrowDownToLine, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -9,12 +9,27 @@ import { Button } from '../ui/Button';
 interface ReceiveModalProps {
   onClose: () => void;
   onSuccess: (session: SessionState) => void;
+  initialCode?: string;
+  autoStart?: boolean;
 }
 
-export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess }) => {
+export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initialCode, autoStart = false }) => {
   const { t } = useTranslation();
-  const [inputCode, setInputCode] = useState('');
+  const [inputCode, setInputCode] = useState(() => {
+    return initialCode ? initialCode.replace(/\D/g, '').slice(0, 6) : '';
+  });
   const { status, progress, errorMessage, startReceiving, cancel, receivedSession } = useP2PTransfer();
+  const autoStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoStart && initialCode && !autoStartedRef.current) {
+      const cleaned = initialCode.replace(/\D/g, '').slice(0, 6);
+      if (cleaned.length === 6) {
+        autoStartedRef.current = true;
+        startReceiving(cleaned);
+      }
+    }
+  }, [autoStart, initialCode, startReceiving]);
 
   useEffect(() => {
     return () => {
