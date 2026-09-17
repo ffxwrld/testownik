@@ -18,7 +18,8 @@ import {
   isBefore, 
   startOfDay 
 } from 'date-fns';
-import { pl } from 'date-fns/locale';
+import { pl, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -40,14 +41,6 @@ interface PresetOption {
   days: number;
 }
 
-const PRESETS: PresetOption[] = [
-  { label: 'Jutro', days: 1 },
-  { label: 'Za 3 dni', days: 3 },
-  { label: 'Za tydzień', days: 7 },
-  { label: 'Za 2 tyg.', days: 14 },
-  { label: 'Za miesiąc', days: 30 },
-];
-
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
@@ -60,6 +53,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   size = 'md',
   align = 'left',
 }) => {
+  const { t, i18n } = useTranslation();
+  const currentLocale = i18n.language === 'en' ? enUS : pl;
+  const isEn = i18n.language === 'en';
+
+  const presets: PresetOption[] = useMemo(() => [
+    { label: isEn ? 'Tomorrow' : 'Jutro', days: 1 },
+    { label: isEn ? 'In 3 days' : 'Za 3 dni', days: 3 },
+    { label: isEn ? 'In a week' : 'Za tydzień', days: 7 },
+    { label: isEn ? 'In 2 weeks' : 'Za 2 tyg.', days: 14 },
+    { label: isEn ? 'In a month' : 'Za miesiąc', days: 30 },
+  ], [isEn]);
+
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -158,10 +163,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   // Human-friendly label for the trigger button
   const displayLabel = useMemo(() => {
     if (!selectedDate) return null;
-    return format(selectedDate, 'd MMMM yyyy (EEEE)', { locale: pl });
-  }, [selectedDate]);
+    return format(selectedDate, 'd MMMM yyyy (EEEE)', { locale: currentLocale });
+  }, [selectedDate, currentLocale]);
 
-  const weekDayHeaders = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
+  const weekDayHeaders = isEn 
+    ? ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] 
+    : ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
 
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-xs min-h-[36px] rounded-lg gap-2',
@@ -232,10 +239,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             <div className="mb-3.5 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">
                 <Sparkles className="w-3 h-3 text-primary-500" />
-                <span>Szybki wybór</span>
+                <span>{isEn ? 'Quick presets' : 'Szybki wybór'}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {PRESETS.map((p) => (
+                {presets.map((p) => (
                   <button
                     key={p.label}
                     type="button"
@@ -251,14 +258,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {/* Month Stepper Header */}
             <div className="flex items-center justify-between mb-3 px-1">
               <span className="text-sm font-bold capitalize text-zinc-900 dark:text-zinc-100">
-                {format(currentMonth, 'LLLL yyyy', { locale: pl })}
+                {format(currentMonth, 'LLLL yyyy', { locale: currentLocale })}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setCurrentMonth((prev) => subMonths(prev, 1))}
                   className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                  title="Poprzedni miesiąc"
+                  title={isEn ? 'Previous month' : 'Poprzedni miesiąc'}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -266,7 +273,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   type="button"
                   onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}
                   className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                  title="Następny miesiąc"
+                  title={isEn ? 'Next month' : 'Następny miesiąc'}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -332,14 +339,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 disabled={isDayDisabled(new Date())}
                 className="font-semibold text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-40 cursor-pointer"
               >
-                Dzisiaj
+                {isEn ? 'Today' : 'Dzisiaj'}
               </button>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="px-3 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 font-semibold text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
               >
-                Zamknij
+                {t('common.close', isEn ? 'Close' : 'Zamknij')}
               </button>
             </div>
           </motion.div>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import { X } from 'lucide-react';
 import { SavedSessionMetadata } from '../../models/types';
 import { DatePicker } from '../ui/DatePicker';
@@ -10,6 +11,7 @@ interface ScheduleAssignModalProps {
   onClose: () => void;
   unscheduledSessions: SavedSessionMetadata[];
   onUpdateDate: (sessionId: string, date: string | undefined) => void | Promise<void>;
+  initialDate?: string;
 }
 
 export const ScheduleAssignModal: React.FC<ScheduleAssignModalProps> = ({
@@ -17,10 +19,17 @@ export const ScheduleAssignModal: React.FC<ScheduleAssignModalProps> = ({
   onClose,
   unscheduledSessions,
   onUpdateDate,
+  initialDate,
 }) => {
   const { t } = useTranslation();
   const [editingDateSessionId, setEditingDateSessionId] = useState<string | null>(null);
   const [newDateInput, setNewDateInput] = useState('');
+
+  useEffect(() => {
+    if (initialDate) {
+      setNewDateInput(initialDate);
+    }
+  }, [initialDate]);
 
   return (
     <AnimatePresence>
@@ -56,56 +65,62 @@ export const ScheduleAssignModal: React.FC<ScheduleAssignModalProps> = ({
               {t('schedule.assignModal.desc')}
             </p>
 
-            <div className="max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60 pr-1">
-              {unscheduledSessions.map(s => (
-                <div key={s.id} className="py-2.5 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                      {s.baseName}
+            {unscheduledSessions.length === 0 ? (
+              <div className="py-8 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                {t('schedule.assignModal.allScheduled', 'Wszystkie Twoje paczki pytań mają już przypisany termin egzaminu.')}
+              </div>
+            ) : (
+              <div className="max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60 pr-1">
+                {unscheduledSessions.map(s => (
+                  <div key={s.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                        {s.baseName}
+                      </div>
+                      <div className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                        {t('home.questionsCount', { count: s.totalQuestions })}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                      {t('home.questionsCount', { count: s.totalQuestions })}
-                    </div>
-                  </div>
 
-                  {editingDateSessionId === s.id ? (
-                    <div className="flex items-center gap-1.5">
-                      <DatePicker
-                        value={newDateInput}
-                        onChange={(date) => {
-                          setNewDateInput(date);
-                          if (date) {
-                            onUpdateDate(s.id, date);
-                            setEditingDateSessionId(null);
-                          }
-                        }}
-                        minDate={new Date().toISOString().split('T')[0]}
-                        placeholder={t('schedule.assignModal.selectDate')}
-                        size="sm"
-                        align="right"
-                        className="w-44"
-                      />
+                    {editingDateSessionId === s.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <DatePicker
+                          value={newDateInput}
+                          onChange={(date) => {
+                            setNewDateInput(date);
+                            if (date) {
+                              onUpdateDate(s.id, date);
+                              setEditingDateSessionId(null);
+                            }
+                          }}
+                          minDate={format(new Date(), 'yyyy-MM-dd')}
+                          placeholder={t('schedule.assignModal.selectDate')}
+                          size="sm"
+                          align="right"
+                          className="w-44"
+                        />
+                        <button
+                          onClick={() => setEditingDateSessionId(null)}
+                          className="text-xs px-2 py-1 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition cursor-pointer"
+                        >
+                          {t('schedule.assignModal.cancelBtn')}
+                        </button>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => setEditingDateSessionId(null)}
-                        className="text-xs px-2 py-1 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition cursor-pointer"
+                        onClick={() => {
+                          setEditingDateSessionId(s.id);
+                          setNewDateInput(initialDate || format(new Date(), 'yyyy-MM-dd'));
+                        }}
+                        className="text-xs px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold rounded-lg transition cursor-pointer"
                       >
-                        {t('schedule.assignModal.cancelBtn')}
+                        {t('schedule.assignModal.saveBtn')}
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingDateSessionId(s.id);
-                        setNewDateInput(new Date().toISOString().split('T')[0]);
-                      }}
-                      className="text-xs px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold rounded-lg transition cursor-pointer"
-                    >
-                      {t('schedule.assignModal.saveBtn')}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <button
               onClick={onClose}

@@ -2,9 +2,11 @@ import { FC, useState, ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { SavedSessionMetadata } from '../models/types';
 import { Button } from './ui/Button';
 import { SessionCard } from './sessions/SessionCard';
+import { TargetDateModal } from './sessions/TargetDateModal';
 import { loadSession, saveSession } from '../utils/session';
 
 interface SessionsListProps {
@@ -17,6 +19,7 @@ interface SessionsListProps {
   onEditInCreator: (sessionId: string) => void;
   onFlashcards: (sessionId: string) => void;
   onUpdateTargetDate?: (sessionId: string, newDate: string | undefined) => void | Promise<void>;
+  onShareCode?: (session: SavedSessionMetadata) => void;
   prependItem?: ReactNode;
 }
 
@@ -30,6 +33,7 @@ export const SessionsList: FC<SessionsListProps> = ({
   onEditInCreator,
   onFlashcards,
   onUpdateTargetDate,
+  onShareCode,
   prependItem,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,6 +48,8 @@ export const SessionsList: FC<SessionsListProps> = ({
     setEditValue(session.baseName || '');
   }, []);
 
+  const [targetDateSession, setTargetDateSession] = useState<SavedSessionMetadata | null>(null);
+
   const commitEdit = useCallback((sessionId: string) => {
     if (editValue.trim()) {
       onRename(sessionId, editValue.trim());
@@ -55,26 +61,29 @@ export const SessionsList: FC<SessionsListProps> = ({
     setEditingId(null);
   }, []);
 
-  const handleUpdateTargetDate = useCallback(async (session: SavedSessionMetadata) => {
-    const dateStr = window.prompt(t('sessionsList.examPrompt'), session.targetDate || '');
-    if (dateStr !== null) {
-      const newDate = dateStr.trim() || undefined;
-      if (onUpdateTargetDate) {
-        await onUpdateTargetDate(session.id, newDate);
-      } else {
-        try {
-          const s = await loadSession(session.id);
-          if (s) {
-            s.targetDate = newDate;
-            await saveSession(s, session.id);
-            window.location.reload();
+  const handleUpdateTargetDate = useCallback((session: SavedSessionMetadata) => {
+    setTargetDateSession(session);
+  }, []);
+
+  const handleSaveTargetDate = useCallback(async (sessionId: string, newDate: string | undefined) => {
+    if (onUpdateTargetDate) {
+      await onUpdateTargetDate(sessionId, newDate);
+    } else {
+      try {
+        const s = await loadSession(sessionId);
+        if (s) {
+          s.targetDate = newDate;
+          await saveSession(s, sessionId);
+          const match = sessions.find((item) => item.id === sessionId);
+          if (match) {
+            match.targetDate = newDate;
           }
-        } catch (e) {
-          console.error('Failed to update session target date:', e);
         }
+      } catch (e) {
+        console.error('Failed to update session target date:', e);
       }
     }
-  }, [onUpdateTargetDate, t]);
+  }, [onUpdateTargetDate, sessions]);
 
   const handleExportPdf = useCallback((session: SavedSessionMetadata) => {
     const exportType = window.confirm(t('sessionsList.printConfirm')) ? 'compendium' : 'study';
@@ -85,6 +94,24 @@ export const SessionsList: FC<SessionsListProps> = ({
         }
       });
     });
+  }, [t]);
+
+  const handleExportZip = useCallback(async (session: SavedSessionMetadata) => {
+    try {
+      const fullSession = await loadSession(session.id);
+      if (!fullSession) {
+        toast.error(t('sessionsList.zipExportError'));
+        return;
+      }
+      const { exportSessionToZip, triggerBlobDownload } = await import('../utils/parser');
+      const zipBlob = await exportSessionToZip(session.id, fullSession);
+      const filename = `${session.baseName || 'paczka'}.zip`;
+      triggerBlobDownload(zipBlob, filename);
+      toast.success(t('sessionsList.zipExportSuccess'));
+    } catch (err) {
+      console.error('Błąd eksportu paczki ZIP:', err);
+      toast.error(t('sessionsList.zipExportError'));
+    }
   }, [t]);
 
   useEffect(() => {
@@ -119,6 +146,8 @@ export const SessionsList: FC<SessionsListProps> = ({
             onDelete={() => onDelete(session.id)}
             onUpdateTargetDate={() => handleUpdateTargetDate(session)}
             onExportPdf={() => handleExportPdf(session)}
+            onExportZip={() => handleExportZip(session)}
+            onShareCode={onShareCode ? () => onShareCode(session) : undefined}
             isMenuOpen={openMenuId === session.id}
             onToggleMenu={() => setOpenMenuId((prev) => (prev === session.id ? null : session.id))}
             onCloseMenu={() => setOpenMenuId(null)}
@@ -195,6 +224,13 @@ export const SessionsList: FC<SessionsListProps> = ({
           </AnimatePresence>,
           document.body
         )}
+
+      <TargetDateModal
+        session={targetDateSession}
+        isOpen={Boolean(targetDateSession)}
+        onClose={() => setTargetDateSession(null)}
+        onSave={handleSaveTargetDate}
+      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, parseISO, format, startOfDay } from 'date-fns';
 import { X, Clock, BookOpen, Sparkles, ArrowRight } from 'lucide-react';
 import { SavedSessionMetadata } from '../../models/types';
 import { DatePicker } from '../ui/DatePicker';
@@ -26,7 +26,7 @@ export const ScheduleDetailModal: React.FC<ScheduleDetailModalProps> = ({
   if (!session) return null;
 
   const days = session.targetDate
-    ? differenceInCalendarDays(new Date(session.targetDate), new Date())
+    ? differenceInCalendarDays(parseISO(session.targetDate), startOfDay(new Date()))
     : null;
 
   const progressPercent = Math.min(
@@ -138,7 +138,7 @@ export const ScheduleDetailModal: React.FC<ScheduleDetailModalProps> = ({
                 <DatePicker
                   value={tempDate || session.targetDate || ''}
                   onChange={(date) => setTempDate(date)}
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={format(new Date(), 'yyyy-MM-dd')}
                   placeholder={t('schedule.assignModal.selectDate')}
                   size="sm"
                   className="flex-1"
@@ -181,7 +181,7 @@ export const ScheduleDetailModal: React.FC<ScheduleDetailModalProps> = ({
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
-                  setTempDate(session.targetDate || new Date().toISOString().split('T')[0]);
+                  setTempDate(session.targetDate || format(new Date(), 'yyyy-MM-dd'));
                   setIsEditingDate(true);
                 }}
                 className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"

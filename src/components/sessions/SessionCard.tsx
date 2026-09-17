@@ -1,6 +1,7 @@
 import { FC, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Download, Radio } from 'lucide-react';
 import { SavedSessionMetadata } from '../../models/types';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -21,6 +22,8 @@ interface SessionCardProps {
   onDelete: () => void;
   onUpdateTargetDate: () => void;
   onExportPdf: () => void;
+  onExportZip: () => void;
+  onShareCode?: () => void;
   isMenuOpen: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
@@ -42,6 +45,8 @@ export const SessionCard: FC<SessionCardProps> = memo(({
   onDelete,
   onUpdateTargetDate,
   onExportPdf,
+  onExportZip,
+  onShareCode,
   isMenuOpen,
   onToggleMenu,
   onCloseMenu,
@@ -319,6 +324,30 @@ export const SessionCard: FC<SessionCardProps> = memo(({
                   </svg>
                   {t('sessionsList.print')}
                 </button>
+
+                <button
+                  onClick={() => {
+                    onCloseMenu();
+                    onExportZip();
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Download className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+                  {t('sessionsList.exportZip')}
+                </button>
+
+                {onShareCode && (
+                  <button
+                    onClick={() => {
+                      onCloseMenu();
+                      onShareCode();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Radio className="w-4 h-4 text-primary-500" />
+                    {t('sessionsList.shareCode')}
+                  </button>
+                )}
 
                 <div className="h-px bg-zinc-200 dark:bg-zinc-700 my-1 mx-2" />
 

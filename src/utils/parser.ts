@@ -150,6 +150,22 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
     }
   });
 
+  // Fallback: If no .txt files are present, check for meta.json
+  if (txtFiles.length === 0) {
+    const metaFile = loaded.file('meta.json');
+    if (metaFile) {
+      try {
+        const metaContent = await metaFile.async('string');
+        const session = JSON.parse(metaContent);
+        if (session && Array.isArray(session.questions) && session.questions.length > 0) {
+          questions.push(...session.questions);
+        }
+      } catch (err) {
+        console.warn('Failed to parse fallback meta.json:', err);
+      }
+    }
+  }
+
   // Sort for deterministic natural ordering
   
   const MAX_FILES = 2000;
@@ -223,18 +239,82 @@ import { SessionState } from '../models/types';
 import { getAllSessionImages } from './db';
 import { saveSession } from './session';
 
-export async function exportSessionToZip(sessionId: string, session: SessionState): Promise<Blob> {
+export function serializeQuestionToTxt(question: Question): string {
+  const binaryMask = question.answers
+    .map(a => (a.isCorrect ? '1' : '0'))
+    .join('');
+  const maskLine = `X${binaryMask}`;
+  const lines = [maskLine, question.text, ...question.answers.map(a => a.text)];
+  return lines.join('\r\n') + '\r\n';
+}
+
+export function triggerBlobDownload(blob: Blob, filename: string): void {
+  const safeFilename = filename.endsWith('.zip') ? filename : `${filename}.zip`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = safeFilename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function exportQuestionsToZip(
+  baseName: string,
+  questions: Question[],
+  images: Record<string, Blob> = {},
+  fullSession?: SessionState
+): Promise<Blob> {
   const zip = new JSZip();
-  // Add metadata
-  zip.file('meta.json', JSON.stringify(session));
-  
-  // Add images
-  const images = await getAllSessionImages(sessionId);
+
+  // 1. Add meta.json for instant, lossless import into Testownik
+  const sessionData: SessionState = fullSession || {
+    version: 1,
+    questions,
+    queue: questions.map(q => ({
+      questionId: q.id,
+      requiredCorrectStreak: 1,
+      consecutiveCorrect: 0,
+      wrongCount: 0,
+      firstAnswerWrong: false,
+    })),
+    done: [],
+    doneStats: [],
+    repeatMode: 1,
+    elapsedSeconds: 0,
+    totalFirstAttempts: 0,
+    totalFirstCorrect: 0,
+    startedAt: new Date().toISOString(),
+    phase: 'test',
+    currentQuestionIndex: 0,
+    shuffledAnswerOrder: [],
+    baseName: baseName || 'test',
+  };
+  zip.file('meta.json', JSON.stringify(sessionData, null, 2));
+
+  // 2. Add individual .txt files for standard Testownik compatibility
+  questions.forEach((q, idx) => {
+    let filename = q.sourceFile ? q.sourceFile.replace(/^[\\/]+/, '') : '';
+    if (!filename || !filename.toLowerCase().endsWith('.txt')) {
+      filename = `${String(idx + 1).padStart(3, '0')}.txt`;
+    }
+    const txtContent = serializeQuestionToTxt(q);
+    zip.file(filename, txtContent);
+  });
+
+  // 3. Add images
   for (const [imageName, blob] of Object.entries(images)) {
-    zip.file(imageName, blob);
+    const cleanName = imageName.replace(/^[\\/]+/, '');
+    zip.file(cleanName, blob);
   }
-  
+
   return await zip.generateAsync({ type: 'blob' });
+}
+
+export async function exportSessionToZip(sessionId: string, session: SessionState): Promise<Blob> {
+  const images = await getAllSessionImages(sessionId);
+  return await exportQuestionsToZip(session.baseName || 'paczka', session.questions, images, session);
 }
 
 export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: string, session: SessionState }> {

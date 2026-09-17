@@ -1,5 +1,6 @@
 import { FC, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Download, Save } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { BackButton } from '../common/BackButton';
 
@@ -10,9 +11,20 @@ interface CreatorHeaderProps {
   onToggleSidebar?: () => void;
   baseName: string;
   setBaseName: (name: string) => void;
+  onExportZip?: () => void;
+  isExportingZip?: boolean;
 }
 
-export const CreatorHeader: FC<CreatorHeaderProps> = ({ onQuit, onSaveClick, questionsCount, baseName, setBaseName, onToggleSidebar }) => {
+export const CreatorHeader: FC<CreatorHeaderProps> = ({ 
+  onQuit, 
+  onSaveClick, 
+  questionsCount, 
+  baseName, 
+  setBaseName, 
+  onToggleSidebar,
+  onExportZip,
+  isExportingZip
+}) => {
   const { t } = useTranslation();
   const [isMac, setIsMac] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,11 +69,21 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({ onQuit, onSaveClick, que
         <span className="hidden sm:inline-block text-xs font-semibold px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-md whitespace-nowrap">
           {questionsCount} {questionsCount === 1 ? 'pytanie' : (questionsCount >= 2 && questionsCount <= 4 ? 'pytania' : 'pytań')}
         </span>
-        <Button variant="primary" onClick={onSaveClick} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent flex items-center justify-center sm:gap-2 px-2 sm:pl-3 sm:pr-2.5">
+        {onExportZip && (
+          <Button
+            variant="secondary"
+            onClick={onExportZip}
+            disabled={isExportingZip}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 text-zinc-700 dark:text-zinc-200 cursor-pointer"
+            title={t('creator.downloadZip')}
+          >
+            <Download className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+            <span className="hidden md:inline">{t('creator.downloadZip')}</span>
+          </Button>
+        )}
+        <Button variant="primary" onClick={onSaveClick} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent flex items-center justify-center sm:gap-2 px-2 sm:pl-3 sm:pr-2.5 cursor-pointer">
           <div className="flex items-center">
-            <svg className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
+            <Save className="w-4 h-4 sm:mr-1.5 shrink-0" />
             <span className="hidden sm:inline">{t('creator.saveToApp')}</span>
           </div>
           <kbd className="hidden sm:inline-flex items-center justify-center h-5 px-1.5 ml-2 text-[10px] font-medium font-sans text-emerald-900 bg-emerald-400/50 rounded-md border border-emerald-400/30">

@@ -230,7 +230,7 @@ const App: FC = () => {
                   />
                 )}
                 {displayPhase === 'schedule' && (
-                  <ScheduleView />
+                  <ScheduleView onResumeSession={handleResumeSession} />
                 )}
                 {displayPhase === 'profile' && (
                   <AuthGuard onCancel={() => setPhase('dashboard')}>

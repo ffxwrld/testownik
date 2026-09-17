@@ -5,13 +5,17 @@ import { createPortal } from 'react-dom';
 import { parseZipFile } from '../utils/parser';
 import { buildDemoQuestions } from '../utils/demo';
 import { Question, SavedSessionMetadata } from '../models/types';
-import { getAllSessionMetadata } from '../utils/session';
+import { getAllSessionMetadata, loadSession, saveSession } from '../utils/session';
+import { format } from 'date-fns';
 import { Button } from './ui/Button';
 import { DatePicker } from './ui/DatePicker';
-import { PenTool, UploadCloud, Layers, BookOpen } from 'lucide-react';
+import { PenTool, UploadCloud, Layers, BookOpen, ArrowDownToLine } from 'lucide-react';
+import { toast } from 'sonner';
 import { SessionsList } from './SessionsList';
 import { ImportModal } from './common/ImportModal';
 import { PageHeader } from './common/PageHeader';
+import { ShareModal } from './share/ShareModal';
+import { ReceiveModal } from './share/ReceiveModal';
 import { cn } from '../utils/cn';
 
 interface LearnViewProps {
@@ -53,6 +57,8 @@ export const LearnView: FC<LearnViewProps> = ({
   
   // State for the configuration modal
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [sharingSession, setSharingSession] = useState<SavedSessionMetadata | null>(null);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
 
   useEffect(() => {
     getAllSessionMetadata().then(setSavedSessions);
@@ -156,38 +162,62 @@ export const LearnView: FC<LearnViewProps> = ({
       )}
 
       {learningMode === 'test' && (
-        <button 
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "w-full h-[152px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:scale-[0.98]",
-            isDragging
-              ? "border-primary-500 bg-primary-500/20"
-              : "border-primary-500/40 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10"
-          )}
-        >
-          <div className="w-11 h-11 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-2.5 group-hover:scale-105 transition-transform">
-            {isLoading ? (
-              <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <UploadCloud className="w-5 h-5" />
+        <div className="w-full h-[152px] flex gap-2.5 sm:gap-3 relative">
+          {/* Kafelek 1: Importuj z dysku */}
+          <button 
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "flex-1 h-full border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group/left relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 active:scale-[0.98] p-3",
+              isDragging
+                ? "border-primary-500 bg-primary-500/20"
+                : "border-primary-500/40 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10"
             )}
-          </div>
-          <span className="font-bold text-primary-700 dark:text-primary-300 text-sm">
-            {t('learn.importDisk')}
-          </span>
-          <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-1">
-            {t('learn.importDiskSub')}
-          </p>
+          >
+            <div className="w-11 h-11 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-2.5 group-hover/left:scale-105 transition-transform">
+              {isLoading ? (
+                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <UploadCloud className="w-5 h-5" />
+              )}
+            </div>
+            <span className="font-bold text-primary-700 dark:text-primary-300 text-sm">
+              {t('learn.importDisk')}
+            </span>
+            <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-1 text-center line-clamp-1">
+              {t('learn.importDiskSub')}
+            </p>
+          </button>
+
+          {/* Kafelek 2: Odbierz kodem */}
+          <button
+            type="button"
+            onClick={() => setShowReceiveModal(true)}
+            className="w-16 sm:w-20 h-full border-2 border-dashed border-primary-500/40 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-200 group/right active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 py-3 px-1.5 text-primary-600 dark:text-primary-400 shrink-0"
+            title={t('learn.receiveWithCode', 'Odbierz kodem')}
+          >
+            <div className="w-8 h-8 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center group-hover/right:scale-105 transition-transform shrink-0">
+              <ArrowDownToLine className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+            </div>
+            <div className="flex flex-col items-center text-center select-none leading-none gap-0.5">
+              <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-primary-700 dark:text-primary-300 group-hover/right:text-primary-800 dark:group-hover/right:text-primary-200 transition-colors">
+                {t('learn.receiveWord', 'Odbierz')}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-primary-600/80 dark:text-primary-400/80 group-hover/right:text-primary-700 dark:group-hover/right:text-primary-300 transition-colors">
+                {t('learn.codeWord', 'kodem')}
+              </span>
+            </div>
+          </button>
+
           {loadError && (
             <div className="absolute -bottom-10 left-0 right-0 text-center text-xs text-red-500 font-semibold bg-red-100 dark:bg-red-900/40 py-1 rounded-xl">
               {loadError}
             </div>
           )}
-        </button>
+        </div>
       )}
     </>
   );
@@ -283,7 +313,7 @@ export const LearnView: FC<LearnViewProps> = ({
           <button
             type="button"
             onClick={onEnterCreator}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xs active:scale-[0.98]"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xs active:scale-[0.98] cursor-pointer"
           >
             <PenTool className="w-4 h-4" />
             <span>{t('creator.title', 'Kreator')}</span>
@@ -312,6 +342,15 @@ export const LearnView: FC<LearnViewProps> = ({
           }}
           onEditInCreator={onEditInCreator}
           onFlashcards={onFlashcards}
+          onShareCode={setSharingSession}
+          onUpdateTargetDate={async (sessionId, newDate) => {
+            const loaded = await loadSession(sessionId);
+            if (loaded) {
+              loaded.targetDate = newDate;
+              await saveSession(loaded, sessionId);
+              setSavedSessions(await getAllSessionMetadata());
+            }
+          }}
           prependItem={PrependCards}
         />
 
@@ -364,7 +403,7 @@ export const LearnView: FC<LearnViewProps> = ({
                   <DatePicker
                     value={targetDate}
                     onChange={setTargetDate}
-                    minDate={new Date().toISOString().split('T')[0]}
+                    minDate={format(new Date(), 'yyyy-MM-dd')}
                     placeholder={t('learn.newSessionModal.targetDate')}
                     size="md"
                     allowClear
@@ -425,6 +464,27 @@ export const LearnView: FC<LearnViewProps> = ({
           setShowConfigModal(true);
         }}
       />
+
+      {sharingSession && createPortal(
+        <ShareModal 
+          session={sharingSession} 
+          onClose={() => setSharingSession(null)} 
+        />,
+        document.body
+      )}
+
+      {showReceiveModal && createPortal(
+        <ReceiveModal 
+          onClose={() => setShowReceiveModal(false)}
+          onSuccess={async (newSession) => {
+            setShowReceiveModal(false);
+            const fresh = await getAllSessionMetadata();
+            setSavedSessions(fresh);
+            toast.success(t('receive.successToast', { name: newSession.baseName }));
+          }}
+        />,
+        document.body
+      )}
     </div>
   );
 };

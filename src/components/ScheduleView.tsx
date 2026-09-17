@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, isValid } from 'date-fns';
+import { format, parse, startOfWeek, getDay, isValid, parseISO, startOfDay } from 'date-fns';
 import { pl, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -23,12 +23,16 @@ const locales = { pl, en: enUS, 'en-US': enUS };
 const localizer = dateFnsLocalizer({
   format,
   parse,
-  startOfWeek: () => startOfWeek(new Date(), { locale: pl }),
+  startOfWeek: (date: Date, options?: { locale?: any }) => startOfWeek(date, options || { locale: pl }),
   getDay,
   locales,
 });
 
-export const ScheduleView: React.FC = () => {
+interface ScheduleViewProps {
+  onResumeSession?: (sessionId: string) => void;
+}
+
+export const ScheduleView: React.FC<ScheduleViewProps> = ({ onResumeSession }) => {
   const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
   const [sessions, setSessions] = useState<SavedSessionMetadata[]>([]);
@@ -38,6 +42,7 @@ export const ScheduleView: React.FC = () => {
   );
   const [selectedSession, setSelectedSession] = useState<SavedSessionMetadata | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignInitialDate, setAssignInitialDate] = useState<string | undefined>(undefined);
 
   const refreshSessions = () => {
     getAllSessionMetadata().then(setSessions);
@@ -53,14 +58,11 @@ export const ScheduleView: React.FC = () => {
     sessions.forEach((s) => {
       if (!s.targetDate) return;
 
-      const dateObj = new Date(s.targetDate);
+      const dateObj = parseISO(s.targetDate);
       if (!isValid(dateObj) || isNaN(dateObj.getTime())) return;
 
-      const start = new Date(dateObj);
-      start.setHours(9, 0, 0, 0);
-
-      const end = new Date(dateObj);
-      end.setHours(12, 0, 0, 0);
+      const start = startOfDay(dateObj);
+      const end = startOfDay(dateObj);
 
       const isCompleted =
         s.currentPhase === 'summary' ||
@@ -166,11 +168,10 @@ export const ScheduleView: React.FC = () => {
   };
 
   const upcomingExams = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDay(new Date());
     return sessions
-      .filter((s) => s.targetDate && new Date(s.targetDate) >= today)
-      .sort((a, b) => new Date(a.targetDate!).getTime() - new Date(b.targetDate!).getTime());
+      .filter((s) => s.targetDate && parseISO(s.targetDate) >= today)
+      .sort((a, b) => parseISO(a.targetDate!).getTime() - parseISO(b.targetDate!).getTime());
   }, [sessions]);
 
   const unscheduledSessions = useMemo(() => {
@@ -198,7 +199,10 @@ export const ScheduleView: React.FC = () => {
             {unscheduledSessions.length > 0 && (
               <motion.button
                 whileTap={{ scale: 0.96 }}
-                onClick={() => setIsAssignModalOpen(true)}
+                onClick={() => {
+                  setAssignInitialDate(undefined);
+                  setIsAssignModalOpen(true);
+                }}
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition shadow-xs cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -231,6 +235,13 @@ export const ScheduleView: React.FC = () => {
             defaultView={Views.MONTH}
             startAccessor="start"
             endAccessor="end"
+            selectable
+            onSelectSlot={(slotInfo) => {
+              if (unscheduledSessions.length > 0) {
+                setAssignInitialDate(format(slotInfo.start, 'yyyy-MM-dd'));
+                setIsAssignModalOpen(true);
+              }
+            }}
             onSelectEvent={(event) => setSelectedSession(event.resource)}
             eventPropGetter={eventStyleGetter}
             components={{
@@ -264,15 +275,24 @@ export const ScheduleView: React.FC = () => {
           onClose={() => setSelectedSession(null)}
           onUpdateDate={handleUpdateDate}
           onStartLearning={() => {
+            const sid = selectedSession?.id;
             setSelectedSession(null);
-            setLocation('/nauka');
+            if (sid && onResumeSession) {
+              onResumeSession(sid);
+            } else {
+              setLocation('/nauka');
+            }
           }}
         />
 
         {/* Modal: Zaplanuj termin dla nieprzypisanej paczki */}
         <ScheduleAssignModal
           isOpen={isAssignModalOpen}
-          onClose={() => setIsAssignModalOpen(false)}
+          onClose={() => {
+            setIsAssignModalOpen(false);
+            setAssignInitialDate(undefined);
+          }}
+          initialDate={assignInitialDate}
           unscheduledSessions={unscheduledSessions}
           onUpdateDate={handleUpdateDate}
         />

@@ -1,12 +1,16 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useCreatorEngine, EditingQuestion, EditingAnswer } from '../hooks/useCreatorEngine';
 export type { EditingQuestion, EditingAnswer };
 import { CreatorHeader } from './creator/CreatorHeader';
 import { CreatorSidebar } from './creator/CreatorSidebar';
 import { CreatorEditor } from './creator/CreatorEditor';
 import { Button } from './ui/Button';
+import { mapEditingFormatToQuestions } from '../utils/adapters';
+import { exportQuestionsToZip, triggerBlobDownload } from '../utils/parser';
+import { getAllSessionImages } from '../utils/db';
 
 interface CreatorViewProps {
   onQuit: () => void;
@@ -23,10 +27,47 @@ export const CreatorView: FC<CreatorViewProps> = ({
   const { t } = useTranslation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [isExportingZip, setIsExportingZip] = useState(false);
   
   const engine = useCreatorEngine(
     initialQuestions, initialBaseName, initialImageNames, sourceSessionId
   );
+
+  const handleExportZip = useCallback(async () => {
+    if (engine.questions.length === 0) {
+      toast.error(t('creator.noQuestionsToExport'));
+      return;
+    }
+
+    setIsExportingZip(true);
+    try {
+      const questions = mapEditingFormatToQuestions(engine.questions);
+      const allImages: Record<string, Blob> = { ...engine.images };
+
+      if (engine.sourceSessionId && engine.existingImages.size > 0) {
+        try {
+          const dbImages = await getAllSessionImages(engine.sourceSessionId);
+          for (const imgName of engine.existingImages) {
+            if (!allImages[imgName] && dbImages[imgName]) {
+              allImages[imgName] = dbImages[imgName];
+            }
+          }
+        } catch (err) {
+          console.warn('Nie udało się pobrać niektórych istniejących obrazów:', err);
+        }
+      }
+
+      const baseName = engine.savePromptName.trim() || 'paczka';
+      const zipBlob = await exportQuestionsToZip(baseName, questions, allImages);
+      triggerBlobDownload(zipBlob, `${baseName}.zip`);
+      toast.success(t('creator.exportZipSuccess'));
+    } catch (err) {
+      console.error('Błąd eksportu bazy do ZIP:', err);
+      toast.error(t('creator.errorCreateZip', { message: (err as Error)?.message || 'Nieznany błąd' }));
+    } finally {
+      setIsExportingZip(false);
+    }
+  }, [engine.questions, engine.images, engine.sourceSessionId, engine.existingImages, engine.savePromptName, t]);
 
   const handleRequestQuit = () => {
     if (engine.questions.length > 0) {
@@ -97,6 +138,8 @@ export const CreatorView: FC<CreatorViewProps> = ({
         baseName={engine.savePromptName}
         setBaseName={engine.setSavePromptName}
         onToggleSidebar={() => setIsMobileSidebarOpen(true)}
+        onExportZip={handleExportZip}
+        isExportingZip={isExportingZip}
       />
       
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">

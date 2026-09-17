@@ -8,7 +8,7 @@ import { useLeaderboard } from '../hooks/useLeaderboard';
 import { getAllSessionMetadata } from '../utils/session';
 import { SavedSessionMetadata } from '../models/types';
 import { Play, Target, RotateCcw, LayoutDashboard } from 'lucide-react';
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 import { PageHeader } from './common/PageHeader';
 
 interface DashboardViewProps {
@@ -46,15 +46,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
     return `${m}min`;
   };
 
-  const primarySession = recentSessions.find(s => s.targetDate && new Date(s.targetDate) >= new Date(new Date().setHours(0,0,0,0))) || recentSessions[0];
+  const today = startOfDay(new Date());
+  const primarySession = recentSessions.find(s => s.targetDate && parseISO(s.targetDate) >= today) || recentSessions[0];
   let daysLeft: number | null = null;
   let dailyGoal: number | null = null;
   let questionsLeft: number = 0;
   
   if (primarySession && primarySession.targetDate) {
-    const target = new Date(primarySession.targetDate);
-    const now = new Date();
-    daysLeft = Math.max(0, differenceInCalendarDays(target, now));
+    const target = parseISO(primarySession.targetDate);
+    daysLeft = Math.max(0, differenceInCalendarDays(target, today));
     
     questionsLeft = Math.max(0, primarySession.totalQuestions - primarySession.completedQuestions);
     dailyGoal = daysLeft > 0 ? Math.ceil(questionsLeft / daysLeft) : questionsLeft;

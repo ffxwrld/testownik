@@ -5,9 +5,21 @@ contextBridge.exposeInMainWorld('electron', {
     name: 'Testownik',
   },
   updater: {
-    onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_event, info) => callback(info)),
-    onUpdateAvailableMac: (callback) => ipcRenderer.on('update-available-mac', (_event, info) => callback(info)),
-    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_event, info) => callback(info)),
+    onUpdateAvailable: (callback) => {
+      const listener = (_event, info) => callback(info);
+      ipcRenderer.on('update-available', listener);
+      return () => ipcRenderer.removeListener('update-available', listener);
+    },
+    onUpdateAvailableMac: (callback) => {
+      const listener = (_event, info) => callback(info);
+      ipcRenderer.on('update-available-mac', listener);
+      return () => ipcRenderer.removeListener('update-available-mac', listener);
+    },
+    onUpdateDownloaded: (callback) => {
+      const listener = (_event, info) => callback(info);
+      ipcRenderer.on('update-downloaded', listener);
+      return () => ipcRenderer.removeListener('update-downloaded', listener);
+    },
     restartApp: () => ipcRenderer.send('restart-app')
   },
   zoom: {

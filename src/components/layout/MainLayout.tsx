@@ -47,25 +47,25 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
       <img
         src={profile.avatar_url}
         alt={profile.username}
-        className="w-[18px] h-[18px] rounded-full object-cover shadow-xs border border-white/80 dark:border-zinc-700"
+        className="w-5 h-5 rounded-full object-cover shadow-xs border border-white/80 dark:border-zinc-700"
       />
     ) : (
       <div
-        className="w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold text-[9px] text-white shadow-xs"
+        className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-xs"
         style={{ backgroundColor: `hsl(${userHue}, 70%, 50%)` }}
       >
         {profile.username.charAt(0).toUpperCase()}
       </div>
     )
   ) : (
-    <User className="w-[18px] h-[18px]" />
+    <User className="w-5 h-5" />
   );
 
   const mobileTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
-    { id: 'dashboard', icon: <LayoutDashboard className="w-[18px] h-[18px]" />, label: t('nav.dashboard', 'Pulpit') },
-    { id: 'learn', icon: <Zap className="w-[18px] h-[18px]" />, label: t('nav.learn', 'Nauka') },
-    { id: 'multiplayer', icon: <Gamepad2 className="w-[18px] h-[18px]" />, label: t('nav.games', 'Graj') },
-    { id: 'schedule', icon: <Calendar className="w-[18px] h-[18px]" />, label: t('nav.schedule', 'Harmonogram') },
+    { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
+    { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
+    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: t('nav.games', 'Graj') },
+    { id: 'schedule', icon: <Calendar className="w-5 h-5" />, label: t('nav.schedule', 'Harmonogram') },
     { id: 'profile', icon: profileAvatarIcon, label: t('nav.profile', 'Profil') },
   ];
 
@@ -150,17 +150,22 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
         {children}
       </main>
 
-      {/* Mobile Floating Island TabBar (Apple iOS 18 & visionOS Style) */}
+      {/* Mobile Floating Island TabBar (Apple iOS 18 & visionOS Style - Icon Only) */}
       <div className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 flex justify-center px-3 pointer-events-none">
-        <nav className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-2xl border border-zinc-200/80 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] max-w-full overflow-x-auto hide-scrollbar">
+        <nav 
+          aria-label={t('nav.mainNavigation', 'Nawigacja')}
+          className="pointer-events-auto flex items-center gap-1.5 p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-2xl border border-zinc-200/80 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
+        >
           {mobileTabs.map(tab => {
             const isActive = currentPhase === tab.id;
             return (
               <motion.button
                 key={tab.id}
-                whileTap={{ scale: 0.92 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => onNavigate?.(tab.id)}
-                className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-full font-semibold text-xs transition-colors duration-200 select-none cursor-pointer ${
+                aria-label={tab.label}
+                title={tab.label}
+                className={`relative flex items-center justify-center w-11 h-11 rounded-full transition-colors duration-200 select-none cursor-pointer ${
                   isActive
                     ? 'text-primary-600 dark:text-primary-400'
                     : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
@@ -173,20 +178,9 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
                     transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
                   />
                 )}
-                <span className={`shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] transition-transform duration-200 ${isActive ? 'scale-105' : 'opacity-80'}`}>
+                <span className={`shrink-0 [&>svg]:w-5 [&>svg]:h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'opacity-85'}`}>
                   {tab.icon}
                 </span>
-                {isActive && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.25 }}
-                    className="whitespace-nowrap overflow-hidden font-bold tracking-tight text-[11px]"
-                  >
-                    {tab.label}
-                  </motion.span>
-                )}
               </motion.button>
             );
           })}
