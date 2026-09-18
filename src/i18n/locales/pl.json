@@ -816,6 +816,7 @@
       "rematchHost": "Rozpocznij rewanż",
       "rematchGuest": "Zagraj rewanż",
       "backToLobby": "Wróć do lobby",
+      "backToLobbyHost": "Wróć z drużyną do lobby",
       "playerFinished": "{{username}} ukończył wyścig na {{rank}}. miejscu!"
     },
     "race": {

@@ -810,6 +810,7 @@
       "rematchHost": "Start rematch",
       "rematchGuest": "Play rematch",
       "backToLobby": "Back to lobby",
+      "backToLobbyHost": "Return team to lobby",
       "playerFinished": "{{username}} finished in {{rank}} place!"
     },
     "race": {

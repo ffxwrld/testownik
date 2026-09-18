@@ -49,7 +49,7 @@ export function applyZoom(level: number): number {
 export function useAppOrchestrator() {
   const { t } = useTranslation();
   const { triggerSync } = useSync();
-  const { broadcastTestProgress, roomCode, resetRace, rematchEventCount, isHost, cleanup: cleanupMultiplayer } = useMultiplayerContext();
+  const { broadcastTestProgress, roomCode, returnToLobby, returnToLobbyCount, cleanup: cleanupMultiplayer } = useMultiplayerContext();
 
   const [location, setLocation] = useLocation();
 
@@ -269,16 +269,18 @@ export function useAppOrchestrator() {
     [setPhase]
   );
 
-  // Guest auto-rematch: when Host triggers a rematch in multiplayer, guests automatically restart their test session
-  const prevRematchCountRef = useRef(rematchEventCount);
+  // Return to Lobby synchronization: when Host or Peer returns to lobby, return view to multiplayer
+  const prevReturnToLobbyCountRef = useRef(returnToLobbyCount);
   useEffect(() => {
-    if (rematchEventCount > prevRematchCountRef.current && roomCode && currentSessionId && !isHost) {
-      prevRematchCountRef.current = rematchEventCount;
-      handleResetSession(currentSessionId);
+    if (returnToLobbyCount > prevReturnToLobbyCountRef.current && roomCode) {
+      prevReturnToLobbyCountRef.current = returnToLobbyCount;
+      setCurrentSessionId(null);
+      setSession(null);
+      setPhase('multiplayer');
     } else {
-      prevRematchCountRef.current = rematchEventCount;
+      prevReturnToLobbyCountRef.current = returnToLobbyCount;
     }
-  }, [rematchEventCount, roomCode, currentSessionId, isHost, handleResetSession]);
+  }, [returnToLobbyCount, roomCode, setPhase]);
 
   const handleResumeSession = useCallback(
     async (sessionId: string) => {
@@ -390,12 +392,12 @@ export function useAppOrchestrator() {
     setCurrentSessionId(null);
     setSession(null);
     if (roomCode) {
-      resetRace();
+      returnToLobby();
       setPhase('multiplayer');
     } else {
       setPhase('learn');
     }
-  }, [roomCode, resetRace, setPhase]);
+  }, [roomCode, returnToLobby, setPhase]);
 
   const handleRestartSession = useCallback(
     async (sessionId: string, newRepeatMode?: number) => {

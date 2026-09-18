@@ -137,6 +137,7 @@ export const useMultiplayer = () => {
   const [isHost, setIsHost] = useState(false);
   const [isSendingPackage, setIsSendingPackage] = useState(false);
   const [rematchEventCount, setRematchEventCount] = useState(0);
+  const [returnToLobbyCount, setReturnToLobbyCount] = useState(0);
   
   // Maps a userId to their WebRTCManager
   const peersRef = useRef<Map<string, WebRTCManager>>(new Map());
@@ -697,6 +698,50 @@ export const useMultiplayer = () => {
           isDNF: false,
         })));
         setRematchEventCount(c => c + 1);
+        setReturnToLobbyCount(c => c + 1);
+      })
+      .on('broadcast', { event: 'return_to_lobby' }, () => {
+        setRaceStarted(false);
+        raceStartedRef.current = false;
+        setStoredMultiplayerSession({ roomCode: code, isHost: hostMode, raceStarted: false, gameMode: gameModeRef.current });
+        setReceivedFile(null);
+        if (tugTimerRef.current) {
+          clearInterval(tugTimerRef.current);
+          tugTimerRef.current = null;
+        }
+        setTugState({
+          ropePosition: 0,
+          timeLeftSeconds: 90,
+          winner: null,
+          winReason: null,
+        });
+        if (pokerTimerRef.current) {
+          clearInterval(pokerTimerRef.current);
+          pokerTimerRef.current = null;
+        }
+        pokerAnswersCorrectRef.current = {};
+        setPokerState({
+          currentRound: 1,
+          totalRounds: 5,
+          phase: 'wager',
+          questionIndex: 0,
+          timeLeftSeconds: 10,
+          chips: {},
+          wagers: {},
+          answers: {},
+          roundResults: null,
+        });
+        setPlayers(prev => prev.map(p => ({
+          ...p,
+          progress: 0,
+          status: 'ready',
+          accuracy: undefined,
+          timeSeconds: undefined,
+          finishedAt: undefined,
+          isDNF: false,
+        })));
+        setReturnToLobbyCount(c => c + 1);
+        setRematchEventCount(c => c + 1);
       })
       .on('broadcast', { event: 'test_progress' }, ({ payload }: { payload: TestProgressPayload }) => {
         setPlayers(prev => prev.map(p => 
@@ -841,7 +886,7 @@ export const useMultiplayer = () => {
     })));
   }, [roomCode, isHost]);
 
-  const triggerRematch = useCallback(() => {
+  const returnToLobby = useCallback(() => {
     if (tugTimerRef.current) {
       clearInterval(tugTimerRef.current);
       tugTimerRef.current = null;
@@ -871,10 +916,14 @@ export const useMultiplayer = () => {
     };
     setPokerState(initialPoker);
     pokerStateRef.current = initialPoker;
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'reset_race',
-    });
+
+    if (isHost) {
+      channelRef.current?.send({
+        type: 'broadcast',
+        event: 'return_to_lobby',
+      });
+    }
+
     setRaceStarted(false);
     raceStartedRef.current = false;
     if (roomCode) {
@@ -889,8 +938,11 @@ export const useMultiplayer = () => {
       finishedAt: undefined,
       isDNF: false,
     })));
+    setReturnToLobbyCount(c => c + 1);
     setRematchEventCount(c => c + 1);
   }, [roomCode, isHost]);
+
+  const triggerRematch = returnToLobby;
 
   const startRace = useCallback((pokerRounds?: number) => {
     if (!isHost) return;
@@ -1376,6 +1428,8 @@ export const useMultiplayer = () => {
     markPlayerReady,
     startRace,
     resetRace,
+    returnToLobby,
+    returnToLobbyCount,
     triggerRematch,
     rematchEventCount,
     raceStarted,

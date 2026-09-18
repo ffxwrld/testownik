@@ -12,10 +12,10 @@ import {
   Sparkle,
   Flame,
   ArrowRight,
-  ArrowsClockwise,
   SignOut,
   EyeSlash,
   Medal,
+  Users,
 } from '@phosphor-icons/react';
 import { SessionState, Question } from '../../models/types';
 import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
@@ -40,7 +40,7 @@ export const PokerWagerView: FC<PokerWagerViewProps> = ({ session, onQuit }) => 
     submitPokerAnswer,
     players,
     isHost,
-    triggerRematch,
+    returnToLobby,
     profile,
   } = useMultiplayerContext();
 
@@ -376,16 +376,18 @@ export const PokerWagerView: FC<PokerWagerViewProps> = ({ session, onQuit }) => 
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            {isHost && (
-              <Button
-                variant="primary"
-                onClick={triggerRematch}
-                className="px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-primary-600/20 active:scale-[0.97]"
-              >
-                <ArrowsClockwise className="w-5 h-5" />
-                <span>{t('multiplayer.poker.rematchBtn')}</span>
-              </Button>
-            )}
+            <Button
+              variant="primary"
+              onClick={returnToLobby}
+              className="px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-primary-600/20 active:scale-[0.97]"
+            >
+              <Users className="w-5 h-5" />
+              <span>
+                {isHost
+                  ? t('multiplayer.podium.backToLobbyHost', 'Wróć z drużyną do lobby')
+                  : t('multiplayer.podium.backToLobby', 'Wróć do lobby')}
+              </span>
+            </Button>
             <Button
               variant="secondary"
               onClick={onQuit}

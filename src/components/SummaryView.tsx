@@ -39,7 +39,6 @@ export const SummaryView: FC<SummaryViewProps> = ({
   session,
   sessionId,
   onNewTest,
-  onRestartSession,
 }) => {
   const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -47,7 +46,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
     roomCode,
     players,
     broadcastTestProgress,
-    triggerRematch,
+    returnToLobby,
     currentUserId,
     isHost,
   } = useMultiplayerContext();
@@ -89,13 +88,11 @@ export const SummaryView: FC<SummaryViewProps> = ({
     }
   }, [roomCode, broadcastTestProgress, accuracy, session.elapsedSeconds]);
 
-  const handleRematch = () => {
-    triggerRematch();
-    if (onRestartSession) {
-      onRestartSession(sessionId);
-    } else {
-      onNewTest();
+  const handleBackToLobby = () => {
+    if (roomCode) {
+      returnToLobby();
     }
+    onNewTest();
   };
 
   return (
@@ -114,37 +111,47 @@ export const SummaryView: FC<SummaryViewProps> = ({
               initial={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
               animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
               exit={{ opacity: 0, transform: 'translateY(10px) scale(0.95)' }}
-              transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="beer-title"
-              className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border border-zinc-200 dark:border-zinc-800"
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-zinc-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-zinc-200 dark:border-zinc-700 text-center relative overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <motion.div 
-                animate={{ transform: ['translateY(0px)', 'translateY(-10px)', 'translateY(0px)'] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="mb-4 inline-block text-amber-500"
-              >
-                <BeerStein className="w-16 h-16" weight="duotone" />
-              </motion.div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-              {t('summary.beerModalTitle')}
-            </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-              {t('summary.beerModalDesc')}
-            </p>
-            <Button onClick={() => setShowBeerModal(false)} variant="primary" className="w-full" autoFocus>
-              {t('summary.beerModalBtn')}
-            </Button>
+              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-500 dark:text-amber-400">
+                <BeerStein className="w-8 h-8" weight="duotone" />
+              </div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                {t('summary.beerModal.title')}
+              </h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                {t('summary.beerModal.description')}
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  variant="secondary" 
+                  fullWidth 
+                  onClick={() => setShowBeerModal(false)}
+                >
+                  {t('summary.beerModal.close')}
+                </Button>
+                <Button 
+                  variant="primary" 
+                  fullWidth 
+                  onClick={() => {
+                    setShowBeerModal(false);
+                    window.open('https://buycoffee.to/ffxwrld', '_blank');
+                  }}
+                  className="bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+                >
+                  {t('summary.beerModal.buyBeer')}
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
       </AnimatePresence>
 
         <div className="w-full max-w-2xl flex items-center justify-between mb-4 z-10">
           <BackButton
-            onClick={onNewTest}
+            onClick={handleBackToLobby}
             label={roomCode ? t('summary.backToLobby', 'Wróć do lobby') : (t('common.back', 'Wróć') || 'Wróć')}
             enableEscapeKey={!showBeerModal}
           />
@@ -156,8 +163,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
               players={players}
               currentUserId={currentUserId}
               isHost={isHost}
-              onRematch={handleRematch}
-              onBackToLobby={onNewTest}
+              onBackToLobby={handleBackToLobby}
             />
           </div>
         )}
@@ -446,7 +452,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
           variant="primary"
           size="xl"
           fullWidth
-          onClick={onNewTest}
+          onClick={handleBackToLobby}
           className="shadow-xl shadow-primary-600/20"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

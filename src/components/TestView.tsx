@@ -91,11 +91,14 @@ const StandardTestView: FC<TestViewProps> = ({
   useEffect(() => {
     if (gameMode === 'tug_of_war' && tugState?.winner) {
       const timer = setTimeout(() => {
-        onQuit();
+        onSessionUpdate({
+          ...session,
+          phase: 'summary',
+        });
       }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [gameMode, tugState?.winner, onQuit]);
+  }, [gameMode, tugState?.winner, onSessionUpdate, session]);
 
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">

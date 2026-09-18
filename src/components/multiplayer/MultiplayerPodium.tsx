@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowCounterClockwise, ArrowLeft, Sparkle, CircleNotch, Crown, Medal, FlagCheckered, Trophy } from '@phosphor-icons/react';
+import { Sparkle, CircleNotch, Crown, Medal, FlagCheckered, Trophy, Users } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
@@ -13,7 +13,6 @@ interface MultiplayerPodiumProps {
   players: Player[];
   currentUserId?: string;
   isHost?: boolean;
-  onRematch?: () => void;
   onBackToLobby: () => void;
   className?: string;
 }
@@ -45,7 +44,6 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
   players,
   currentUserId,
   isHost = false,
-  onRematch,
   onBackToLobby,
   className = '',
 }) => {
@@ -599,26 +597,19 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
       )}
 
       {/* Action Controls */}
-      <div className="relative z-10 flex flex-col sm:flex-row gap-3 mt-8 pt-4 border-t border-zinc-200/80 dark:border-zinc-800/80">
-        {onRematch && (
-          <Button
-            variant="primary"
-            size="lg"
-            className="flex-1 py-3.5 rounded-xl shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2"
-            onClick={onRematch}
-          >
-            <ArrowCounterClockwise className="w-4 h-4" />
-            <span>{isHost ? t('multiplayer.podium.rematchHost', 'Rozpocznij rewanż') : t('multiplayer.podium.rematchGuest', 'Zagraj rewanż')}</span>
-          </Button>
-        )}
+      <div className="relative z-10 flex justify-center mt-8 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
         <Button
-          variant={onRematch ? 'secondary' : 'primary'}
+          variant="primary"
           size="lg"
-          className="flex-1 py-3.5 rounded-xl flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-8 py-3.5 rounded-2xl shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2 active:scale-[0.97]"
           onClick={onBackToLobby}
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>{t('multiplayer.podium.backToLobby', 'Wróć do lobby')}</span>
+          <Users className="w-5 h-5" />
+          <span>
+            {isHost
+              ? t('multiplayer.podium.backToLobbyHost', 'Wróć z drużyną do lobby')
+              : t('multiplayer.podium.backToLobby', 'Wróć do lobby')}
+          </span>
         </Button>
       </div>
     </div>
