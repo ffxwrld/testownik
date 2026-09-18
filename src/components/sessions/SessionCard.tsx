@@ -1,7 +1,7 @@
 import { FC, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Download, Radio } from '@phosphor-icons/react';
+import { Download, Radio, Check, Hourglass, Clock } from '@phosphor-icons/react';
 import { SavedSessionMetadata } from '../../models/types';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -138,9 +138,7 @@ export const SessionCard: FC<SessionCardProps> = memo(({
             </p>
             {examDateStr && (
               <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary-600 dark:text-primary-400">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <Clock className="w-3.5 h-3.5" weight="bold" />
                 {t('sessionsList.exam')}: {examDateStr}
               </div>
             )}
@@ -148,8 +146,18 @@ export const SessionCard: FC<SessionCardProps> = memo(({
         )}
 
         {!isEditing && (
-          <Badge variant={isCompleted ? 'success' : 'info'}>
-            {isCompleted ? t('sessionsList.completed') : t('sessionsList.inProgress')}
+          <Badge variant={isCompleted ? 'success' : 'info'} className="inline-flex items-center gap-1">
+            {isCompleted ? (
+              <>
+                <Check className="w-3 h-3" weight="bold" />
+                <span>{t('sessionsList.completed')}</span>
+              </>
+            ) : (
+              <>
+                <Hourglass className="w-3 h-3" weight="duotone" />
+                <span>{t('sessionsList.inProgress')}</span>
+              </>
+            )}
           </Badge>
         )}
       </div>

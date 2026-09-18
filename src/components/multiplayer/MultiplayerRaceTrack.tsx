@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users } from '@phosphor-icons/react';
+import { Users, Medal, Car, FlagCheckered } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
 import { cn } from '../../utils/cn';
@@ -62,10 +62,10 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
 
   const getRankBadge = (rank: number) => {
     const text = t('multiplayer.race.rankPlace', { rank });
-    if (rank === 1) return { text, icon: '🥇', color: 'text-amber-500 bg-amber-500/10' };
-    if (rank === 2) return { text, icon: '🥈', color: 'text-slate-400 bg-slate-500/10' };
-    if (rank === 3) return { text, icon: '🥉', color: 'text-amber-700 bg-amber-700/10' };
-    return { text, icon: '🏎️', color: 'text-zinc-500 bg-zinc-500/10' };
+    if (rank === 1) return { text, icon: <Medal className="w-3.5 h-3.5 text-amber-500 shrink-0" weight="fill" />, color: 'text-amber-500 bg-amber-500/10' };
+    if (rank === 2) return { text, icon: <Medal className="w-3.5 h-3.5 text-slate-400 shrink-0" weight="fill" />, color: 'text-slate-400 bg-slate-500/10' };
+    if (rank === 3) return { text, icon: <Medal className="w-3.5 h-3.5 text-amber-700 dark:text-amber-600 shrink-0" weight="fill" />, color: 'text-amber-700 bg-amber-700/10' };
+    return { text, icon: <Car className="w-3.5 h-3.5 text-zinc-500 shrink-0" weight="duotone" />, color: 'text-zinc-500 bg-zinc-500/10' };
   };
 
   const rankInfo = getRankBadge(myRank);
@@ -82,7 +82,7 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
             transition={{ type: 'spring', bounce: 0, duration: 0.25 }}
             className="mb-1.5 py-0.5 px-3 mx-auto w-fit rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 shadow-xs"
           >
-            <span>🏁</span>
+            <FlagCheckered className="w-3.5 h-3.5 shrink-0" weight="duotone" />
             <span>{finishBanner}</span>
           </motion.div>
         )}
@@ -92,11 +92,11 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
       <div className="flex items-center justify-between mb-1.5 px-0.5">
         <div className="flex items-center gap-2">
           <span
-            className={`px-2 py-0.5 rounded-lg text-xs font-bold flex items-center gap-1 ${rankInfo.color}`}
+            className={`px-2 py-0.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${rankInfo.color}`}
           >
-              <span>{rankInfo.icon}</span>
-              <span>{rankInfo.text}</span>
-            </span>
+            {rankInfo.icon}
+            <span>{rankInfo.text}</span>
+          </span>
             {leader && leader.userId !== currentUserId && myPlayer && (
               <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 hidden xs:inline">
                 {t('multiplayer.race.behindLeader', { diff: Math.max(0, Math.round(leader.progress - myPlayer.progress)) })}
@@ -127,8 +127,8 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
           <div className="absolute right-9 sm:right-10 top-0 bottom-0 w-2.5 flex flex-col justify-between overflow-hidden opacity-50 dark:opacity-75 pointer-events-none border-x border-zinc-400/40 dark:border-zinc-500/40 bg-[linear-gradient(45deg,#18181b_25%,transparent_25%),linear-gradient(-45deg,#18181b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#18181b_75%),linear-gradient(-45deg,transparent_75%,#18181b_75%)] dark:bg-[linear-gradient(45deg,#f4f4f5_25%,transparent_25%),linear-gradient(-45deg,#f4f4f5_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f4f4f5_75%),linear-gradient(-45deg,transparent_75%,#f4f4f5_75%)] [background-size:6px_6px] [background-position:0_0,0_3px,3px_-3px,-3px_0]" />
 
           {/* Finish Line Flag */}
-          <div className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 select-none pointer-events-none">
-            <span className="text-sm sm:text-base filter drop-shadow-xs">🏁</span>
+          <div className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 select-none pointer-events-none text-zinc-700 dark:text-zinc-200">
+            <FlagCheckered className="w-4 h-4 drop-shadow-xs" weight="duotone" />
           </div>
 
           {/* Moving Avatars (From start at left-4 to finish line at right-9/10) */}
@@ -184,7 +184,8 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
                     {/* Finished Badge */}
                     {isFinished && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter shadow-xs flex items-center gap-0.5 whitespace-nowrap">
-                        {t('multiplayer.race.finishBadge')}
+                        <FlagCheckered className="w-2.5 h-2.5 shrink-0" weight="fill" />
+                        <span>{t('multiplayer.race.finishBadge')}</span>
                       </div>
                     )}
 

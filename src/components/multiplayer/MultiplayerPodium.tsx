@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowCounterClockwise, ArrowLeft, Sparkle, CircleNotch } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowLeft, Sparkle, CircleNotch, Crown, Medal, FlagCheckered, Trophy } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
@@ -117,7 +117,9 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
         if (p.userId !== currentUserId) {
           const rank = finishedPlayers.findIndex((fp) => fp.userId === p.userId) + 1;
           const defaultName = t('multiplayer.podium.player', 'Gracz');
-          toast.info(t('multiplayer.podium.playerFinished', '🏁 {{username}} ukończył wyścig na {{rank}}. miejscu!', { username: p.username || defaultName, rank }));
+          toast.info(t('multiplayer.podium.playerFinished', '{{username}} ukończył wyścig na {{rank}}. miejscu!', { username: p.username || defaultName, rank }), {
+            icon: <FlagCheckered className="w-4 h-4 text-amber-500" weight="duotone" />
+          });
         }
       }
     });
@@ -224,12 +226,17 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
           {t('multiplayer.podium.title', 'Podium Wyścigu')}
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          {isMeWinner
-            ? t('multiplayer.podium.winnerYou', '🏆 Gratulacje! Wygrałeś wyścig!')
-            : myRank > 0
-            ? t('multiplayer.podium.rankYou', 'Ukończyłeś rywalizację na {{rank}}. miejscu!', { rank: myRank })
-            : t('multiplayer.podium.goodFight', 'Znakomita walka do samego końca!')}
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center justify-center gap-1.5">
+          {isMeWinner ? (
+            <>
+              <Trophy className="w-4 h-4 text-amber-500 shrink-0" weight="fill" />
+              <span>{t('multiplayer.podium.winnerYou', 'Gratulacje! Wygrałeś wyścig!')}</span>
+            </>
+          ) : myRank > 0 ? (
+            t('multiplayer.podium.rankYou', 'Ukończyłeś rywalizację na {{rank}}. miejscu!', { rank: myRank })
+          ) : (
+            t('multiplayer.podium.goodFight', 'Znakomita walka do samego końca!')
+          )}
         </p>
         {racingPlayers.length > 0 && (
           <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1 flex items-center justify-center gap-1.5">
@@ -262,7 +269,9 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                       alt={second.username}
                       className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-slate-300 dark:border-slate-500 shadow-lg ring-4 ring-slate-200/50 dark:ring-slate-700/50"
                     />
-                    <span className="absolute -bottom-2 -right-1 text-xl drop-shadow">🥈</span>
+                    <div className="absolute -bottom-2 -right-1 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-md">
+                      <Medal className="w-3.5 h-3.5 text-slate-400" weight="fill" />
+                    </div>
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[120px]">
                     {second.username}
@@ -326,9 +335,9 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
               <motion.div
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                className="text-3xl mb-1"
+                className="mb-1 flex justify-center"
               >
-                👑
+                <Crown className="w-8 h-8 text-amber-400 drop-shadow-sm" weight="fill" />
               </motion.div>
               <div className="relative">
                 <img
@@ -336,7 +345,9 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                   alt={winner.username}
                   className="w-18 h-18 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-amber-400 dark:border-amber-400 shadow-xl ring-4 ring-amber-300/40 dark:ring-amber-500/20"
                 />
-                <span className="absolute -bottom-2 -right-1 text-2xl drop-shadow">🥇</span>
+                <div className="absolute -bottom-2 -right-1 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950 border border-amber-400 dark:border-amber-500 flex items-center justify-center shadow-md">
+                  <Medal className="w-4 h-4 text-amber-500" weight="fill" />
+                </div>
               </div>
               <span className="mt-2 text-sm sm:text-base font-extrabold text-zinc-900 dark:text-zinc-50 truncate max-w-[150px]">
                 {winner.username}
@@ -382,7 +393,9 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                       alt={third.username}
                       className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-amber-700 dark:border-amber-600 shadow-lg ring-4 ring-amber-700/20 dark:ring-amber-700/30"
                     />
-                    <span className="absolute -bottom-2 -right-1 text-xl drop-shadow">🥉</span>
+                    <div className="absolute -bottom-2 -right-1 w-6 h-6 rounded-full bg-amber-950/20 dark:bg-amber-950/40 border border-amber-700/60 dark:border-amber-700/80 flex items-center justify-center shadow-md">
+                      <Medal className="w-3.5 h-3.5 text-amber-700 dark:text-amber-600" weight="fill" />
+                    </div>
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate max-w-[120px]">
                     {third.username}
@@ -504,7 +517,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 mt-6 py-2 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold text-center flex items-center justify-center gap-2"
         >
-          <span>🏁</span>
+          <FlagCheckered className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" weight="duotone" />
           <span>{t('multiplayer.podium.allFinished', 'Wszyscy uczestnicy ukończyli wyścig!')}</span>
         </motion.div>
       )}

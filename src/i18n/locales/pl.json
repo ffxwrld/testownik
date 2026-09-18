@@ -15,7 +15,7 @@
     "tabs": {
       "newTest": "Nowy test",
       "myTests": "Moje testy",
-      "creator": "✨ Kreator Baz"
+      "creator": "Kreator Baz"
     },
     "step1": "1. Wczytaj bazę pytań",
     "useDemo": "Użyj pytań demonstracyjnych",
@@ -48,8 +48,8 @@
     "emptyStateSub": "Stwórz nowy test, aby zacząć.",
     "placeholderName": "Nazwa bazy pytań...",
     "defaultBaseName": "Baza pytań",
-    "completed": "✓ Ukończony",
-    "inProgress": "⏳ W trakcie",
+    "completed": "Ukończony",
+    "inProgress": "W trakcie",
     "questions": "pyt.",
     "startOver": "Zacznij od nowa",
     "editWarning": "Edycja w kreatorze nadpisze test nową wersją (obecny postęp zostanie zresetowany). Czy kontynuować?",
@@ -193,7 +193,7 @@
     "errors": "Błędy: {{count}}",
     "correctAnswer": "Poprawna odpowiedź!",
     "moreToPass": "Jeszcze {{count}} do zaliczenia.",
-    "questionPassed": "Pytanie zaliczone! 🎉",
+    "questionPassed": "Pytanie zaliczone!",
     "skipped": "Pominięto. Pytanie wróci do kolejki.",
     "wrongAnswerPrefix": "Błędna odpowiedź. Pytanie wróci do kolejki i będzie wymagać ",
     "wrongAnswerSuffix_one": "poprawnej odpowiedzi.",
@@ -742,7 +742,7 @@
     "podium": {
       "finalBadge": "Finał wyścigu wieloosobowego",
       "title": "Podium Wyścigu",
-      "winnerYou": "🏆 Gratulacje! Wygrałeś wyścig!",
+      "winnerYou": "Gratulacje! Wygrałeś wyścig!",
       "rankYou": "Ukończyłeś rywalizację na {{rank}}. miejscu!",
       "goodFight": "Znakomita walka do samego końca!",
       "ongoingBattle": "Trwa rywalizacja o kolejne miejsca na podium...",
@@ -763,18 +763,18 @@
       "rematchHost": "Rozpocznij rewanż",
       "rematchGuest": "Zagraj rewanż",
       "backToLobby": "Wróć do lobby",
-      "playerFinished": "🏁 {{username}} ukończył wyścig na {{rank}}. miejscu!"
+      "playerFinished": "{{username}} ukończył wyścig na {{rank}}. miejscu!"
     },
     "race": {
-      "finishedYou": "Przekroczyłeś linię mety! 🏁",
-      "finishedOther": "{{name}} ukończył wyścig! 🏁",
+      "finishedYou": "Przekroczyłeś linię mety!",
+      "finishedOther": "{{name}} ukończył wyścig!",
       "rankPlace": "{{rank}}. miejsce",
       "behindLeader": "Strata do lidera: -{{diff}}%",
       "playersCount_one": "{{count}} gracz",
       "playersCount_few": "{{count}} graczy",
       "playersCount_many": "{{count}} graczy",
       "playersCount_other": "{{count}} graczy",
-      "finishBadge": "META 🏁",
+      "finishBadge": "META",
       "youBadge": "Ty",
       "disconnected": "(Rozłączony / DNF)"
     },

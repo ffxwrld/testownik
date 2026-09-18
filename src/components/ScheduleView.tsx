@@ -5,7 +5,7 @@ import { pl, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { Calendar as CalendarIcon, BookOpen, Plus } from '@phosphor-icons/react';
+import { Calendar as CalendarIcon, BookOpen, Plus, Check } from '@phosphor-icons/react';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { getAllSessionMetadata, loadSession, saveSession } from '../utils/session';
@@ -107,8 +107,9 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ onResumeSession }) =
               {event.resource.completedQuestions} / {event.resource.totalQuestions} pytań
             </span>
             {isCompleted && (
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md">
-                ✓ Opanowano
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md">
+                <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" weight="bold" />
+                <span>Opanowano</span>
               </span>
             )}
           </div>

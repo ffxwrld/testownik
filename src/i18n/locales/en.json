@@ -15,7 +15,7 @@
     "tabs": {
       "newTest": "New test",
       "myTests": "My tests",
-      "creator": "✨ Database Creator"
+      "creator": "Database Creator"
     },
     "step1": "1. Load question database",
     "useDemo": "Use demo questions",
@@ -48,8 +48,8 @@
     "emptyStateSub": "Create a new test to start.",
     "placeholderName": "Question database name...",
     "defaultBaseName": "Question database",
-    "completed": "✓ Completed",
-    "inProgress": "⏳ In progress",
+    "completed": "Completed",
+    "inProgress": "In progress",
     "questions": "q.",
     "startOver": "Start over",
     "editWarning": "Editing in creator will overwrite the test with a new version (current progress will be reset). Continue?",
@@ -193,7 +193,7 @@
     "errors": "Errors: {{count}}",
     "correctAnswer": "Correct answer!",
     "moreToPass": "{{count}} more to pass.",
-    "questionPassed": "Question passed! 🎉",
+    "questionPassed": "Question passed!",
     "skipped": "Skipped. Question will return to queue.",
     "wrongAnswerPrefix": "Wrong answer. Question will return to queue and will require ",
     "wrongAnswerSuffix_one": "correct answer.",
@@ -736,7 +736,7 @@
     "podium": {
       "finalBadge": "Multiplayer race final",
       "title": "Race Podium",
-      "winnerYou": "🏆 Congratulations! You won the race!",
+      "winnerYou": "Congratulations! You won the race!",
       "rankYou": "You finished in {{rank}} place!",
       "goodFight": "Great fight until the very end!",
       "ongoingBattle": "Battle for podium spots in progress...",
@@ -757,16 +757,16 @@
       "rematchHost": "Start rematch",
       "rematchGuest": "Play rematch",
       "backToLobby": "Back to lobby",
-      "playerFinished": "🏁 {{username}} finished in {{rank}} place!"
+      "playerFinished": "{{username}} finished in {{rank}} place!"
     },
     "race": {
-      "finishedYou": "You crossed the finish line! 🏁",
-      "finishedOther": "{{name}} finished the race! 🏁",
+      "finishedYou": "You crossed the finish line!",
+      "finishedOther": "{{name}} finished the race!",
       "rankPlace": "Place {{rank}}",
       "behindLeader": "Behind leader: -{{diff}}%",
       "playersCount_one": "{{count}} player",
       "playersCount_other": "{{count}} players",
-      "finishBadge": "FINISH 🏁",
+      "finishBadge": "FINISH",
       "youBadge": "You",
       "disconnected": "(Disconnected / DNF)"
     },

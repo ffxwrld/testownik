@@ -1,4 +1,4 @@
-import { Trophy } from '@phosphor-icons/react';
+import { Trophy, BeerStein, Lightning, Mountains } from '@phosphor-icons/react';
 import { useState, useMemo, FC, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -124,9 +124,9 @@ export const SummaryView: FC<SummaryViewProps> = ({
               <motion.div 
                 animate={{ transform: ['translateY(0px)', 'translateY(-10px)', 'translateY(0px)'] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="text-6xl mb-4 origin-bottom inline-block"
+                className="mb-4 inline-block text-amber-500"
               >
-                🍻
+                <BeerStein className="w-16 h-16" weight="duotone" />
               </motion.div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
               {t('summary.beerModalTitle')}
@@ -203,7 +203,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
           <div className="relative z-10 flex flex-wrap justify-center gap-3 mt-8">
             {accuracy === 100 && (
               <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/10 border border-amber-200 dark:border-amber-800/50 px-4 py-2 rounded-full shadow-sm">
-                <span className="text-xl">🏆</span>
+                <Trophy className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" weight="duotone" />
                 <div>
                   <div className="text-sm font-bold text-amber-900 dark:text-amber-100">
                     {t('summary.badges.flawless', 'Nieskazitelny')}
@@ -216,7 +216,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
             )}
             {(session.elapsedSeconds / totalQuestions) < 5 && (
               <div className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-blue-900/10 border border-blue-200 dark:border-blue-800/50 px-4 py-2 rounded-full shadow-sm">
-                <span className="text-xl">⚡️</span>
+                <Lightning className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" weight="fill" />
                 <div>
                   <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
                     {t('summary.badges.sprinter', 'Sprinter')}
@@ -229,7 +229,7 @@ export const SummaryView: FC<SummaryViewProps> = ({
             )}
             {totalQuestions >= 100 && (
               <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 px-4 py-2 rounded-full shadow-xs">
-                <span className="text-xl">🏔️</span>
+                <Mountains className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" weight="duotone" />
                 <div>
                   <div className="text-sm font-bold text-indigo-950 dark:text-indigo-100">
                     {t('summary.badges.tenacious', 'Wytrwały')}
