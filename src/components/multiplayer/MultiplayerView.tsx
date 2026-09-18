@@ -5,10 +5,11 @@ import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
 import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
-import { Users, Play, Download, CheckCircle, Copy, CircleNotch, QrCode } from '@phosphor-icons/react';
+import { Users, Play, Download, CheckCircle, Copy, CircleNotch, QrCode, FlagCheckered, Sword, Cards } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { BackButton } from '../common/BackButton';
 import { QRCodeModal } from './QRCodeModal';
+import { cn } from '../../utils/cn';
 
 interface MultiplayerViewProps {
   onStartSession: (sessionId: string) => void;
@@ -28,7 +29,9 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     markPlayerReady,
     receivedFile, 
     startRace, 
-    raceStarted 
+    raceStarted,
+    gameMode,
+    setGameMode,
   } = useMultiplayerContext();
 
   const [view, setView] = useState<'menu' | 'host_select' | 'join' | 'lobby'>(() => {
@@ -324,13 +327,99 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 </div>
               </div>
 
+              {/* Game Mode Selector */}
+              <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm mb-6 text-left">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span>{t('multiplayer.mode.title', 'Tryb Gry')}</span>
+                  </h3>
+                  {!isHost && (
+                    <span className="text-xs text-zinc-400 font-medium">
+                      {t('multiplayer.mode.hostSelected', 'Wybór gospodarza')}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Mode 1: Classic Race */}
+                  <div
+                    onClick={() => isHost && setGameMode('race')}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 transition-all text-left",
+                      isHost ? "cursor-pointer" : "cursor-default",
+                      gameMode === 'race'
+                        ? "border-emerald-500 bg-emerald-500/10 shadow-xs"
+                        : "border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/40 opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                      <FlagCheckered className="w-5 h-5" weight="duotone" />
+                    </div>
+                    <div className="font-bold text-sm text-zinc-900 dark:text-zinc-50">
+                      {t('multiplayer.mode.raceTitle', 'Klasyczny Wyścig')}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                      {t('multiplayer.mode.raceDesc', 'Kto pierwszy ukończy 100% pytań z bazy.')}
+                    </p>
+                  </div>
+
+                  {/* Mode 2: Tug of War */}
+                  <div
+                    onClick={() => isHost && setGameMode('tug_of_war')}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 transition-all text-left",
+                      isHost ? "cursor-pointer" : "cursor-default",
+                      gameMode === 'tug_of_war'
+                        ? "border-blue-500 bg-blue-500/10 shadow-xs"
+                        : "border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/40 opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                      <Sword className="w-5 h-5" weight="duotone" />
+                    </div>
+                    <div className="font-bold text-sm text-zinc-900 dark:text-zinc-50">
+                      {t('multiplayer.mode.tugTitle', 'Przeciąganie Liny')}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                      {t('multiplayer.mode.tugDesc', 'Dobre odpowiedzi ciągną linę, błędy odpychają. K.O. lub limit czasu.')}
+                    </p>
+                  </div>
+
+                  {/* Mode 3: Poker Wager */}
+                  <div
+                    onClick={() => isHost && setGameMode('poker')}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 transition-all text-left",
+                      isHost ? "cursor-pointer" : "cursor-default",
+                      gameMode === 'poker'
+                        ? "border-amber-500 bg-amber-500/10 shadow-xs"
+                        : "border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/40 opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+                      <Cards className="w-5 h-5" weight="duotone" />
+                    </div>
+                    <div className="font-bold text-sm text-zinc-900 dark:text-zinc-50">
+                      {t('multiplayer.mode.pokerTitle', 'Poker Wiedzy')}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                      {t('multiplayer.mode.pokerDesc', 'Licytacja żetonów w ciemno przed odkryciem odpowiedzi. Rundy i blef.')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm mb-8">
                 <h3 className="text-left font-bold text-lg mb-6 flex items-center justify-between text-zinc-900 dark:text-white">
                   <span>{t('multiplayer.lobby.playersCount', 'Gracze ({{count}})', { count: players.length })}</span>
                   <div className="flex items-center gap-2">
                     {isHost && players.length > 1 && players.every(p => p.status === 'ready' || p.isHost) && (
-                      <button onClick={startRace} className="text-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition cursor-pointer">
-                        {t('multiplayer.lobby.startRace', 'Rozpocznij Wyścig!')}
+                      <button onClick={() => startRace()} className="text-sm bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition cursor-pointer">
+                        {gameMode === 'tug_of_war'
+                          ? t('multiplayer.lobby.startTug', 'Rozpocznij Pojedynek!')
+                          : gameMode === 'poker'
+                          ? t('multiplayer.lobby.startPoker', 'Rozpocznij Pokera!')
+                          : t('multiplayer.lobby.startRace', 'Rozpocznij Wyścig!')}
                       </button>
                     )}
                     {isHost && players.length > 1 && (

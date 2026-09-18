@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Moon, Check } from '@phosphor-icons/react';
 import { useMultiplayerContext } from '../contexts/MultiplayerContext';
 import { MultiplayerRaceTrack } from './multiplayer/MultiplayerRaceTrack';
+import { TugOfWarTrack } from './multiplayer/TugOfWarTrack';
+import { PokerWagerView } from './multiplayer/PokerWagerView';
 import { Button } from './ui/Button';
 
 import { useTranslation } from 'react-i18next';
@@ -24,7 +26,7 @@ interface TestViewProps {
   onQuit: () => void;
 }
 
-export const TestView: FC<TestViewProps> = ({
+const StandardTestView: FC<TestViewProps> = ({
   session,
   sessionId,
   onSessionUpdate,
@@ -61,7 +63,7 @@ export const TestView: FC<TestViewProps> = ({
     }
   }, [sessionId, session.questions.length, session.chunkConfig]);
 
-  const { roomCode, players, broadcastTestProgress, currentUserId } = useMultiplayerContext();
+  const { roomCode, players, broadcastTestProgress, currentUserId, gameMode, tugState, pullRope } = useMultiplayerContext();
   const isMultiplayer = Boolean(roomCode);
   
   const engine = useTestEngine({
@@ -72,6 +74,11 @@ export const TestView: FC<TestViewProps> = ({
     showingPrevious,
     setShowingPrevious,
     instantMode: isMultiplayer,
+    onAnswerEvaluated: (isCorrect, streak) => {
+      if (roomCode && gameMode === 'tug_of_war') {
+        pullRope(isCorrect, streak);
+      }
+    },
   });
 
   useEffect(() => {
@@ -79,6 +86,16 @@ export const TestView: FC<TestViewProps> = ({
       broadcastTestProgress(engine.progressPercent);
     }
   }, [engine.progressPercent, roomCode, broadcastTestProgress]);
+
+  // Auto-finish transition when Tug of War game is concluded
+  useEffect(() => {
+    if (gameMode === 'tug_of_war' && tugState?.winner) {
+      const timer = setTimeout(() => {
+        onQuit();
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [gameMode, tugState?.winner, onQuit]);
 
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
@@ -125,10 +142,18 @@ export const TestView: FC<TestViewProps> = ({
         hideProgressBar={Boolean(roomCode && players.length > 1)}
       >
         {roomCode && players.length > 1 && (
-          <MultiplayerRaceTrack
-            players={players}
-            currentUserId={currentUserId}
-          />
+          gameMode === 'tug_of_war' ? (
+            <TugOfWarTrack
+              players={players}
+              currentUserId={currentUserId}
+              tugState={tugState}
+            />
+          ) : (
+            <MultiplayerRaceTrack
+              players={players}
+              currentUserId={currentUserId}
+            />
+          )
         )}
       </TestHeader>
 
@@ -299,3 +324,14 @@ export const TestView: FC<TestViewProps> = ({
     </div>
   );
 };
+
+export const TestView: FC<TestViewProps> = (props) => {
+  const { roomCode, gameMode } = useMultiplayerContext();
+
+  if (roomCode && gameMode === 'poker') {
+    return <PokerWagerView session={props.session} onQuit={props.onQuit} />;
+  }
+
+  return <StandardTestView {...props} />;
+};
+

@@ -26,6 +26,7 @@ interface UseTestEngineProps {
   showingPrevious: boolean;
   setShowingPrevious: React.Dispatch<React.SetStateAction<boolean>>;
   instantMode?: boolean;
+  onAnswerEvaluated?: (isCorrect: boolean, streak: number) => void;
 }
 
 const FEEDBACK_DELAY_MS = 150;
@@ -39,6 +40,7 @@ export function useTestEngine({
   showingPrevious,
   setShowingPrevious,
   instantMode = false,
+  onAnswerEvaluated,
 }: UseTestEngineProps) {
   const [elapsed, setElapsed] = useState(session.elapsedSeconds);
   const [isAfk, setIsAfk] = useState(false);
@@ -201,6 +203,9 @@ export function useTestEngine({
         setOptimisticWrongCount((currentItem?.wrongCount ?? 0) + 1);
       }
 
+      const evaluatedStreak = isCorrect ? ((currentItem?.consecutiveCorrect ?? 0) + 1) : 0;
+      onAnswerEvaluated?.(isCorrect, evaluatedStreak);
+
       const newFeedback: AnswerFeedback = {
         selectedAnswerIndices: chosenIndices,
         state: isCorrect ? 'correct' : 'wrong',
@@ -246,6 +251,7 @@ export function useTestEngine({
       instantMode,
       sessionId,
       handleNext,
+      onAnswerEvaluated,
     ]
   );
 
