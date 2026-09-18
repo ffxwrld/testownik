@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, SkipForward, ArrowLeft, PanelRightOpen } from 'lucide-react';
+import { Check, SkipForward, ArrowLeft, SidebarSimple } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { AnswerFeedback } from '../../models/types';
@@ -212,7 +212,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
               title={t('test.expandSidebar')}
               aria-label={t('test.expandSidebar')}
             >
-              <PanelRightOpen className="w-4 h-4" />
+              <SidebarSimple className="w-4 h-4" />
             </button>
           )}
         </motion.div>

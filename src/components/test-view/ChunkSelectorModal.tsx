@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, X, Play, CheckCircle2, SlidersHorizontal, BookOpen } from 'lucide-react';
+import { Stack, X, Play, CheckCircle, SlidersHorizontal, BookOpen } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { ChunkInfo, Question } from '../../models/types';
 import { getChunkProgress } from '../../utils/session';
@@ -53,7 +53,7 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
           <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center flex-shrink-0">
-                <Layers className="w-5 h-5" />
+                <Stack className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -119,7 +119,7 @@ export const ChunkSelectorModal: React.FC<ChunkSelectorModalProps> = ({
                     <div className="flex items-center gap-2">
                       {isFinished ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <CheckCircle className="w-3.5 h-3.5" />
                           {t('test.chunkSelectorModal.completed', 'Ukończona')}
                         </span>
                       ) : (

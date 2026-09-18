@@ -2,20 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
-  Gamepad2,
-  Users,
-  Heart,
-  Zap,
-  Sparkles,
-  Trophy,
-  Play,
-  Layers,
-  ChevronRight,
-  X,
-  LogIn,
-  Flame,
-  ArrowUpRight,
-} from 'lucide-react';
+  GameController, Users, Heart, Lightning, Sparkle, Trophy, Play, Stack, CaretRight, X, SignIn, Flame, ArrowUpRight } from '@phosphor-icons/react';
 import { Question, SavedSessionMetadata } from '../../models/types';
 import { SoloGameMode, getSoloModeRecord } from '../../utils/arcadeStorage';
 import { getAllSessionMetadata, loadSession } from '../../utils/session';
@@ -124,7 +111,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
     <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12">
         {/* Header with Title and Apple Segmented Control */}
         <PageHeader
-          icon={<Gamepad2 />}
+          icon={<GameController />}
           title={t('games.title')}
           subtitle={t('games.subtitle')}
         >
@@ -239,7 +226,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Zap className="w-5 h-5 fill-current" />
+                        <Lightning className="w-5 h-5 fill-current" />
                       </div>
                       <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-full border border-amber-200/50 dark:border-amber-900/30">
                         {t('games.solo.timeAttack.badge')}
@@ -277,7 +264,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Sparkles className="w-5 h-5" />
+                        <Sparkle className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20 px-2.5 py-1 rounded-full border border-primary-200/50 dark:border-primary-900/30">
                         {t('games.solo.zen.badge')}
@@ -315,7 +302,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
                   <span>{t('games.solo.comboFootnote', 'Każda poprawna odpowiedź buduje mnożnik combo (do x5)')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <Layers className="w-3.5 h-3.5 text-zinc-400" />
+                  <Stack className="w-3.5 h-3.5 text-zinc-400" />
                   <span>{t('games.solo.savedPacksFootnote', 'Zapisane bazy pytań: {{count}}', { count: sessions.length })}</span>
                 </div>
               </div>
@@ -338,7 +325,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
                   className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20"
                   onClick={onNavigateToAuth}
                 >
-                  <LogIn className="w-4 h-4" />
+                  <SignIn className="w-4 h-4" />
                   <span>{t('games.multiplayerLogin')}</span>
                 </Button>
               </div>
@@ -420,7 +407,7 @@ export const GameHubView: FC<GameHubViewProps> = ({
                             {isLoadingThis ? (
                               <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors" />
+                              <CaretRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors" />
                             )}
                           </div>
                         </div>

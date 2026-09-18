@@ -67,6 +67,9 @@ Stan projektu: **v1.1.3** | Stabilny build | TypeScript 0 błędów | Testy: 48/
 - [x] Zaktualizowanie `.gitignore` (ignorowanie `graphify-out/` oraz `strix_runs/`).
 - [x] Przygotowanie spójnego commita w git podsumowującego refaktoryzację (nagłówki, i18n, bezpieczeństwo, optymalizacja bundle, testy silników domenowych).
 
+### 7. 🐇 Final Release & Code Quality Gate
+- [ ] **CodeRabbit Review**: Gdy aplikacja będzie w 100% gotowa (przed finalnym wydaniem produkcyjnym), przeprowadzenie kompleksowego audytu i code review całego repozytorium przy użyciu **CodeRabbit**.
+
 ---
 
 ## ✅ Zrealizowane Kamienie Milowe

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, ArrowRight, RotateCcw, Layers } from 'lucide-react';
+import { Trophy, ArrowRight, ArrowCounterClockwise, Stack } from '@phosphor-icons/react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../ui/Button';
 
@@ -103,7 +103,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
               onClick={onOpenSelector}
               className="rounded-xl py-3"
             >
-              <Layers className="w-4 h-4 mr-2" />
+              <Stack className="w-4 h-4 mr-2" />
               {t('test.chunkCompletionModal.chooseOther', 'Wybierz inną część')}
             </Button>
 
@@ -115,7 +115,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                 onClick={onRepeatChunk}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <ArrowCounterClockwise className="w-3.5 h-3.5" />
                 {t('test.chunkCompletionModal.repeatChunk', 'Powtórz tę część')}
               </motion.button>
               {hasNextChunk && (

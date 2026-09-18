@@ -24,9 +24,9 @@ const RAW_QUESTIONS: RawDemoQuestion[] = [
     answers: ['10', '11', '12', '13'],
   },
   {
-    mask: 'X0001',
-    text: 'Który planet jest największy w Układzie Słonecznym?',
-    answers: ['Mars', 'Saturn', 'Uran', 'Jowisz'],
+    mask: 'X1000',
+    text: 'Która planeta znajduje się najbliżej Słońca?',
+    answers: ['Merkury', 'Wenus', 'Ziemia', 'Mars'],
   },
   {
     mask: 'X0100',

@@ -1,26 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  format, 
-  parseISO, 
-  isValid, 
-  addDays, 
-  addMonths, 
-  subMonths, 
-  startOfWeek, 
-  endOfWeek, 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  isSameMonth, 
-  isSameDay, 
-  isToday, 
-  isBefore, 
-  startOfDay 
+  format, parseISO, isValid, addDays, addMonths, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isBefore, startOfDay 
 } from 'date-fns';
 import { pl, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Calendar as CalendarIcon, CaretLeft, CaretRight, X, Sparkle } from '@phosphor-icons/react';
 import { cn } from '@/utils/cn';
 
 export interface DatePickerProps {
@@ -239,7 +224,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {/* Quick Presets */}
             <div className="mb-3.5 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">
-                <Sparkles className="w-3 h-3 text-primary-500" />
+                <Sparkle className="w-3 h-3 text-primary-500" />
                 <span>{isEn ? 'Quick presets' : 'Szybki wybór'}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -268,7 +253,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                   title={isEn ? 'Previous month' : 'Poprzedni miesiąc'}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <CaretLeft className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
@@ -276,7 +261,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                   title={isEn ? 'Next month' : 'Następny miesiąc'}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <CaretRight className="w-4 h-4" />
                 </button>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Save } from 'lucide-react';
+import { Download, FloppyDisk } from '@phosphor-icons/react';
 import { Button } from '../ui/Button';
 import { BackButton } from '../common/BackButton';
 
@@ -83,7 +83,7 @@ export const CreatorHeader: FC<CreatorHeaderProps> = ({
         )}
         <Button variant="primary" onClick={onSaveClick} className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent flex items-center justify-center sm:gap-2 px-2 sm:pl-3 sm:pr-2.5 cursor-pointer">
           <div className="flex items-center">
-            <Save className="w-4 h-4 sm:mr-1.5 shrink-0" />
+            <FloppyDisk className="w-4 h-4 sm:mr-1.5 shrink-0" />
             <span className="hidden sm:inline">{t('creator.saveToApp')}</span>
           </div>
           <kbd className="hidden sm:inline-flex items-center justify-center h-5 px-1.5 ml-2 text-[10px] font-medium font-sans text-emerald-900 bg-emerald-400/50 rounded-md border border-emerald-400/30">

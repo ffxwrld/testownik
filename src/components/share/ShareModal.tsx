@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Copy, Check, Radio, CheckCircle2, AlertCircle, Loader2, QrCode } from 'lucide-react';
+import { X, Copy, Check, Radio, CheckCircle, WarningCircle, CircleNotch, QrCode } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { SavedSessionMetadata } from '../../models/types';
 import { useP2PTransfer } from '../../hooks/useP2PTransfer';
@@ -162,7 +162,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
                         />
                       ) : (
                         <div className="w-44 h-44 flex items-center justify-center text-zinc-400 text-xs">
-                          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+                          <CircleNotch className="w-6 h-6 animate-spin text-primary-500" />
                         </div>
                       )}
                     </div>
@@ -192,7 +192,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
               </AnimatePresence>
 
               <div className="flex items-center justify-center gap-2 pt-2 text-xs text-zinc-400 dark:text-zinc-500">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <CircleNotch className="w-3.5 h-3.5 animate-spin" />
                 <span>{t('share.waitingNotice', 'Oczekiwanie na połączenie odbiorcy... Trzymaj to okno otwarte.')}</span>
               </div>
             </div>
@@ -200,7 +200,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
 
           {status === 'connecting' && (
             <div className="py-8 text-center space-y-3">
-              <Loader2 className="w-10 h-10 text-primary-500 animate-spin mx-auto" />
+              <CircleNotch className="w-10 h-10 text-primary-500 animate-spin mx-auto" />
               <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
                 {t('share.connecting', 'Odbiorca dołączył! Nawiązywanie tunelu WebRTC...')}
               </p>
@@ -228,7 +228,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
           {status === 'completed' && (
             <div className="py-6 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7" />
+                <CheckCircle className="w-7 h-7" />
               </div>
               <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
                 {t('share.successTitle', 'Paczka pomyślnie przesłana!')}
@@ -242,7 +242,7 @@ export const ShareModal: FC<ShareModalProps> = ({ session, onClose }) => {
           {status === 'error' && (
             <div className="py-4 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
-                <AlertCircle className="w-7 h-7" />
+                <WarningCircle className="w-7 h-7" />
               </div>
               <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                 {t('share.errorTitle', 'Wystąpił błąd')}

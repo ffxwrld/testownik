@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { LogOut, Clock, Layers, ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { SignOut, Clock, Stack, CaretDown, SidebarSimple } from '@phosphor-icons/react';
 import { ProgressBar } from '../ui/ProgressBar';
 import { formatTime } from '../../utils/session';
 import { cn } from '../../utils/cn';
@@ -55,7 +55,7 @@ export const TestHeader: FC<TestHeaderProps> = ({
                   onClick={onQuitConfirm}
                   className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium animate-fadeIn shadow-sm shadow-red-500/20"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <SignOut className="w-4 h-4" />
                   {t('test.yes')}
                 </button>
                 <button
@@ -71,7 +71,7 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 className="group p-2 rounded-xl text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 title={t('test.quit')}
               >
-                <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                <SignOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
               </button>
             )}
 
@@ -85,9 +85,9 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-colors border border-zinc-200/80 dark:border-zinc-700/80 cursor-pointer shadow-xs select-none tabular-nums"
                 title={t('test.chunkSelectorModal.title', 'Wybierz część')}
               >
-                <Layers className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
+                <Stack className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
                 <span>{chunkLabel}</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <CaretDown className="w-3 h-3 text-zinc-400" />
               </motion.button>
             )}
           </div>
@@ -130,9 +130,9 @@ export const TestHeader: FC<TestHeaderProps> = ({
                 aria-label={isSidebarCollapsed ? t('test.expandSidebar') : t('test.collapseSidebar')}
               >
                 {isSidebarCollapsed ? (
-                  <PanelRightOpen className="w-4 h-4" />
+                  <SidebarSimple className="w-4 h-4" />
                 ) : (
-                  <PanelRightClose className="w-4 h-4" />
+                  <SidebarSimple className="w-4 h-4" />
                 )}
               </motion.button>
             )}

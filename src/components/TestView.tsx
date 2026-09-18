@@ -1,6 +1,6 @@
 import { type FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Moon, Check } from 'lucide-react';
+import { Trophy, Moon, Check } from '@phosphor-icons/react';
 import { useMultiplayerContext } from '../contexts/MultiplayerContext';
 import { MultiplayerRaceTrack } from './multiplayer/MultiplayerRaceTrack';
 import { Button } from './ui/Button';

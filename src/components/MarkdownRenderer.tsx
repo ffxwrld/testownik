@@ -2,7 +2,7 @@ import { FC, useState, useMemo, memo } from 'react';
 import ReactMarkdown, { Components, defaultUrlTransform } from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { ZoomIn } from 'lucide-react';
+import { MagnifyingGlassPlus } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
 
@@ -42,7 +42,7 @@ const InteractiveMarkdownImage: FC<InteractiveImageProps> = ({ src, alt, onZoom,
         className="max-w-full h-auto rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs mx-auto block max-h-[60vh] object-contain cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]"
       />
       <span className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/70 backdrop-blur-md text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 pointer-events-none shadow-md">
-        <ZoomIn className="w-3.5 h-3.5" />
+        <MagnifyingGlassPlus className="w-3.5 h-3.5" />
         <span>{t('components.questionRenderer.zoomHint') || 'Powiększ'}</span>
       </span>
     </span>

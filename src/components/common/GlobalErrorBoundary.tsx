@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { WarningCircle, ArrowsClockwise, House } from '@phosphor-icons/react';
 import i18n from '../../i18n/config';
 
 interface Props {
@@ -43,7 +43,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen w-full flex items-center justify-center p-6 bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100">
           <div className="w-full max-w-md p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-zinc-200/80 dark:border-zinc-800/80 text-center flex flex-col items-center">
             <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center mb-5">
-              <AlertCircle className="w-7 h-7" />
+              <WarningCircle className="w-7 h-7" />
             </div>
 
             <h2 className="text-xl font-bold mb-2">
@@ -67,7 +67,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                 onClick={this.handleReload}
                 className="w-full py-3 px-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-primary-500/20"
               >
-                <RefreshCw className="w-4 h-4" />
+                <ArrowsClockwise className="w-4 h-4" />
                 <span>{i18n.t('common.errorBoundary.reload', 'Odśwież stronę')}</span>
               </button>
 
@@ -76,7 +76,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                 onClick={this.handleGoHome}
                 className="w-full py-3 px-4 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
               >
-                <Home className="w-4 h-4" />
+                <House className="w-4 h-4" />
                 <span>{i18n.t('common.errorBoundary.home', 'Menu główne')}</span>
               </button>
             </div>

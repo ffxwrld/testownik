@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { pl, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, ListFilter } from 'lucide-react';
+import { CaretLeft, CaretRight, CalendarDots, Funnel } from '@phosphor-icons/react';
 import { CalendarEvent } from './types';
 
 export const ScheduleToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
@@ -28,7 +28,7 @@ export const ScheduleToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
             className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700/80 transition-colors shadow-none hover:shadow-xs"
             aria-label={t('test.prevQuestion', 'Poprzedni')}
           >
-            <ChevronLeft className="w-4 h-4" />
+            <CaretLeft className="w-4 h-4" />
           </motion.button>
 
           <motion.button
@@ -45,7 +45,7 @@ export const ScheduleToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
             className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700/80 transition-colors shadow-none hover:shadow-xs"
             aria-label={t('test.nextShort', 'Dalej')}
           >
-            <ChevronRight className="w-4 h-4" />
+            <CaretRight className="w-4 h-4" />
           </motion.button>
         </div>
 
@@ -71,7 +71,7 @@ export const ScheduleToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
               transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
             />
           )}
-          <CalendarDays className="w-3.5 h-3.5" />
+          <CalendarDots className="w-3.5 h-3.5" />
           {t('schedule.calendar.month')}
         </button>
 
@@ -90,7 +90,7 @@ export const ScheduleToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
               transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
             />
           )}
-          <ListFilter className="w-3.5 h-3.5" />
+          <Funnel className="w-3.5 h-3.5" />
           {t('schedule.calendar.agenda')}
         </button>
       </div>

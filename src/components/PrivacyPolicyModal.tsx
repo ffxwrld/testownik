@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { Shield } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 
 interface PrivacyPolicyModalProps {

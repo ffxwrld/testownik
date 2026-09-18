@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { differenceInCalendarDays, parseISO, format, startOfDay } from 'date-fns';
-import { X, Clock, BookOpen, Sparkles, ArrowRight } from 'lucide-react';
+import { X, Clock, BookOpen, Sparkle, ArrowRight } from '@phosphor-icons/react';
 import { SavedSessionMetadata } from '../../models/types';
 import { DatePicker } from '../ui/DatePicker';
 
@@ -115,7 +115,7 @@ export const ScheduleDetailModal: React.FC<ScheduleDetailModalProps> = ({
             <div className="space-y-1.5 pt-1">
               <div className="flex justify-between text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <Sparkle className="w-3 h-3 text-amber-500" />
                   {t('dashboard.yourProgress')}
                 </span>
                 <span>{progressPercent}%</span>

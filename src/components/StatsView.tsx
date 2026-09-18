@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BarChart3, LineChart, Trophy } from 'lucide-react';
+import { ChartBar, ChartLine, Trophy } from '@phosphor-icons/react';
 import { ProgressView } from './ProgressView';
 import { LeaderboardView } from './social/LeaderboardView';
 import { PageHeader } from './common/PageHeader';
@@ -18,7 +18,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState<StatsTab>('progress');
 
   const tabs: { id: StatsTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'progress', label: t('stats.tabs.progress'), icon: <LineChart className="w-4 h-4" /> },
+    { id: 'progress', label: t('stats.tabs.progress'), icon: <ChartLine className="w-4 h-4" /> },
     { id: 'ranking', label: t('stats.tabs.ranking'), icon: <Trophy className="w-4 h-4" /> },
   ];
 
@@ -65,7 +65,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ embedded = false }) => {
     <div className="w-full max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-32 md:pb-12">
       {/* Header & Apple Segmented Control */}
       <PageHeader
-        icon={<BarChart3 />}
+        icon={<ChartBar />}
         title={t('stats.title')}
         subtitle={t('stats.subtitle')}
       >

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { X, Calendar } from 'lucide-react';
+import { X, Calendar } from '@phosphor-icons/react';
 import { SavedSessionMetadata } from '../../models/types';
 import { DatePicker } from '../ui/DatePicker';
 

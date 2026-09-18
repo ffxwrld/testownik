@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowCounterClockwise, ArrowLeft, Sparkle, CircleNotch } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
@@ -218,7 +218,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-semibold uppercase tracking-wider mb-3"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Sparkle className="w-3.5 h-3.5" />
           <span>{t('multiplayer.podium.finalBadge', 'Finał wyścigu wieloosobowego')}</span>
         </motion.div>
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -287,7 +287,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                   className="relative mb-3 flex flex-col items-center text-center w-full"
                 >
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-850/40 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-inner">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <CircleNotch className="w-5 h-5 animate-spin" />
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500">
                     {t('multiplayer.podium.waiting', 'Oczekiwanie...')}
@@ -407,7 +407,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
                   className="relative mb-3 flex flex-col items-center text-center w-full"
                 >
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-amber-700/40 dark:border-amber-700/50 bg-amber-950/10 flex items-center justify-center text-amber-700/50 dark:text-amber-600 shadow-inner">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <CircleNotch className="w-5 h-5 animate-spin" />
                   </div>
                   <span className="mt-2 text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500">
                     {t('multiplayer.podium.waiting', 'Oczekiwanie...')}
@@ -594,7 +594,7 @@ export const MultiplayerPodium: React.FC<MultiplayerPodiumProps> = ({
             className="flex-1 py-3.5 rounded-xl shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2"
             onClick={onRematch}
           >
-            <RotateCcw className="w-4 h-4" />
+            <ArrowCounterClockwise className="w-4 h-4" />
             <span>{isHost ? t('multiplayer.podium.rematchHost', 'Rozpocznij rewanż') : t('multiplayer.podium.rematchGuest', 'Zagraj rewanż')}</span>
           </Button>
         )}

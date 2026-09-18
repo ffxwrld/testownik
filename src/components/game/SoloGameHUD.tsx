@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Heart, Zap, Sparkles, X, Volume2, VolumeX, Flame, Check } from 'lucide-react';
+import { Heart, Lightning, Sparkle, X, SpeakerHigh, SpeakerSimpleX, Flame, Check } from '@phosphor-icons/react';
 import { SoloGameMode } from '../../utils/arcadeStorage';
 import { isSoundMuted, toggleSoundMuted } from '../../utils/sound';
 import { TimeDeltaNotification } from '../../hooks/useSoloGameEngine';
@@ -78,13 +78,13 @@ export const SoloGameHUD: FC<SoloGameHUDProps> = ({
             )}
             {mode === 'time-attack' && (
               <>
-                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <Lightning className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                 <span>Time Attack</span>
               </>
             )}
             {mode === 'zen' && (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-primary-500" />
+                <Sparkle className="w-3.5 h-3.5 text-primary-500" />
                 <span>{t('games.solo.zen.title')}</span>
               </>
             )}
@@ -218,7 +218,7 @@ export const SoloGameHUD: FC<SoloGameHUDProps> = ({
             aria-label={muted ? (i18n.language === 'en' ? 'Unmute sound' : 'Włącz dźwięk') : (i18n.language === 'en' ? 'Mute sound' : 'Wycisz dźwięk')}
             className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70 active:scale-95 transition-all focus:outline-none cursor-pointer"
           >
-            {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            {muted ? <SpeakerSimpleX className="w-3.5 h-3.5" /> : <SpeakerHigh className="w-3.5 h-3.5" />}
           </button>
         </div>
       </header>

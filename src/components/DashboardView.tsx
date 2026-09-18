@@ -7,7 +7,7 @@ import { useUserStats } from '../hooks/useUserStats';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { getAllSessionMetadata } from '../utils/session';
 import { SavedSessionMetadata } from '../models/types';
-import { Play, Target, RotateCcw, LayoutDashboard } from 'lucide-react';
+import { Play, Target, ArrowCounterClockwise, SquaresFour } from '@phosphor-icons/react';
 import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 import { PageHeader } from './common/PageHeader';
 
@@ -67,7 +67,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
       
       {/* PAGE HEADER */}
       <PageHeader
-        icon={<LayoutDashboard />}
+        icon={<SquaresFour />}
         title={t('dashboard.greeting', { name: profile?.username || (i18n.language === 'en' ? 'User' : 'Użytkowniku') })}
         subtitle={
           <span>
@@ -162,7 +162,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
                 onClick={() => onResetSession(recentSessions[0].id)}
                 className="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-3.5 px-7 rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4" />
+                <ArrowCounterClockwise className="w-4 h-4" />
                 {t('sessionsList.startOver')}
               </motion.button>
             ) : (

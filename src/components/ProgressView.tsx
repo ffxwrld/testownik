@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useActivity } from '../hooks/useActivity';
-import { Clock, CheckCircle2, TrendingUp, Target, CalendarDays } from 'lucide-react';
+import { Clock, CheckCircle, TrendUp, Target, CalendarDots } from '@phosphor-icons/react';
 import { Card } from './ui/Card';
 
 interface ProgressViewProps {
@@ -67,7 +67,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
         <div className="space-y-6">
           
           <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-4">
-            <CalendarDays className="w-4 h-4 text-primary-500" /> {t('stats.progress.last7Days')}
+            <CalendarDots className="w-4 h-4 text-primary-500" /> {t('stats.progress.last7Days')}
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -112,7 +112,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
               <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
                   <div className="p-2 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-500/20">
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle className="w-5 h-5" />
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.sessions')}</span>
                 </div>
@@ -129,7 +129,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ showHeader = true })
               <Card className="p-5 flex flex-col items-start h-full">
                 <div className="flex items-center gap-2 mb-3 text-zinc-500">
                   <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20">
-                    <TrendingUp className="w-5 h-5" />
+                    <TrendUp className="w-5 h-5" />
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{t('stats.progress.questions')}</span>
                 </div>

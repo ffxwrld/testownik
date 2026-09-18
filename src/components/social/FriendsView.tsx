@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Users } from 'lucide-react';
+import { Users } from '@phosphor-icons/react';
 import { useFriends } from '../../hooks/useFriends';
 import { FriendData } from '../../utils/friends';
 import { UserProfile } from '../../models/social';

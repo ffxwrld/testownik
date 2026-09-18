@@ -1,6 +1,31 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import JSZip from 'jszip';
-import { decodeMask, parseQuestionFile, serializeQuestionToTxt, exportQuestionsToZip } from './parser';
+import { decodeMask, parseQuestionFile, serializeQuestionToTxt, exportQuestionsToZip, importSessionFromZip } from './parser';
+
+const idbMockStore = new Map<string, unknown>();
+vi.mock('idb-keyval', () => ({
+  get: vi.fn(async (key: string) => idbMockStore.get(key)),
+  set: vi.fn(async (key: string, val: unknown) => { idbMockStore.set(key, val); }),
+  del: vi.fn(async (key: string) => { idbMockStore.delete(key); }),
+  keys: vi.fn(async () => Array.from(idbMockStore.keys())),
+}));
+
+vi.mock('./db', () => ({
+  getAllSessionImages: vi.fn(async () => ({})),
+  saveSessionImages: vi.fn(async () => {}),
+  deleteSessionImages: vi.fn(async () => {}),
+}));
+
+const lsStore: Record<string, string> = {};
+Object.defineProperty(globalThis, 'localStorage', {
+  value: {
+    getItem: (key: string) => lsStore[key] ?? null,
+    setItem: (key: string, val: string) => { lsStore[key] = val; },
+    removeItem: (key: string) => { delete lsStore[key]; },
+    clear: () => { Object.keys(lsStore).forEach(k => delete lsStore[k]); },
+  },
+  writable: true,
+});
 
 describe('parser.ts', () => {
   describe('decodeMask', () => {
@@ -136,6 +161,59 @@ Odp 5`;
       const txtContent = await loadedZip.file('001.txt')?.async('string');
       expect(txtContent).toContain('X10');
       expect(txtContent).toContain('Pytanie 1');
+    });
+
+    it('should reset progress when exporting and importing an in-progress session', async () => {
+      const inProgressSession: any = {
+        version: 1,
+        baseName: 'Moja Paczka',
+        repeatMode: 2,
+        phase: 'test',
+        elapsedSeconds: 154,
+        currentQuestionIndex: 3,
+        questions: [
+          {
+            id: 'q1',
+            sourceFile: '001.txt',
+            text: 'Pytanie 1',
+            answers: [
+              { id: 'a1', text: 'A', isCorrect: true },
+              { id: 'a2', text: 'B', isCorrect: false },
+            ],
+            correctAnswerIndices: [0],
+          },
+          {
+            id: 'q2',
+            sourceFile: '002.txt',
+            text: 'Pytanie 2',
+            answers: [
+              { id: 'a3', text: 'C', isCorrect: true },
+              { id: 'a4', text: 'D', isCorrect: false },
+            ],
+            correctAnswerIndices: [0],
+          },
+        ],
+        queue: [
+          { questionId: 'q2', requiredCorrectStreak: 2, consecutiveCorrect: 1, wrongCount: 0, firstAnswerWrong: false },
+        ],
+        done: ['q1'],
+        doneStats: [{ questionId: 'q1', wrongCount: 1, elapsedSeconds: 40 }],
+      };
+
+      const blob = await exportQuestionsToZip('Moja Paczka', inProgressSession.questions, {}, inProgressSession);
+      const { sessionId, session: imported } = await importSessionFromZip(blob);
+
+      expect(sessionId).toBeTruthy();
+      expect(imported.baseName).toBe('Moja Paczka');
+      expect(imported.repeatMode).toBe(2);
+      // Progress must be reset!
+      expect(imported.currentQuestionIndex).toBe(0);
+      expect(imported.elapsedSeconds).toBe(0);
+      expect(imported.done).toEqual([]);
+      expect(imported.doneStats).toEqual([]);
+      // Queue must contain all questions with fresh streak
+      expect(imported.queue.length).toBe(2);
+      expect(imported.queue.every(item => item.consecutiveCorrect === 0)).toBe(true);
     });
   });
 });

@@ -5,7 +5,7 @@ import { pl, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { Calendar as CalendarIcon, BookOpen, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, BookOpen, Plus } from '@phosphor-icons/react';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { getAllSessionMetadata, loadSession, saveSession } from '../utils/session';

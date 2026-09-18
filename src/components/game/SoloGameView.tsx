@@ -7,7 +7,7 @@ import { useSoloGameEngine } from '../../hooks/useSoloGameEngine';
 import { SoloGameHUD } from './SoloGameHUD';
 import { SoloGameOverModal } from './SoloGameOverModal';
 import { QuestionCard } from '../test-view/QuestionCard';
-import { Check } from 'lucide-react';
+import { Check } from '@phosphor-icons/react';
 
 interface SoloGameViewProps {
   mode: SoloGameMode;

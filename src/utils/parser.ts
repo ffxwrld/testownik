@@ -237,7 +237,7 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
 
 import { SessionState } from '../models/types';
 import { getAllSessionImages } from './db';
-import { saveSession } from './session';
+import { saveSession, buildInitialSession } from './session';
 
 export function serializeQuestionToTxt(question: Question): string {
   const binaryMask = question.answers
@@ -269,28 +269,45 @@ export async function exportQuestionsToZip(
   const zip = new JSZip();
 
   // 1. Add meta.json for instant, lossless import into Testownik
-  const sessionData: SessionState = fullSession || {
-    version: 1,
-    questions,
-    queue: questions.map(q => ({
-      questionId: q.id,
-      requiredCorrectStreak: 1,
-      consecutiveCorrect: 0,
-      wrongCount: 0,
-      firstAnswerWrong: false,
-    })),
-    done: [],
-    doneStats: [],
-    repeatMode: 1,
-    elapsedSeconds: 0,
-    totalFirstAttempts: 0,
-    totalFirstCorrect: 0,
-    startedAt: new Date().toISOString(),
-    phase: 'test',
-    currentQuestionIndex: 0,
-    shuffledAnswerOrder: [],
-    baseName: baseName || 'test',
-  };
+  // When fullSession is provided, create clean initial session data
+  // so the recipient starts fresh from question 1 with 0 timer, while preserving
+  // base configuration (repeatMode, baseName, targetDate, chunkSize).
+  const sessionData: SessionState = fullSession
+    ? {
+        ...buildInitialSession(
+          fullSession.questions,
+          fullSession.repeatMode || 1,
+          fullSession.baseName || baseName || 'test',
+          fullSession.targetDate
+        ),
+        chunkConfig: fullSession.chunkConfig ? {
+          enabled: fullSession.chunkConfig.enabled,
+          chunkSize: fullSession.chunkConfig.chunkSize,
+          activeChunkIndex: null,
+        } : undefined,
+      }
+    : {
+        version: 1,
+        questions,
+        queue: questions.map(q => ({
+          questionId: q.id,
+          requiredCorrectStreak: 1,
+          consecutiveCorrect: 0,
+          wrongCount: 0,
+          firstAnswerWrong: false,
+        })),
+        done: [],
+        doneStats: [],
+        repeatMode: 1,
+        elapsedSeconds: 0,
+        totalFirstAttempts: 0,
+        totalFirstCorrect: 0,
+        startedAt: new Date().toISOString(),
+        phase: 'test',
+        currentQuestionIndex: 0,
+        shuffledAnswerOrder: [],
+        baseName: baseName || 'test',
+      };
   zip.file('meta.json', JSON.stringify(sessionData, null, 2));
 
   // 2. Add individual .txt files for standard Testownik compatibility
@@ -318,19 +335,37 @@ export async function exportSessionToZip(sessionId: string, session: SessionStat
 }
 
 export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: string, session: SessionState }> {
-  const zip = await JSZip.loadAsync(zipBlob);
+  const data = typeof (zipBlob as any).arrayBuffer === 'function'
+    ? await (zipBlob as any).arrayBuffer()
+    : zipBlob;
+  const zip = await JSZip.loadAsync(data);
   
   const metaFile = zip.file('meta.json');
   if (!metaFile) throw new Error('Nieprawidłowy plik trybu wieloosobowego (brak meta.json)');
   
   const metaContent = await metaFile.async('string');
-  const session: SessionState = JSON.parse(metaContent);
+  const rawSession: SessionState = JSON.parse(metaContent);
   
   // Generate a new Session ID for this imported session (so it doesn't collide if they already have it)
   const newSessionId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
     ? crypto.randomUUID()
     : `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-  session.synced = false; // reset synced flag
+
+  // Always reset progress for the imported session so the recipient starts fresh from question 1
+  const cleanSession: SessionState = buildInitialSession(
+    rawSession.questions || [],
+    rawSession.repeatMode || 1,
+    rawSession.baseName || 'Baza pytań',
+    rawSession.targetDate
+  );
+  if (rawSession.chunkConfig) {
+    cleanSession.chunkConfig = {
+      enabled: rawSession.chunkConfig.enabled,
+      chunkSize: rawSession.chunkConfig.chunkSize,
+      activeChunkIndex: null,
+    };
+  }
+  cleanSession.synced = false;
   
   const images: Record<string, Blob> = {};
   
@@ -341,11 +376,9 @@ export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: 
     }
   }
   
-  // We can't import 'saveSessionImages' directly here if it causes circular deps, 
-  // but let's assume we can call db.ts
   const { saveSessionImages } = await import('./db');
   await saveSessionImages(newSessionId, images);
   
-  await saveSession(session, newSessionId);
-  return { sessionId: newSessionId, session };
+  await saveSession(cleanSession, newSessionId);
+  return { sessionId: newSessionId, session: cleanSession };
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, CalendarDays, Calendar, Crown, Trophy } from 'lucide-react';
+import { Clock, CalendarDots, Calendar, Crown, Trophy } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ showHeader = t
 
   const timeRanges: { id: LeaderboardTimeRange; label: string; icon: React.ReactNode }[] = [
     { id: '7_days', label: t('social.leaderboard.ranges.sevenDays'), icon: <Clock className="w-4 h-4" /> },
-    { id: '30_days', label: t('social.leaderboard.ranges.thirtyDays'), icon: <CalendarDays className="w-4 h-4" /> },
+    { id: '30_days', label: t('social.leaderboard.ranges.thirtyDays'), icon: <CalendarDots className="w-4 h-4" /> },
     { id: 'all_time', label: t('social.leaderboard.ranges.allTime'), icon: <Calendar className="w-4 h-4" /> },
   ];
 

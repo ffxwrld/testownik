@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { Search, Zap, BarChart3, Gamepad2, User, BookOpen, Command } from 'lucide-react';
+import { MagnifyingGlass, Lightning, ChartBar, GameController, User, BookOpen, Command } from '@phosphor-icons/react';
 import { useSpotlightSearch } from '../../hooks/useSpotlightSearch';
 import { getAllSessionMetadata } from '../../utils/session';
 import { SavedSessionMetadata } from '../../models/types';
@@ -27,9 +27,9 @@ export const CommandPalette: React.FC = () => {
   }, [isOpen]);
 
   const navItems = [
-    { id: 'nav-nauka', label: t('nav.learn'), icon: <Zap className="w-4 h-4" />, action: () => setLocation('/nauka'), shortcut: 'N' },
-    { id: 'nav-stats', label: t('nav.stats'), icon: <BarChart3 className="w-4 h-4" />, action: () => setLocation('/statystyki'), shortcut: 'S' },
-    { id: 'nav-multi', label: t('nav.multiplayer'), icon: <Gamepad2 className="w-4 h-4" />, action: () => setLocation('/multiplayer'), shortcut: 'M' },
+    { id: 'nav-nauka', label: t('nav.learn'), icon: <Lightning className="w-4 h-4" />, action: () => setLocation('/nauka'), shortcut: 'N' },
+    { id: 'nav-stats', label: t('nav.stats'), icon: <ChartBar className="w-4 h-4" />, action: () => setLocation('/statystyki'), shortcut: 'S' },
+    { id: 'nav-multi', label: t('nav.multiplayer'), icon: <GameController className="w-4 h-4" />, action: () => setLocation('/multiplayer'), shortcut: 'M' },
     { id: 'nav-profile', label: t('nav.profile'), icon: <User className="w-4 h-4" />, action: () => setLocation('/profil'), shortcut: 'P' },
   ];
 
@@ -117,7 +117,7 @@ export const CommandPalette: React.FC = () => {
               className="w-full max-w-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50 pointer-events-auto flex flex-col max-h-[60vh]"
             >
               <div className="flex items-center px-4 border-b border-zinc-200/50 dark:border-zinc-800/50">
-                <Search className="w-5 h-5 text-zinc-400 shrink-0" />
+                <MagnifyingGlass className="w-5 h-5 text-zinc-400 shrink-0" />
                 <input
                   ref={inputRef}
                   value={query}

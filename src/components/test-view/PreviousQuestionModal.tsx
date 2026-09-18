@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { MarkdownRenderer } from '../MarkdownRenderer';
 import { QuestionRenderer } from '../QuestionRenderer';
 import { PreviousQuestionData } from '../../hooks/useTestEngine';

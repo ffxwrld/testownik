@@ -1,6 +1,6 @@
 import { type FC, ReactNode, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Layers, AlertCircle, FileText } from 'lucide-react';
+import { Stack, WarningCircle, FileText } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
@@ -177,13 +177,13 @@ const QuestionCardComponent: FC<QuestionCardProps> = ({
           </Badge>
           {isMultiAnswer && (
             <Badge variant="warning">
-              <Layers className="w-3 h-3" />
+              <Stack className="w-3 h-3" />
               {t('test.multipleCorrect')}
             </Badge>
           )}
           {wrongCountForCurrent > 0 && (
             <Badge variant="warning">
-              <AlertCircle className="w-3 h-3" />
+              <WarningCircle className="w-3 h-3" />
               {t('test.errors', { count: wrongCountForCurrent })}
             </Badge>
           )}
@@ -204,7 +204,7 @@ const QuestionCardComponent: FC<QuestionCardProps> = ({
           }}
           className="w-full"
         >
-          <Card className="overflow-hidden bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-sm">
+          <Card className="overflow-hidden bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-sm notranslate" translate="no">
             <div className="px-6 py-8 md:px-8 md:py-10">
               <div className="text-lg md:text-xl font-medium text-zinc-900 dark:text-zinc-50 leading-relaxed">
                 <QuestionRenderer 
@@ -270,7 +270,7 @@ const QuestionCardComponent: FC<QuestionCardProps> = ({
                   >
                     <div className="flex items-start gap-4">
                       <div className="mt-0.5">{getAnswerBadge(shuffledIdx)}</div>
-                      <div className="flex-1">
+                      <div className="flex-1 notranslate" translate="no">
                         <MarkdownRenderer content={answer.text} className="[&>p]:mb-0" />
                       </div>
                     </div>

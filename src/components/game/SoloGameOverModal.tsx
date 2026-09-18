@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Trophy, RotateCcw, Home, Sparkles, Flame, Target, Clock, ShieldAlert, Timer } from 'lucide-react';
+import { Trophy, ArrowCounterClockwise, House, Sparkle, Flame, Target, Clock, ShieldWarning, Timer } from '@phosphor-icons/react';
 import { SoloGameMode, SoloModeRecord } from '../../utils/arcadeStorage';
 
 interface SoloGameOverModalProps {
@@ -70,9 +70,9 @@ export const SoloGameOverModal: FC<SoloGameOverModalProps> = ({
           ) : mode === 'time-attack' ? (
             <Timer className="w-8 h-8 text-amber-500" strokeWidth={2} />
           ) : mode === 'sudden-death' ? (
-            <ShieldAlert className="w-8 h-8 text-rose-500" strokeWidth={2} />
+            <ShieldWarning className="w-8 h-8 text-rose-500" strokeWidth={2} />
           ) : (
-            <Sparkles className="w-8 h-8 text-primary-500" strokeWidth={2} />
+            <Sparkle className="w-8 h-8 text-primary-500" strokeWidth={2} />
           )}
         </div>
 
@@ -90,7 +90,7 @@ export const SoloGameOverModal: FC<SoloGameOverModalProps> = ({
             animate={{ scale: 1, opacity: 1 }}
             className="mb-6 py-2 px-4 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <Sparkle className="w-3.5 h-3.5 text-amber-500" />
             <span>
               {isNewHighScore && isNewBestStreak
                 ? `${t('games.gameOver.newHighScore')} & ${t('games.gameOver.newBestStreak')}`
@@ -105,7 +105,7 @@ export const SoloGameOverModal: FC<SoloGameOverModalProps> = ({
         <div className="rounded-2xl bg-zinc-100/60 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800/80 divide-y divide-zinc-200/60 dark:divide-zinc-800/80 mb-7 text-left text-sm">
           <div className="p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-zinc-600 dark:text-zinc-400 font-medium">
-              <Sparkles className="w-4 h-4 text-primary-500" />
+              <Sparkle className="w-4 h-4 text-primary-500" />
               <span>{t('games.gameOver.stats.score')}</span>
             </div>
             <div className="text-right">
@@ -168,7 +168,7 @@ export const SoloGameOverModal: FC<SoloGameOverModalProps> = ({
             onClick={onRestart}
             className="w-full h-12 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm focus:outline-none cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
+            <ArrowCounterClockwise className="w-4 h-4" />
             <span>{t('games.gameOver.playAgain')}</span>
           </button>
           <button
@@ -176,7 +176,7 @@ export const SoloGameOverModal: FC<SoloGameOverModalProps> = ({
             onClick={onExit}
             className="w-full h-12 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-zinc-700 dark:text-zinc-300 font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all focus:outline-none cursor-pointer"
           >
-            <Home className="w-4 h-4" />
+            <House className="w-4 h-4" />
             <span>{t('games.gameOver.exit')}</span>
           </button>
         </div>

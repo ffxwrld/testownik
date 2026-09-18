@@ -1,7 +1,7 @@
 import { FC, ReactNode, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Zap, Gamepad2, Calendar, User } from 'lucide-react';
+import { SquaresFour, Lightning, GameController, Calendar, User } from '@phosphor-icons/react';
 
 import { useLocation } from 'wouter';
 import logo from '../../assets/logo.png';
@@ -32,9 +32,9 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
   const levelInfo = stats ? calculateLevel(stats.total_xp) : { level: 1, currentLevelXp: 0, nextLevelXp: 1250, progress: 0, xpToNextLevel: 1250 };
 
   const mainTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
-    { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
-    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: t('nav.games', 'Graj') },
-    { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
+    { id: 'dashboard', icon: <SquaresFour className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
+    { id: 'multiplayer', icon: <GameController className="w-5 h-5" />, label: t('nav.games', 'Graj') },
+    { id: 'learn', icon: <Lightning className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
     { id: 'schedule', icon: <Calendar className="w-5 h-5" />, label: t('nav.schedule', 'Harmonogram') },
   ];
 
@@ -62,9 +62,9 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, onNavigate }) => {
   );
 
   const mobileTabs: { id: MainLayoutNavTarget; icon: React.ReactNode; label: string }[] = [
-    { id: 'dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
-    { id: 'learn', icon: <Zap className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
-    { id: 'multiplayer', icon: <Gamepad2 className="w-5 h-5" />, label: t('nav.games', 'Graj') },
+    { id: 'dashboard', icon: <SquaresFour className="w-5 h-5" />, label: t('nav.dashboard', 'Pulpit') },
+    { id: 'learn', icon: <Lightning className="w-5 h-5" />, label: t('nav.learn', 'Nauka') },
+    { id: 'multiplayer', icon: <GameController className="w-5 h-5" />, label: t('nav.games', 'Graj') },
     { id: 'schedule', icon: <Calendar className="w-5 h-5" />, label: t('nav.schedule', 'Harmonogram') },
     { id: 'profile', icon: profileAvatarIcon, label: t('nav.profile', 'Profil') },
   ];

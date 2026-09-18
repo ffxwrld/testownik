@@ -1,7 +1,7 @@
-import { type FC, type ReactNode } from 'react';
+import { type FC, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../utils/cn';
 
-interface CardProps {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -23,9 +23,11 @@ export const Card: FC<CardProps> = ({
   padding = 'lg',
   glass = false,
   variant = 'default',
+  ...rest
 }) => {
   return (
     <div
+      {...rest}
       className={cn(
         variant === 'hero' ? 'rounded-3xl' : 'rounded-2xl',
         'border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs transition-colors duration-150',

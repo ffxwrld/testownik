@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { X, MagnifyingGlassPlus, MagnifyingGlassMinus, ArrowCounterClockwise } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 
 interface ImageLightboxModalProps {
@@ -135,7 +135,7 @@ export const ImageLightboxModal: FC<ImageLightboxModalProps> = ({
                 aria-label={t('components.questionRenderer.zoomOut') || 'Zoom Out'}
                 className="p-1.5 rounded-full hover:bg-white/15 active:scale-95 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer"
               >
-                <ZoomOut className="w-4 h-4" />
+                <MagnifyingGlassMinus className="w-4 h-4" />
               </button>
 
               <button
@@ -155,7 +155,7 @@ export const ImageLightboxModal: FC<ImageLightboxModalProps> = ({
                 aria-label={t('components.questionRenderer.zoomIn') || 'Zoom In'}
                 className="p-1.5 rounded-full hover:bg-white/15 active:scale-95 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer"
               >
-                <ZoomIn className="w-4 h-4" />
+                <MagnifyingGlassPlus className="w-4 h-4" />
               </button>
 
               <div className="w-px h-4 bg-white/20 mx-1" />
@@ -167,7 +167,7 @@ export const ImageLightboxModal: FC<ImageLightboxModalProps> = ({
                 aria-label={t('components.questionRenderer.resetZoom') || 'Reset'}
                 className="p-1.5 rounded-full hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <ArrowCounterClockwise className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

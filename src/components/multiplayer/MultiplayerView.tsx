@@ -5,7 +5,7 @@ import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
 import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
-import { Users, Play, Download, CheckCircle2, Copy, Loader2, QrCode } from 'lucide-react';
+import { Users, Play, Download, CheckCircle, Copy, CircleNotch, QrCode } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { BackButton } from '../common/BackButton';
 import { QRCodeModal } from './QRCodeModal';
@@ -339,7 +339,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                         onClick={handleStartTransfer} 
                         className="text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-2 rounded-lg font-bold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                       >
-                        {isSendingPackage && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {isSendingPackage && <CircleNotch className="w-4 h-4 animate-spin" />}
                         {isSendingPackage 
                           ? t('multiplayer.lobby.sendingPackage', 'Wysyłanie...') 
                           : players.some(p => !p.isHost && p.status === 'ready') 
@@ -394,7 +394,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                           )}
                           {p.status === 'ready' && (
                             <div key="ready-wrap">
-                              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                              <CheckCircle className="w-6 h-6 text-emerald-500" />
                             </div>
                           )}
                           {p.status === 'joined' && !p.isHost && (

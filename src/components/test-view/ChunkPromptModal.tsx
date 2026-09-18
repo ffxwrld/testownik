@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Check, ArrowRight } from 'lucide-react';
+import { Stack, Check, ArrowRight } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/Button';
 
@@ -62,7 +62,7 @@ export const ChunkPromptModal: React.FC<ChunkPromptModalProps> = ({
 
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center flex-shrink-0">
-              <Layers className="w-5 h-5" />
+              <Stack className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">

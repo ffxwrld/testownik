@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ZoomIn } from 'lucide-react';
+import { MagnifyingGlassPlus } from '@phosphor-icons/react';
 import { getSessionImage } from '../utils/db';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
@@ -108,7 +108,7 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
               className="max-w-full h-auto max-h-[60vh] rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs block object-contain cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]" 
             />
             <span className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/70 backdrop-blur-md text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 pointer-events-none shadow-md">
-              <ZoomIn className="w-3.5 h-3.5" />
+              <MagnifyingGlassPlus className="w-3.5 h-3.5" />
               <span>{t('components.questionRenderer.zoomHint') || 'Powiększ'}</span>
             </span>
           </div>
@@ -119,7 +119,7 @@ export const QuestionRenderer: FC<QuestionRendererProps> = ({
   }, [hasParsedTags, imageUrls, t]);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative notranslate ${className}`} translate="no">
       {isLoading && (
         <div className="absolute top-0 right-0 p-2">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full animate-pulse border border-zinc-200 dark:border-zinc-700">

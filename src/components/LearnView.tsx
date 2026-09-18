@@ -9,7 +9,7 @@ import { getAllSessionMetadata, loadSession, saveSession } from '../utils/sessio
 import { format } from 'date-fns';
 import { Button } from './ui/Button';
 import { DatePicker } from './ui/DatePicker';
-import { PenTool, UploadCloud, Layers, BookOpen, ArrowDownToLine } from 'lucide-react';
+import { PenNib, CloudArrowUp, Stack, BookOpen, DownloadSimple } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { SessionsList } from './SessionsList';
 import { ImportModal } from './common/ImportModal';
@@ -170,7 +170,7 @@ export const LearnView: FC<LearnViewProps> = ({
           className="w-full h-[152px] border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 hover:bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 active:scale-[0.98]"
         >
           <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-2.5 group-hover:scale-105 transition-transform">
-            <Layers className="w-5 h-5" />
+            <Stack className="w-5 h-5" />
           </div>
           <span className="font-bold text-amber-700 dark:text-amber-300 text-sm">
             {t('learn.createFlashcards')}
@@ -201,7 +201,7 @@ export const LearnView: FC<LearnViewProps> = ({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
-                <UploadCloud className="w-5 h-5" />
+                <CloudArrowUp className="w-5 h-5" />
               )}
             </div>
             <span className="font-bold text-primary-700 dark:text-primary-300 text-sm">
@@ -220,7 +220,7 @@ export const LearnView: FC<LearnViewProps> = ({
             title={t('learn.receiveWithCode', 'Odbierz kodem')}
           >
             <div className="w-8 h-8 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center group-hover/right:scale-105 transition-transform shrink-0">
-              <ArrowDownToLine className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <DownloadSimple className="w-4 h-4 text-primary-600 dark:text-primary-400" />
             </div>
             <div className="flex flex-col items-center text-center select-none leading-none gap-0.5">
               <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-primary-700 dark:text-primary-300 group-hover/right:text-primary-800 dark:group-hover/right:text-primary-200 transition-colors">
@@ -261,7 +261,7 @@ export const LearnView: FC<LearnViewProps> = ({
           >
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-full shadow-2xl flex flex-col items-center">
               <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center mb-4">
-                <UploadCloud className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                <CloudArrowUp className="w-8 h-8 text-primary-600 dark:text-primary-400" />
               </div>
               <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
                 {t('learn.dragDropTitle')}
@@ -335,7 +335,7 @@ export const LearnView: FC<LearnViewProps> = ({
             onClick={onEnterCreator}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <PenTool className="w-4 h-4" />
+            <PenNib className="w-4 h-4" />
             <span>{t('creator.title', 'Kreator')}</span>
           </button>
         </PageHeader>

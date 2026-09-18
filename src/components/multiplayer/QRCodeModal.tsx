@@ -1,7 +1,7 @@
 import { FC, useEffect, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Copy, Check, QrCode, Loader2 } from 'lucide-react';
+import { X, Copy, Check, QrCode, CircleNotch } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { getRoomJoinUrl } from '../../utils/url';
 import { Button } from '../ui/Button';
@@ -140,7 +140,7 @@ export const QRCodeModal: FC<QRCodeModalProps> = ({ roomCode, onClose }) => {
           <div className="relative p-4 bg-white rounded-3xl shadow-sm border border-zinc-200/80 flex items-center justify-center min-w-[240px] min-h-[240px]">
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center gap-2 text-zinc-400">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                <CircleNotch className="w-8 h-8 animate-spin text-primary-500" />
                 <span className="text-xs font-medium">{t('multiplayer.qr.generating', 'Generowanie QR...')}</span>
               </div>
             ) : qrDataUrl ? (

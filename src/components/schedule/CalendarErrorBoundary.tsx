@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   children: ReactNode;
@@ -28,7 +28,7 @@ export class CalendarErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50/50 dark:bg-red-950/20 border border-red-200/80 dark:border-red-900/40 rounded-3xl text-center my-8 backdrop-blur-md">
-          <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
+          <WarningCircle className="w-10 h-10 text-red-500 mb-3" />
           <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Nie udało się wyświetlić harmonogramu</h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mt-1 mb-4">
             {this.state.error || 'Wystąpił problem z formatowaniem dat.'}

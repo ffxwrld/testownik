@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StickyNote, Check } from 'lucide-react';
+import { Note, Check } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useQuestionNote } from '../../hooks/useQuestionNote';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +49,7 @@ export const QuestionNoteEditor: React.FC<Props> = ({ sessionId, questionId }) =
             : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
         }`}
       >
-        <StickyNote className="w-4 h-4" />
+        <Note className="w-4 h-4" />
         {hasNote ? t('test.note.myNote', 'Twoja notatka') : t('test.note.addNote', 'Dodaj notatkę')}
         {saved && <Check className="w-3 h-3 text-emerald-500" />}
       </button>

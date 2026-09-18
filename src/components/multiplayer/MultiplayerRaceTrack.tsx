@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users } from 'lucide-react';
+import { Users } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../../hooks/useMultiplayer';
 import { cn } from '../../utils/cn';

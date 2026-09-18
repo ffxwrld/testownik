@@ -31,7 +31,7 @@ Hybrydowa aplikacja edukacyjna (desktop Electron + web): **Vite**, **React 19**,
 * **Łączenie klas:** ZAWSZE używaj helpera `cn(...)` z `@/utils/cn` (`clsx` + `tailwind-merge`).
 * **Jakość wykonania:**
   * Płynne mikrointerakcje z `framer-motion`.
-  * Ikony wyłącznie z `lucide-react`.
+  * Ikony wyłącznie z `@phosphor-icons/react`.
   * Powiadomienia systemowe przez `sonner`.
   * Żadnych surowych, niedokończonych widoków.
 * **Formuły i tekst:** KaTeX i Markdown renderowane przez zestaw `katex` + `react-markdown` + `remark-math` + `rehype-katex`.
@@ -94,3 +94,4 @@ flowchart LR
    npx tsc -b && npm test
    ```
 4. **Granice autonomii:** Wymagaj potwierdzenia przed usuwaniem plików, destrukcyjnymi poleceniami git oraz modyfikacją migracji w `supabase/migrations/`.
+5. **Final Release Gate (CodeRabbit):** Gdy aplikacja osiągnie 100% gotowości funkcjonalnej, przed finalnym wydaniem produkcyjnym należy przeprowadzić pełny audyt / review repozytorium przy użyciu **CodeRabbit**.

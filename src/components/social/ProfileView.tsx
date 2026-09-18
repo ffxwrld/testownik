@@ -2,17 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
-  User, 
-  Settings, 
-  BarChart3, 
-  Users, 
-  RefreshCw, 
-  Cloud, 
-  LogOut, 
-  ChevronRight, 
-  Calendar, 
-  Mail
-} from 'lucide-react';
+  User, Gear, ChartBar, Users, ArrowsClockwise, Cloud, SignOut, CaretRight, Calendar, EnvelopeSimple } from '@phosphor-icons/react';
 
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
@@ -75,14 +65,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
 
   const tabs: { id: ProfileTab; label: string; icon: React.ReactNode }[] = [
     { id: 'profile', label: t('social.profile.tabs.account'), icon: <User className="w-4 h-4" /> },
-    { id: 'stats', label: t('social.profile.tabs.stats'), icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'stats', label: t('social.profile.tabs.stats'), icon: <ChartBar className="w-4 h-4" /> },
     { id: 'friends', label: t('social.profile.tabs.friends'), icon: <Users className="w-4 h-4" /> },
   ];
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6 pb-32 md:pb-12">
       <PageHeader
-        icon={activeTab === 'profile' ? <User /> : activeTab === 'stats' ? <BarChart3 /> : <Users />}
+        icon={activeTab === 'profile' ? <User /> : activeTab === 'stats' ? <ChartBar /> : <Users />}
         title={
           activeTab === 'profile' 
             ? t('social.profile.headers.accountTitle') 
@@ -153,7 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
             </h2>
             {userEmail ? (
               <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
-                <Mail className="w-3.5 h-3.5 opacity-70" />
+                <EnvelopeSimple className="w-3.5 h-3.5 opacity-70" />
                 <span>{userEmail}</span>
               </div>
             ) : (
@@ -200,7 +190,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
                   disabled={syncing}
                   className="flex items-center gap-1.5 shrink-0"
                 >
-                  <RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
+                  <ArrowsClockwise className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
                   {syncing ? t('social.profile.syncingBtn') : t('social.profile.syncBtn')}
                 </Button>
               </div>
@@ -221,7 +211,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 flex items-center justify-center shrink-0">
-                      <Settings className="w-4 h-4" />
+                      <Gear className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -232,7 +222,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                  <CaretRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
                 </motion.button>
               </div>
             </div>
@@ -251,13 +241,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSettings, initia
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
-                    <LogOut className="w-4 h-4" />
+                    <SignOut className="w-4 h-4" />
                   </div>
                   <div className="text-sm font-semibold text-rose-600 dark:text-rose-400">
                     {t('social.profile.logoutBtn')}
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-rose-300 dark:text-rose-800 group-hover:translate-x-0.5 transition-transform" />
+                <CaretRight className="w-4 h-4 text-rose-300 dark:text-rose-800 group-hover:translate-x-0.5 transition-transform" />
               </motion.button>
             </div>
           </div>

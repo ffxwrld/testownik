@@ -1,7 +1,7 @@
 import { FC, useState, FormEvent, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, ArrowDownToLine, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { X, DownloadSimple, CheckCircle, WarningCircle, CircleNotch } from '@phosphor-icons/react';
 import { useP2PTransfer } from '../../hooks/useP2PTransfer';
 import { SessionState } from '../../models/types';
 import { Button } from '../ui/Button';
@@ -74,7 +74,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400">
-              <ArrowDownToLine className="w-5 h-5" />
+              <DownloadSimple className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
@@ -122,7 +122,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
                 disabled={inputCode.length !== 6}
                 className="w-full py-3 flex items-center justify-center gap-2 cursor-pointer font-bold"
               >
-                <ArrowDownToLine className="w-4 h-4" />
+                <DownloadSimple className="w-4 h-4" />
                 <span>{t('receive.actionBtn', 'Połącz i pobierz')}</span>
               </Button>
             </form>
@@ -130,7 +130,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
 
           {status === 'connecting' && (
             <div className="py-8 text-center space-y-3">
-              <Loader2 className="w-10 h-10 text-primary-500 animate-spin mx-auto" />
+              <CircleNotch className="w-10 h-10 text-primary-500 animate-spin mx-auto" />
               <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
                 {t('receive.connecting', 'Łączenie z nadawcą przez WebRTC...')}
               </p>
@@ -161,7 +161,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
           {status === 'completed' && receivedSession && (
             <div className="py-6 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7" />
+                <CheckCircle className="w-7 h-7" />
               </div>
               <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
                 {t('receive.successTitle', 'Baza została pomyślnie odebrana!')}
@@ -178,7 +178,7 @@ export const ReceiveModal: FC<ReceiveModalProps> = ({ onClose, onSuccess, initia
           {status === 'error' && (
             <div className="py-4 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
-                <AlertCircle className="w-7 h-7" />
+                <WarningCircle className="w-7 h-7" />
               </div>
               <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                 {t('receive.errorTitle', 'Błąd transferu')}
