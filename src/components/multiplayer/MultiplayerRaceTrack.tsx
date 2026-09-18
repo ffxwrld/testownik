@@ -183,7 +183,7 @@ export const MultiplayerRaceTrack: React.FC<MultiplayerRaceTrackProps> = ({
 
                     {/* Finished Badge */}
                     {isFinished && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter shadow-xs flex items-center gap-0.5 whitespace-nowrap">
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-amber-950 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-tighter shadow-xs flex items-center gap-0.5 whitespace-nowrap">
                         <FlagCheckered className="w-2.5 h-2.5 shrink-0" weight="fill" />
                         <span>{t('multiplayer.race.finishBadge')}</span>
                       </div>

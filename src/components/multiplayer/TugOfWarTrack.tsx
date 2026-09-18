@@ -137,7 +137,7 @@ export const TugOfWarTrack: React.FC<TugOfWarTrackProps> = ({
       </div>
 
       {/* The Rope Track */}
-      <div className="relative h-12 w-full bg-zinc-100 dark:bg-zinc-850/80 rounded-2xl flex items-center overflow-hidden border border-zinc-200/80 dark:border-zinc-700/80 shadow-inner px-4">
+      <div className="relative h-13 w-full bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl flex items-center overflow-hidden border border-black/[0.06] dark:border-white/[0.08] shadow-inner px-4">
         {/* Left Side (Team A zone) gradient fill */}
         <div
           className="absolute inset-y-0 left-0 bg-blue-500/10 dark:bg-blue-500/15 transition-all duration-300 pointer-events-none"
@@ -150,21 +150,21 @@ export const TugOfWarTrack: React.FC<TugOfWarTrackProps> = ({
         />
 
         {/* Center Neutral Zero Line */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-zinc-300 dark:bg-zinc-600 flex flex-col justify-between py-1 items-center z-0 pointer-events-none opacity-60">
-          <span className="w-1 h-1 rounded-full bg-zinc-400" />
-          <span className="w-1 h-1 rounded-full bg-zinc-400" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-zinc-300/80 dark:bg-zinc-700/80 flex flex-col justify-between py-1.5 items-center z-0 pointer-events-none opacity-70">
+          <span className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+          <span className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500" />
         </div>
 
         {/* Left KO Goal Area */}
-        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 pointer-events-none">
-          <div className="px-1.5 py-0.5 rounded-md bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[9px] font-black tracking-tighter uppercase border border-blue-500/30">
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 pointer-events-none">
+          <div className="px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 text-[9px] font-mono font-bold tracking-tight uppercase border border-blue-500/25 backdrop-blur-xs">
             K.O. A
           </div>
         </div>
 
         {/* Right KO Goal Area */}
-        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 pointer-events-none">
-          <div className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[9px] font-black tracking-tighter uppercase border border-amber-500/30">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 pointer-events-none">
+          <div className="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] font-mono font-bold tracking-tight uppercase border border-amber-500/25 backdrop-blur-xs">
             K.O. B
           </div>
         </div>
@@ -179,29 +179,29 @@ export const TugOfWarTrack: React.FC<TugOfWarTrackProps> = ({
         <motion.div
           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20"
           animate={{ left: `${markerPercent}%` }}
-          transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+          transition={{ type: 'spring', bounce: 0.12, duration: 0.45 }}
         >
           <div className="relative flex flex-col items-center">
             {/* Knot Badge */}
             <div className={cn(
-              "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg border-2 transition-transform",
+              "w-8 h-8 rounded-full flex items-center justify-center shadow-md border-2 transition-transform duration-200",
               ropePosition < -5
-                ? "bg-blue-500 text-white border-blue-300 shadow-blue-500/40"
+                ? "bg-blue-500 text-white border-blue-300 shadow-blue-500/30 scale-105"
                 : ropePosition > 5
-                ? "bg-amber-500 text-white border-amber-300 shadow-amber-500/40"
-                : "bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-500 shadow-black/30"
+                ? "bg-amber-500 text-white border-amber-300 shadow-amber-500/30 scale-105"
+                : "bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-500/60 shadow-black/20"
             )}>
               {ropePosition < -15 ? (
-                <Lightning className="w-4 h-4 animate-bounce" weight="fill" />
+                <Lightning className="w-4 h-4" weight="fill" />
               ) : ropePosition > 15 ? (
-                <Lightning className="w-4 h-4 animate-bounce" weight="fill" />
+                <Lightning className="w-4 h-4" weight="fill" />
               ) : (
-                <div className="w-2.5 h-2.5 rounded-full bg-current" />
+                <div className="w-2.5 h-2.5 rounded-full bg-current opacity-90" />
               )}
             </div>
 
             {/* Tension Indicator Tooltip */}
-            <div className="absolute -bottom-4 bg-zinc-900/90 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full whitespace-nowrap shadow-xs pointer-events-none">
+            <div className="absolute -bottom-4.5 bg-zinc-900/90 dark:bg-zinc-100/90 text-white dark:text-zinc-900 text-[9px] font-mono font-bold tabular-nums px-2 py-0.2 rounded-full whitespace-nowrap shadow-xs pointer-events-none border border-white/10 dark:border-black/10">
               {Math.abs(ropePosition)}%
             </div>
           </div>
@@ -212,28 +212,29 @@ export const TugOfWarTrack: React.FC<TugOfWarTrackProps> = ({
       <AnimatePresence>
         {winner && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            initial={{ opacity: 0, scale: 0.94, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ type: 'spring', bounce: 0.1, duration: 0.35 }}
             className={cn(
-              "mt-3 p-3 rounded-xl text-center shadow-lg flex items-center justify-center gap-2.5 border",
+              "mt-3 p-3.5 rounded-2xl text-center shadow-md flex items-center justify-center gap-3 border backdrop-blur-md",
               winner === myTeam
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-200"
+                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
                 : winner === 'tie'
-                ? "bg-zinc-500/15 border-zinc-500/30 text-zinc-800 dark:text-zinc-200"
-                : "bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-amber-200"
+                ? "bg-zinc-500/15 border-zinc-500/30 text-zinc-900 dark:text-zinc-200"
+                : "bg-amber-500/15 border-amber-500/30 text-amber-900 dark:text-amber-200"
             )}
           >
             <Trophy className="w-5 h-5 text-amber-500 shrink-0" weight="fill" />
             <div className="flex flex-col text-left">
-              <span className="font-extrabold text-sm">
+              <span className="font-extrabold text-sm tracking-tight">
                 {winner === myTeam
                   ? t('multiplayer.tug.youWin', 'Twoja drużyna zwyciężyła!')
                   : winner === 'tie'
                   ? t('multiplayer.tug.tie', 'Koniec czasu! Remis!')
                   : t('multiplayer.tug.otherWin', 'Przeciwnik przeciągnął linę!')}
               </span>
-              <span className="text-[11px] opacity-80">
+              <span className="text-xs opacity-80 mt-0.5">
                 {winReason === 'knockout'
                   ? t('multiplayer.tug.reasonKnockout', 'Zwycięstwo przez K.O. (przeciągnięcie do bazy)!')
                   : t('multiplayer.tug.reasonTimeout', 'Zwycięstwo na punkty po upływie czasu')}
