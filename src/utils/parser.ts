@@ -237,7 +237,7 @@ export async function parseZipFile(file: File): Promise<ParsedZipResult> {
 
 import { SessionState } from '../models/types';
 import { getAllSessionImages } from './db';
-import { saveSession, buildInitialSession } from './session';
+import { saveSession, saveSessionEphemeral, buildInitialSession } from './session';
 
 export function serializeQuestionToTxt(question: Question): string {
   const binaryMask = question.answers
@@ -334,7 +334,10 @@ export async function exportSessionToZip(sessionId: string, session: SessionStat
   return await exportQuestionsToZip(session.baseName || 'paczka', session.questions, images, session);
 }
 
-export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: string, session: SessionState }> {
+export async function importSessionFromZip(
+  zipBlob: Blob,
+  options?: { ephemeral?: boolean }
+): Promise<{ sessionId: string, session: SessionState }> {
   const data = typeof (zipBlob as any).arrayBuffer === 'function'
     ? await (zipBlob as any).arrayBuffer()
     : zipBlob;
@@ -379,6 +382,10 @@ export async function importSessionFromZip(zipBlob: Blob): Promise<{ sessionId: 
   const { saveSessionImages } = await import('./db');
   await saveSessionImages(newSessionId, images);
   
-  await saveSession(cleanSession, newSessionId);
+  if (options?.ephemeral) {
+    await saveSessionEphemeral(cleanSession, newSessionId);
+  } else {
+    await saveSession(cleanSession, newSessionId);
+  }
   return { sessionId: newSessionId, session: cleanSession };
 }

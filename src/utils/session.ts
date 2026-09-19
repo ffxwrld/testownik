@@ -379,6 +379,37 @@ export async function deleteSession(sessionId: string): Promise<void> {
   }
 }
 
+/**
+ * Saves a session to IDB without adding it to the metadata index.
+ * Used for multiplayer guest sessions that should not appear in session lists.
+ */
+export async function saveSessionEphemeral(session: SessionState, sessionId: string): Promise<string> {
+  try {
+    await ensureMigrated();
+    session.updatedAt = new Date().toISOString();
+    _sessionCache.set(sessionId, session);
+    await set(`${SESSION_PREFIX}${sessionId}`, session);
+    return sessionId;
+  } catch (err) {
+    console.warn('Could not save ephemeral session:', err);
+    return '';
+  }
+}
+
+/**
+ * Deletes an ephemeral session from IDB and cache.
+ * Does not touch the metadata index (ephemeral sessions were never added there).
+ */
+export async function deleteEphemeralSession(sessionId: string): Promise<void> {
+  try {
+    _sessionCache.delete(sessionId);
+    await del(`${SESSION_PREFIX}${sessionId}`);
+    deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete ephemeral images:', err));
+  } catch (err) {
+    console.warn('Could not delete ephemeral session:', err);
+  }
+}
+
 export function getChunkList(totalQuestions: number, chunkSize: number): ChunkInfo[] {
   if (chunkSize <= 0 || totalQuestions <= 0) return [];
   const chunks: ChunkInfo[] = [];

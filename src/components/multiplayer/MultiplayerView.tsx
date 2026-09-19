@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useMultiplayerContext } from '../../contexts/MultiplayerContext';
-import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession } from '../../utils/session';
+import { getAllSessionMetadata, loadSession, saveSession, buildInitialSession, deleteEphemeralSession } from '../../utils/session';
 import { exportSessionToZip, importSessionFromZip } from '../../utils/parser';
 import { SavedSessionMetadata } from '../../models/types';
 import { Users, Play, Download, CheckCircle, Copy, CircleNotch, QrCode, FlagCheckered, Sword, Cards } from '@phosphor-icons/react';
@@ -20,7 +20,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   const { 
     roomCode, 
     isHost, 
-    isSendingPackage,
+    isSendingPackage, 
     players, 
     profile,
     joinRoom, 
@@ -32,9 +32,10 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
     raceStarted,
     gameMode,
     setGameMode,
+    returnToLobbyCount,
   } = useMultiplayerContext();
 
-  const [view, setView] = useState<'menu' | 'host_select' | 'join' | 'lobby'>(() => {
+  const [view, setView] = useState<'menu' | 'join' | 'lobby'>(() => {
     return roomCode ? 'lobby' : 'menu';
   });
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
@@ -107,15 +108,21 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   }, [roomCode, view]);
 
   useEffect(() => {
-    if (view === 'host_select') {
+    if (view === 'lobby' && isHost) {
       getAllSessionMetadata().then(setSavedSessions);
     }
-  }, [view]);
+  }, [view, isHost]);
 
   useEffect(() => {
     if (receivedFile && !isHost) {
       toast.info(t('multiplayer.toasts.unpacking', 'Rozpakowywanie bazy pytań...'));
-      importSessionFromZip(receivedFile).then(({ sessionId }) => {
+      
+      // Cleanup previous ephemeral session if we're receiving a new one (e.g. host clicked "Wyślij ponownie")
+      if (importedSessionId) {
+        deleteEphemeralSession(importedSessionId);
+      }
+
+      importSessionFromZip(receivedFile, { ephemeral: true }).then(({ sessionId }) => {
         setImportedSessionId(sessionId);
         markPlayerReady();
         toast.success(t('multiplayer.toasts.readyForRace', 'Baza pytań gotowa do wyścigu!'));
@@ -124,7 +131,17 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
         toast.error(t('multiplayer.toasts.importError', 'Błąd importu bazy pytań: {{error}}', { error: (err as Error).message || err }));
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receivedFile, isHost, markPlayerReady, t]);
+
+  useEffect(() => {
+    if (returnToLobbyCount > 0 && importedSessionId && !isHost) {
+      // Cleanup ephemeral session on return to lobby so guest needs a new package
+      deleteEphemeralSession(importedSessionId);
+      setImportedSessionId(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnToLobbyCount, isHost]);
 
   useEffect(() => {
     if (raceStarted) {
@@ -137,12 +154,15 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
   }, [raceStarted, isHost, selectedSessionId, importedSessionId, onStartSession]);
 
   const handleLeaveLobby = () => {
+    if (importedSessionId && !isHost) {
+      deleteEphemeralSession(importedSessionId);
+      setImportedSessionId(null);
+    }
     cleanup();
     setView('menu');
   };
 
   const handleHost = async () => {
-    if (!selectedSessionId) return;
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     await joinRoom(code, true);
     setView('lobby');
@@ -198,7 +218,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-primary-500 transition-colors group" onClick={() => setView('host_select')}>
+                <div className="p-8 cursor-pointer rounded-2xl bg-white dark:bg-zinc-900 border-2 shadow-sm border-transparent hover:border-primary-500 transition-colors group" onClick={handleHost}>
                   <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-6 group-hover:scale-110 transition-transform">
                     <Play className="w-8 h-8 ml-1" fill="currentColor" />
                   </div>
@@ -223,41 +243,6 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                 </div>
               </div>
             </div>
-          )}
-
-          {view === 'host_select' && (
-            <motion.div key="host_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <div className="flex items-center gap-4 mb-6">
-                <BackButton onClick={() => setView('menu')} />
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-                  {t('multiplayer.hostSelect.title', 'Wybierz paczkę dla pokoju')}
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {savedSessions.map(s => (
-                  <div 
-                    key={s.id} 
-                    className={`p-5 cursor-pointer rounded-2xl shadow-sm border-2 transition-colors duration-200 ${selectedSessionId === s.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'}`}
-                    onClick={() => setSelectedSessionId(s.id)}
-                  >
-                    <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white">{s.baseName}</h3>
-                    <p className="text-sm text-zinc-500">
-                      {t('multiplayer.hostSelect.questionsCount', '{{count}} pytań', { count: s.totalQuestions })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-8 flex justify-end">
-                <button 
-                  disabled={!selectedSessionId}
-                  onClick={handleHost}
-                  className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-primary-700 transition cursor-pointer"
-                >
-                  {t('multiplayer.hostSelect.generateCodeBtn', 'Generuj Kod Pokoju')}
-                </button>
-              </div>
-            </motion.div>
           )}
 
           {view === 'join' && (
@@ -326,6 +311,34 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
                   </button>
                 </div>
               </div>
+
+              {/* Host Session Picker */}
+              {isHost && (
+                <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-3xl border border-black/[0.06] dark:border-white/[0.08] p-6 shadow-xs mb-6 text-left">
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white tracking-tight mb-4">
+                    {t('multiplayer.hostSelect.title', 'Wybierz paczkę dla pokoju')}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {savedSessions.map(s => (
+                      <div 
+                        key={s.id} 
+                        className={`p-4 cursor-pointer rounded-2xl shadow-xs border-2 transition-all duration-200 ${selectedSessionId === s.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500/25' : 'border-black/[0.06] dark:border-white/[0.08] bg-zinc-100/70 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
+                        onClick={() => setSelectedSessionId(s.id)}
+                      >
+                        <h3 className="font-bold text-sm mb-1 text-zinc-900 dark:text-white line-clamp-1">{s.baseName}</h3>
+                        <p className="text-xs text-zinc-500">
+                          {t('multiplayer.hostSelect.questionsCount', '{{count}} pytań', { count: s.totalQuestions })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {savedSessions.length === 0 && (
+                    <div className="text-center p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700">
+                      <p className="text-sm text-zinc-500">Brak zapisanych testów. Wróć do menu głównego i zaimportuj bazę.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Game Mode Selector */}
               <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-3xl border border-black/[0.06] dark:border-white/[0.08] p-6 shadow-xs mb-6 text-left">

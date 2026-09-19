@@ -12,6 +12,7 @@ import {
   loadSession,
   saveSession,
   deleteSession,
+  deleteEphemeralSession,
   getCurrentSessionId,
   renameSession,
 } from '../utils/session';
@@ -49,7 +50,7 @@ export function applyZoom(level: number): number {
 export function useAppOrchestrator() {
   const { t } = useTranslation();
   const { triggerSync } = useSync();
-  const { broadcastTestProgress, roomCode, returnToLobby, returnToLobbyCount, cleanup: cleanupMultiplayer } = useMultiplayerContext();
+  const { broadcastTestProgress, roomCode, returnToLobby, returnToLobbyCount, cleanup: cleanupMultiplayer, isHost } = useMultiplayerContext();
 
   const [location, setLocation] = useLocation();
 
@@ -383,10 +384,13 @@ export function useAppOrchestrator() {
 
   const handleQuit = useCallback(() => {
     if (roomCode) {
+      if (!isHost && currentSessionId) {
+        deleteEphemeralSession(currentSessionId);
+      }
       cleanupMultiplayer();
     }
     setPhase('learn');
-  }, [roomCode, cleanupMultiplayer, setPhase]);
+  }, [roomCode, isHost, currentSessionId, cleanupMultiplayer, setPhase]);
 
   const handleNewTest = useCallback(() => {
     setCurrentSessionId(null);
