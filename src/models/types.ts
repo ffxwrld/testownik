@@ -1,3 +1,10 @@
+export interface Folder {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
 export interface Answer {
   id: string;
   text: string;
@@ -62,6 +69,7 @@ export interface SessionState {
   syncedAnswers?: number;
   targetDate?: string;
   chunkConfig?: ChunkConfig;
+  folderId?: string;
 }
 
 export interface SavedSessionMetadata {
@@ -74,6 +82,7 @@ export interface SavedSessionMetadata {
   currentPhase: 'test' | 'summary';
   targetDate?: string;
   chunkConfig?: ChunkConfig;
+  folderId?: string;
 }
 
 type FeedbackState = 'correct' | 'wrong';

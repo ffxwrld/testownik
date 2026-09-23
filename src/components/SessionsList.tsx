@@ -20,6 +20,7 @@ interface SessionsListProps {
   onFlashcards: (sessionId: string) => void;
   onUpdateTargetDate?: (sessionId: string, newDate: string | undefined) => void | Promise<void>;
   onShareCode?: (session: SavedSessionMetadata) => void;
+  onAssignFolder?: (session: SavedSessionMetadata) => void;
   prependItem?: ReactNode;
 }
 
@@ -34,6 +35,7 @@ export const SessionsList: FC<SessionsListProps> = ({
   onFlashcards,
   onUpdateTargetDate,
   onShareCode,
+  onAssignFolder,
   prependItem,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -148,6 +150,7 @@ export const SessionsList: FC<SessionsListProps> = ({
             onExportPdf={() => handleExportPdf(session)}
             onExportZip={() => handleExportZip(session)}
             onShareCode={onShareCode ? () => onShareCode(session) : undefined}
+            onAssignFolder={onAssignFolder ? () => onAssignFolder(session) : undefined}
             isMenuOpen={openMenuId === session.id}
             onToggleMenu={() => setOpenMenuId((prev) => (prev === session.id ? null : session.id))}
             onCloseMenu={() => setOpenMenuId(null)}

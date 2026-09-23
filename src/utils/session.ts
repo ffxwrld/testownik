@@ -25,6 +25,7 @@ function extractMetadata(id: string, session: SessionState): SavedSessionMetadat
     currentPhase: (session.phase as 'test' | 'summary') || 'test',
     targetDate: session.targetDate,
     chunkConfig: session.chunkConfig,
+    folderId: session.folderId,
   };
 }
 
@@ -280,8 +281,13 @@ export async function saveSession(session: SessionState, sessionId?: string): Pr
     metaList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     _metaCache = metaList;
     await set(SESSIONS_META_IDB_KEY, metaList);
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('session-metadata-changed'));
+    }
 
-    localStorage.setItem(CURRENT_SESSION_ID_KEY, id);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CURRENT_SESSION_ID_KEY, id);
+    }
     return id;
   } catch (err) {
     console.warn('Could not save session:', err);
@@ -366,6 +372,9 @@ export async function deleteSession(sessionId: string): Promise<void> {
     if (_metaCache) {
       _metaCache = _metaCache.filter(m => m.id !== sessionId);
       await set(SESSIONS_META_IDB_KEY, _metaCache);
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('session-metadata-changed'));
+      }
     }
 
     deleteSessionImages(sessionId).catch(err => console.warn('Failed to delete images:', err));

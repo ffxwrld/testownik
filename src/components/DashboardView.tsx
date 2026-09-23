@@ -26,7 +26,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onStartSession, on
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
   
   useEffect(() => {
-    getAllSessionMetadata().then(setSavedSessions);
+    const loadSessions = () => getAllSessionMetadata().then(setSavedSessions);
+    loadSessions();
+
+    window.addEventListener('session-metadata-changed', loadSessions);
+    return () => window.removeEventListener('session-metadata-changed', loadSessions);
   }, []);
   
   const recentSessions = useMemo(() => {

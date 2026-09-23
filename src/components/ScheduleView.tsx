@@ -50,6 +50,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ onResumeSession }) =
 
   useEffect(() => {
     refreshSessions();
+    window.addEventListener('session-metadata-changed', refreshSessions);
+    return () => window.removeEventListener('session-metadata-changed', refreshSessions);
   }, []);
 
   const events: CalendarEvent[] = useMemo(() => {
