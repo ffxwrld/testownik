@@ -33,3 +33,8 @@ skills-lock.json
 # Temporary & run artifacts
 strix_runs/
 graphify-out/
+
+# Secrets
+.env
+.env.*
+!.env.example

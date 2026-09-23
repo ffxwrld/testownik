@@ -62,7 +62,7 @@ export const ChunkCompletionModal: React.FC<ChunkCompletionModalProps> = ({
                 total: totalChunks,
               }}
               components={{
-                strong: <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums" />,
+                strongNumber: <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums" />,
               }}
             />
           </p>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stack, Check, ArrowRight } from '@phosphor-icons/react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../ui/Button';
 
 interface ChunkPromptModalProps {
@@ -75,9 +75,14 @@ export const ChunkPromptModal: React.FC<ChunkPromptModalProps> = ({
           </div>
 
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 mb-5 leading-relaxed">
-            <span dangerouslySetInnerHTML={{
-              __html: t('test.chunkPrompt.description', 'Baza <strong class="font-semibold text-zinc-800 dark:text-zinc-200">{{baseName}}</strong> liczy <strong class="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{{count}} pytań</strong>. Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.', { baseName, count: totalQuestions })
-            }} />
+            <Trans
+              i18nKey="test.chunkPrompt.description"
+              values={{ baseName, count: totalQuestions }}
+              components={{
+                strong: <strong className="font-semibold text-zinc-800 dark:text-zinc-200" />,
+                strongNumber: <strong className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums" />
+              }}
+            />
           </p>
 
           <div className="space-y-2 mb-6">

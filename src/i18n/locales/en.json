@@ -232,7 +232,7 @@
     "chunkPrompt": {
       "title": "Split test into parts",
       "questionsCount": "{{count}} questions in base",
-      "description": "Base <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200\">{{baseName}}</strong> contains <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} questions</strong>. Solving it in smaller parts improves focus and helps you master material in blocks.",
+      "description": "Base <strong>{{baseName}}</strong> contains <strongNumber>{{count}} questions</strongNumber>. Solving it in smaller parts improves focus and helps you master material in blocks.",
       "recommendedBadge": "Recommended",
       "opt50": "Packs of 50 questions",
       "opt50Desc": "{{chunks}} parts • optimal for 15–20 min study",
@@ -247,7 +247,7 @@
     },
     "chunkCompletionModal": {
       "title": "Part {{index}} completed",
-      "desc": "You mastered all <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} questions</strong> in this part ({{index}} of {{total}}).",
+      "desc": "You mastered all <strongNumber>{{count}} questions</strongNumber> in this part ({{index}} of {{total}}).",
       "nextChunk": "Proceed to Part {{next}}",
       "finishAndResults": "Finish test & view results",
       "chooseOther": "Choose another part",

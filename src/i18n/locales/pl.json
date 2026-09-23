@@ -234,7 +234,7 @@
     "chunkPrompt": {
       "title": "Podziel test na części",
       "questionsCount": "{{count}} pytań w bazie",
-      "description": "Baza <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200\">{{baseName}}</strong> liczy <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} pytań</strong>. Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.",
+      "description": "Baza <strong>{{baseName}}</strong> liczy <strongNumber>{{count}} pytań</strongNumber>. Rozwiązanie jej w mniejszych partiach ułatwia skupienie i pozwala opanować materiał blokami.",
       "recommendedBadge": "Polecane",
       "opt50": "Paczki po 50 pytań",
       "opt50Desc": "{{chunks}} części • optymalne na 15–20 min nauki",
@@ -249,7 +249,7 @@
     },
     "chunkCompletionModal": {
       "title": "Część {{index}} ukończona",
-      "desc": "Opanowałeś wszystkie <strong class=\"font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums\">{{count}} pytań</strong> z tej części ({{index}} z {{total}}).",
+      "desc": "Opanowałeś wszystkie <strongNumber>{{count}} pytań</strongNumber> z tej części ({{index}} z {{total}}).",
       "nextChunk": "Przejdź do Części {{next}}",
       "finishAndResults": "Zakończ test i zobacz wyniki",
       "chooseOther": "Wybierz inną część",

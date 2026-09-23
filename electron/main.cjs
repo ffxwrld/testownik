@@ -35,6 +35,11 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // Block unauthorized popup windows
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
+
   mainWindow.webContents.on('will-prevent-unload', (event) => {
     const { dialog } = require('electron');
     const choice = dialog.showMessageBoxSync(mainWindow, {
@@ -136,7 +141,7 @@ app.on('ready', () => {
   });
 
   ipcMain.on('zoom-set', (event, factor) => {
-    if (mainWindow) {
+    if (mainWindow && typeof factor === 'number' && factor >= 0.5 && factor <= 3.0) {
       mainWindow.webContents.setZoomFactor(factor);
     }
   });
