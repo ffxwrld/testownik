@@ -437,7 +437,7 @@ export function useTestEngine({
         const remainingQuestions = currentBase.questions.filter(q => !doneSet.has(q.id));
         const questionsToQueue = remainingQuestions.length > 0 ? remainingQuestions : currentBase.questions;
         const shuffled = shuffle([...questionsToQueue]);
-        const initialStreak = currentBase.repeatMode > 1 ? currentBase.repeatMode : 1;
+        const initialStreak = (typeof currentBase.repeatMode === 'number' && currentBase.repeatMode > 1) ? currentBase.repeatMode : 1;
         newQueue = shuffled.map(q => ({
           questionId: q.id,
           requiredCorrectStreak: initialStreak,

@@ -27,7 +27,7 @@ interface LearnViewProps {
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void | Promise<void>;
-  onRestartSession: (sessionId: string, newRepeatMode?: number) => void;
+  onRestartSession: (sessionId: string, newRepeatMode?: number | 'spaced') => void;
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
   onFlashcards: (sessionId: string) => void;

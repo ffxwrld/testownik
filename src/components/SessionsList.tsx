@@ -15,7 +15,7 @@ interface SessionsListProps {
   onResume: (sessionId: string) => void;
   onDelete: (sessionId: string) => void;
   onRename: (sessionId: string, newName: string) => void | Promise<void>;
-  onRestart: (sessionId: string, newRepeatMode?: number) => void;
+  onRestart: (sessionId: string, newRepeatMode?: number | 'spaced') => void;
   onEditInCreator: (sessionId: string) => void;
   onFlashcards: (sessionId: string) => void;
   onUpdateTargetDate?: (sessionId: string, newDate: string | undefined) => void | Promise<void>;
@@ -41,7 +41,7 @@ export const SessionsList: FC<SessionsListProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [restartingId, setRestartingId] = useState<string | null>(null);
-  const [restartRepeatMode, setRestartRepeatMode] = useState(1);
+  const [restartRepeatMode, setRestartRepeatMode] = useState<number | 'spaced'>(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const { t } = useTranslation();
 
@@ -186,20 +186,35 @@ export const SessionsList: FC<SessionsListProps> = ({
                   {t('sessionsList.restartModalDesc')}
                 </p>
 
-                <div className="flex gap-2 mb-6">
-                  {[1, 2, 3].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => setRestartRepeatMode(num)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-semibold transition border-2 cursor-pointer ${
-                        restartRepeatMode === num
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
-                      }`}
-                    >
-                      {num}x
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-2 mb-6">
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => setRestartRepeatMode(num)}
+                        className={`flex-1 py-2 rounded-xl text-sm font-semibold transition border-2 cursor-pointer ${
+                          restartRepeatMode === num
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                            : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-primary-300 dark:hover:border-primary-700'
+                        }`}
+                      >
+                        {num}x
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setRestartRepeatMode('spaced')}
+                    className={`w-full py-2.5 rounded-xl text-sm font-semibold transition border-2 flex items-center justify-center gap-2 cursor-pointer ${
+                      restartRepeatMode === 'spaced'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                        : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {t('sessionsList.spacedMode', 'Fiszki Spaced Repetition')}
+                  </button>
                 </div>
 
                 <div className="flex gap-3">

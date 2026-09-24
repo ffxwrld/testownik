@@ -47,13 +47,20 @@ export interface ChunkConfig {
   activeChunkIndex: number | null; // null = entire test
 }
 
+export interface SpacedRepetitionData {
+  efactor: number;       // Easy factor, default 2.5
+  interval: number;      // Current interval in days
+  dueDate: number;       // Timestamp when this question should be reviewed
+  repetitions: number;   // Number of consecutive correct answers
+}
+
 export interface SessionState {
   version: number;            // for migration
   questions: Question[];
   queue: QueueItem[];
   done: string[];
   doneStats: DoneStat[];
-  repeatMode: number;
+  repeatMode: number | 'spaced';
   elapsedSeconds: number;
   totalFirstAttempts: number;
   totalFirstCorrect: number;
@@ -70,6 +77,7 @@ export interface SessionState {
   targetDate?: string;
   chunkConfig?: ChunkConfig;
   folderId?: string;
+  srData?: Record<string, SpacedRepetitionData>;
 }
 
 export interface SavedSessionMetadata {

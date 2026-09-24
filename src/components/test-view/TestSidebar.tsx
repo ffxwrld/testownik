@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, SkipForward, ArrowLeft, SidebarSimple } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
+import { HintButton } from './HintButton';
 import { AnswerFeedback } from '../../models/types';
 
 interface TestSidebarProps {
@@ -18,6 +19,8 @@ interface TestSidebarProps {
   onShowPrevious: () => void;
   isCollapsed?: boolean;
   onExpand?: () => void;
+  questionText?: string;
+  options?: string[];
 }
 
 export const TestSidebar: FC<TestSidebarProps> = ({
@@ -33,6 +36,8 @@ export const TestSidebar: FC<TestSidebarProps> = ({
   onShowPrevious,
   isCollapsed = false,
   onExpand,
+  questionText,
+  options
 }) => {
   const { t } = useTranslation();
 
@@ -68,7 +73,10 @@ export const TestSidebar: FC<TestSidebarProps> = ({
 
   const renderActionButtons = (size: 'md' | 'lg' = 'lg') => {
     return (
-      <div className="relative min-h-[52px] w-full flex items-center">
+      <div className="relative min-h-[52px] w-full flex items-center gap-2">
+        {questionText && options && feedback === null && (
+          <HintButton questionText={questionText} options={options} />
+        )}
         <AnimatePresence mode="popLayout" initial={false}>
           {feedback === null ? (
             <motion.div
@@ -77,7 +85,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ type: 'spring', bounce: 0, duration: 0.22 }}
-              className="w-full"
+              className="flex-1 min-w-0"
             >
               <Button
                 onClick={onConfirm}
@@ -108,7 +116,7 @@ export const TestSidebar: FC<TestSidebarProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ type: 'spring', bounce: 0, duration: 0.22 }}
-              className="w-full"
+              className="flex-1 min-w-0"
             >
               <Button
                 onClick={onNext}

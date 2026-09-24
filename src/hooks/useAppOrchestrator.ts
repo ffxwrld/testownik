@@ -219,7 +219,7 @@ export function useAppOrchestrator() {
   }, []);
 
   const handleStartSession = useCallback(
-    async (questions: Question[], repeatMode: number, baseName: string, images: Record<string, Blob> = {}, targetDate?: string) => {
+    async (questions: Question[], repeatMode: number | 'spaced', baseName: string, images: Record<string, Blob> = {}, targetDate?: string) => {
       const newSession = buildInitialSession(questions, repeatMode, baseName, targetDate);
       const sessionId = await saveSession(newSession);
 
@@ -245,7 +245,7 @@ export function useAppOrchestrator() {
         ...sessionData,
         queue: sessionData.questions.map(q => ({
           questionId: q.id,
-          requiredCorrectStreak: sessionData.repeatMode > 1 ? sessionData.repeatMode : 1,
+          requiredCorrectStreak: (typeof sessionData.repeatMode === 'number' && sessionData.repeatMode > 1) ? sessionData.repeatMode : 1,
           consecutiveCorrect: 0,
           wrongCount: 0,
           firstAnswerWrong: false,
@@ -404,11 +404,17 @@ export function useAppOrchestrator() {
   }, [roomCode, returnToLobby, setPhase]);
 
   const handleRestartSession = useCallback(
-    async (sessionId: string, newRepeatMode?: number) => {
+    async (sessionId: string, newRepeatMode?: number | 'spaced') => {
       const saved = await loadSession(sessionId);
       if (!saved) return;
       const modeToUse = newRepeatMode ?? saved.repeatMode;
       const fresh = buildInitialSession(saved.questions, modeToUse, saved.baseName);
+      
+      // Preserve existing srData if restarting into spaced mode (so progress isn't completely wiped)
+      if (modeToUse === 'spaced' && saved.srData) {
+        fresh.srData = saved.srData;
+      }
+
       await saveSession(fresh, sessionId);
       setCurrentSessionId(sessionId);
       setSession(fresh);
