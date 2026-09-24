@@ -16,6 +16,8 @@ import { ImportModal } from './common/ImportModal';
 import { PageHeader } from './common/PageHeader';
 import { ShareModal } from './share/ShareModal';
 import { ReceiveModal } from './share/ReceiveModal';
+import { FolderPills } from './dashboard/FolderPills';
+import { FolderAssignModal } from './dashboard/FolderAssignModal';
 import { cn } from '../utils/cn';
 
 interface LearnViewProps {
@@ -25,7 +27,7 @@ interface LearnViewProps {
   onResumeSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, newName: string) => void | Promise<void>;
-  onRestartSession: (sessionId: string, newRepeatMode?: number) => void;
+  onRestartSession: (sessionId: string, newRepeatMode?: number | 'spaced') => void;
   onEnterCreator: () => void;
   onEditInCreator: (sessionId: string) => void;
   onFlashcards: (sessionId: string) => void;
@@ -54,15 +56,21 @@ export const LearnView: FC<LearnViewProps> = ({
   const [targetDate, setTargetDate] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSessionMetadata[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   
   // State for the configuration modal
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [sharingSession, setSharingSession] = useState<SavedSessionMetadata | null>(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [initialReceiveCode, setInitialReceiveCode] = useState<string | null>(null);
+  const [assigningSessionId, setAssigningSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    getAllSessionMetadata().then(setSavedSessions);
+    const loadSessions = () => getAllSessionMetadata().then(setSavedSessions);
+    loadSessions();
+
+    window.addEventListener('session-metadata-changed', loadSessions);
+    return () => window.removeEventListener('session-metadata-changed', loadSessions);
   }, []);
 
   // Automatyczne wykrywanie kodu odebrania paczki z URL (?share=XXXXXX lub ?receive=XXXXXX)
@@ -348,31 +356,40 @@ export const LearnView: FC<LearnViewProps> = ({
           className="hidden"
         />
 
-        <SessionsList
-          mode={learningMode}
-          sessions={savedSessions}
-          onResume={onResumeSession}
-          onDelete={handleDeleteAndRefresh}
-          onRename={async (sessionId, newName) => {
-            await onRenameSession(sessionId, newName);
-            setSavedSessions(await getAllSessionMetadata());
-          }}
-          onRestart={(sessionId, config) => {
-            onRestartSession(sessionId, config);
-          }}
-          onEditInCreator={onEditInCreator}
-          onFlashcards={onFlashcards}
-          onShareCode={setSharingSession}
-          onUpdateTargetDate={async (sessionId, newDate) => {
-            const loaded = await loadSession(sessionId);
-            if (loaded) {
-              loaded.targetDate = newDate;
-              await saveSession(loaded, sessionId);
-              setSavedSessions(await getAllSessionMetadata());
-            }
-          }}
-          prependItem={PrependCards}
-        />
+        <div className="flex flex-col gap-6 w-full">
+          <div className="w-full">
+            <FolderPills selectedFolderId={selectedFolderId} onSelectFolder={setSelectedFolderId} />
+          </div>
+          
+          <div className="w-full">
+            <SessionsList
+              mode={learningMode}
+              sessions={selectedFolderId ? savedSessions.filter(s => s.folderId === selectedFolderId) : savedSessions}
+              onResume={onResumeSession}
+              onDelete={handleDeleteAndRefresh}
+              onRename={async (sessionId, newName) => {
+                await onRenameSession(sessionId, newName);
+                setSavedSessions(await getAllSessionMetadata());
+              }}
+              onRestart={(sessionId, config) => {
+                onRestartSession(sessionId, config);
+              }}
+              onEditInCreator={onEditInCreator}
+              onFlashcards={onFlashcards}
+              onShareCode={setSharingSession}
+              onAssignFolder={(session) => setAssigningSessionId(session.id)}
+              onUpdateTargetDate={async (sessionId, newDate) => {
+                const loaded = await loadSession(sessionId);
+                if (loaded) {
+                  loaded.targetDate = newDate;
+                  await saveSession(loaded, sessionId);
+                  setSavedSessions(await getAllSessionMetadata());
+                }
+              }}
+              prependItem={PrependCards}
+            />
+          </div>
+        </div>
 
       </div>
 
@@ -512,6 +529,14 @@ export const LearnView: FC<LearnViewProps> = ({
             setSavedSessions(fresh);
             toast.success(t('receive.successToast', { name: newSession.baseName }));
           }}
+        />,
+        document.body
+      )}
+
+      {assigningSessionId && createPortal(
+        <FolderAssignModal
+          sessionId={assigningSessionId}
+          onClose={() => setAssigningSessionId(null)}
         />,
         document.body
       )}

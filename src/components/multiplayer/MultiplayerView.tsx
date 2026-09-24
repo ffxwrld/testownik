@@ -190,7 +190,7 @@ export const MultiplayerView: React.FC<MultiplayerViewProps> = ({ onStartSession
       // Tworzymy w 100% świeżą sesję z nowo potasowaną kolejką i wyzerowanym postępem
       const cleanSession = buildInitialSession(
         session.questions,
-        session.repeatMode > 1 ? session.repeatMode : 1,
+        (typeof session.repeatMode === 'number' && session.repeatMode > 1) ? session.repeatMode : 1,
         session.baseName
       );
       

@@ -257,6 +257,8 @@ const StandardTestView: FC<TestViewProps> = ({
                 onShowPrevious={() => setShowingPrevious(true)}
                 isCollapsed={isSidebarCollapsed}
                 onExpand={handleToggleSidebar}
+                questionText={engine.currentQuestion?.text}
+                options={engine.currentQuestion?.answers.map(a => a.text)}
               />
             )}
           </div>

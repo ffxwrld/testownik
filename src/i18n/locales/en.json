@@ -59,6 +59,8 @@
     "resume": "Resume",
     "restartModalTitle": "Start over",
     "restartModalDesc": "Current progress in this test will be lost. Select the required number of correct answers in a row to pass a question:",
+    "spacedMode": "Spaced Repetition",
+    "spacedModeShort": "Spaced",
     "cancel": "Cancel",
     "restartBtn": "Restart test",
     "rename": "Rename",

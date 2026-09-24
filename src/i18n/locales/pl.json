@@ -59,6 +59,8 @@
     "resume": "Wznów",
     "restartModalTitle": "Zacznij od nowa",
     "restartModalDesc": "Bieżący postęp w tym teście zostanie utracony. Wybierz wymaganą liczbę poprawnych odpowiedzi z rzędu do zaliczenia pytania:",
+    "spacedMode": "Fiszki Spaced Repetition",
+    "spacedModeShort": "Spaced",
     "cancel": "Anuluj",
     "restartBtn": "Restartuj test",
     "rename": "Zmień nazwę",
