@@ -61,3 +61,39 @@ export function installDOMPolyfills(): void {
 
 // Auto-execute immediately upon import
 installDOMPolyfills();
+
+// Polyfill dla starszych przeglądarek (Chrome < 92, stare Samsung Internet)
+if (typeof window !== 'undefined' && window.crypto) {
+  if (!window.crypto.randomUUID) {
+    window.crypto.randomUUID = function() {
+      return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+        (Number(c) ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (Number(c) / 4)))).toString(16)
+      ) as `${string}-${string}-${string}-${string}-${string}`;
+    };
+  }
+}
+
+// Polyfill globalThis dla bardzo starych urządzeń
+if (typeof globalThis === 'undefined') {
+  (window as any).globalThis = window;
+}
+
+// Polyfill Array.prototype.at (Chrome < 92)
+if (!(Array.prototype as any).at) {
+  (Array.prototype as any).at = function(n: number) {
+    n = Math.trunc(n) || 0;
+    if (n < 0) n += this.length;
+    if (n < 0 || n >= this.length) return undefined;
+    return this[n];
+  };
+}
+
+// Polyfill String.prototype.replaceAll (Chrome < 85)
+if (!(String.prototype as any).replaceAll) {
+  (String.prototype as any).replaceAll = function(str: string | RegExp, newStr: string) {
+    if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+      return this.replace(str as RegExp, newStr);
+    }
+    return this.replace(new RegExp(str.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), newStr);
+  };
+}
