@@ -11,7 +11,7 @@ interface HintButtonProps {
 }
 
 export const HintButton: React.FC<HintButtonProps> = ({ questionText, options }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -122,7 +122,12 @@ export const HintButton: React.FC<HintButtonProps> = ({ questionText, options })
               ) : error ? (
                 <span className="text-amber-600 dark:text-amber-400 font-medium">{error}</span>
               ) : (
-                <span>{hint}</span>
+                <div className="flex flex-col gap-3">
+                  <span>{hint}</span>
+                  <div className="text-[10px] text-zinc-500 dark:text-zinc-500 leading-tight border-t border-zinc-100 dark:border-zinc-800 pt-2">
+                    {t('legal.aiDisclaimer')}
+                  </div>
+                </div>
               )}
             </div>
           </motion.div>
@@ -133,6 +138,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ questionText, options })
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={handleToggle}
+        aria-label="Podpowiedź AI Tutor"
         className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors shadow-sm ${
           isOpen || hint 
             ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800' 

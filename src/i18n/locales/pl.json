@@ -895,7 +895,7 @@
     "title": "Polityka Prywatności",
     "close": "Zamknij",
     "section1Title": "1. Gromadzenie danych",
-    "section1Text": "Aplikacja Testownik przechowuje Twoje paczki pytań oraz postępy w nauce lokalnie na Twoim urządzeniu (w pamięci przeglądarki za pomocą IndexedDB). Gdy korzystasz z funkcji logowania i synchronizacji (w tym zapisu w chmurze i rankingu), Twoje podstawowe dane profilowe (nazwa użytkownika, avatar) oraz statystyki (ilość zdobytego doświadczenia, ukończone sesje) są bezpiecznie przesyłane i przechowywane w naszej bazie danych (Supabase).",
+    "section1Text": "Aplikacja Testownik w architekturze 'offline-first' przechowuje Twoje paczki pytań oraz postępy lokalnie w pamięci przeglądarki (IndexedDB). Gdy korzystasz z funkcji logowania (Supabase), Twoje dane są bezpiecznie szyfrowane. Korzystanie z podpowiedzi 'AI Tutor' wiąże się z anonimowym wysłaniem zapytania do partnerów zewnętrznych (Groq/OpenAI).",
     "section2Title": "2. Tryb Multiplayer (Wyścig)",
     "section2Text": "W trybie wyścigu na żywo, paczki pytań oraz zdjęcia przesyłane są bezpośrednio między urządzeniami graczy w technologii Peer-to-Peer (WebRTC). Twoje adresy IP mogą być krótkotrwale widoczne dla serwerów sygnalizacyjnych (STUN) w celu nawiązania połączenia, jednak żadne treści pytań ani przesyłane grafiki w tym trybie nie są zapisywane na naszych serwerach.",
     "section3Title": "3. Wykorzystanie danych",
@@ -915,5 +915,19 @@
     "decks": "Bazy pytań",
     "questionsCount": "{{count}} pytań",
     "noResults": "Brak wyników dla \"{{query}}\""
+  },
+  "legal": {
+    "aiDisclaimer": "Podpowiedzi generowane przez AI mogą zawierać błędy (halucynacje). Zawsze weryfikuj je ze źródłem.",
+    "onboardingTitle": "Witaj w Testowniku!",
+    "onboardingDesc": "Zanim rozpoczniesz naukę, musimy prosić Cię o akceptację niezbędnych zgód, abyśmy mogli legalnie przechowywać Twoje postępy.",
+    "acceptTOS": "Akceptuję Regulamin świadczenia usług",
+    "acceptPrivacy": "Akceptuję Politykę Prywatności i użycie LocalStorage (IndexedDB) do zapisu moich postępów",
+    "acceptAge": "Mam ukończone 16 lat lub posiadam zgodę opiekuna prawnego",
+    "startLearning": "Rozpocznij naukę"
+  },
+  "termsModal": {
+    "title": "Regulamin Świadczenia Usług",
+    "close": "Zamknij",
+    "content": "1. Postanowienia ogólne\nAplikacja służy do nauki i powtórek materiału.\n\n2. Treści generowane przez użytkowników\nZa wszelkie wgrane pliki (pytania, bazy) pełną odpowiedzialność ponosi Użytkownik. Operator serwisu nie weryfikuje ich pod kątem praw autorskich.\n\n3. Wyłączenie odpowiedzialności\nAplikacja jest dostarczana w modelu 'AS-IS'. Nie gwarantujemy 100% dostępności usług ani poprawności wygenerowanych podpowiedzi AI.\n\n4. Zgłaszanie naruszeń (DSA)\nW przypadku wykrycia nielegalnych treści w trybie udostępniania publicznego, prosimy o kontakt w celu ich zablokowania."
   }
 }

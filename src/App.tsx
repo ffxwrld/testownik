@@ -35,6 +35,7 @@ import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThemePicker } from './components/ThemePicker';
 import { FormatInfoModal } from './components/FormatInfoModal';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { LegalOnboardingModal } from './components/LegalOnboardingModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useAppOrchestrator, AppPhase } from './hooks/useAppOrchestrator';
 
@@ -394,6 +395,7 @@ const App: FC = () => {
           <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
         )}
       </AnimatePresence>
+      <LegalOnboardingModal />
       <CommandPalette />
     </div>
   </GlobalErrorBoundary>
