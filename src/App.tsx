@@ -35,6 +35,7 @@ import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThemePicker } from './components/ThemePicker';
 import { FormatInfoModal } from './components/FormatInfoModal';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { TermsOfServiceModal } from './components/TermsOfServiceModal';
 import { LegalOnboardingModal } from './components/LegalOnboardingModal';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useAppOrchestrator, AppPhase } from './hooks/useAppOrchestrator';
@@ -63,6 +64,8 @@ const App: FC = () => {
     setShowFormatInfo,
     showPrivacyPolicy,
     setShowPrivacyPolicy,
+    showTermsOfService,
+    setShowTermsOfService,
     showMobileSettings,
     setShowMobileSettings,
     isDark,
@@ -362,12 +365,20 @@ const App: FC = () => {
               </div>
 
               <div className="pt-6 mt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center gap-3">
-                <button
-                  onClick={() => setShowPrivacyPolicy(true)}
-                  className="text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
-                >
-                  {t('settings.privacyPolicy')}
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setShowPrivacyPolicy(true)}
+                    className="text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                  >
+                    {t('settings.privacyPolicy')}
+                  </button>
+                  <button
+                    onClick={() => setShowTermsOfService(true)}
+                    className="text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                  >
+                    {t('termsModal.title')}
+                  </button>
+                </div>
                 <a
                   href="https://github.com/ffxwrld"
                   target="_blank"
@@ -393,6 +404,11 @@ const App: FC = () => {
       <AnimatePresence>
         {showPrivacyPolicy && (
           <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showTermsOfService && (
+          <TermsOfServiceModal onClose={() => setShowTermsOfService(false)} />
         )}
       </AnimatePresence>
       <LegalOnboardingModal />

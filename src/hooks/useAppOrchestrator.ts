@@ -119,6 +119,7 @@ export function useAppOrchestrator() {
 
   const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
 
   const themeControls = useTheme();
@@ -471,6 +472,8 @@ export function useAppOrchestrator() {
     setShowFormatInfo,
     showPrivacyPolicy,
     setShowPrivacyPolicy,
+    showTermsOfService,
+    setShowTermsOfService,
     showMobileSettings,
     setShowMobileSettings,
     handleStartSession,
