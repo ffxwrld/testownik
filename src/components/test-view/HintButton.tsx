@@ -94,10 +94,10 @@ export const HintButton: React.FC<HintButtonProps> = ({ questionText, options })
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: 'spring', bounce: 0.3, duration: 0.4 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-xl rounded-2xl p-4 z-50 origin-bottom"
+            className="absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-3 w-72 sm:w-80 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl p-4 z-50 sm:origin-bottom origin-bottom-left"
           >
             {/* Triangle pointing down */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-zinc-900 border-b border-r border-zinc-200 dark:border-zinc-700 rotate-45" />
+            <div className="absolute -bottom-2 left-5 sm:left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-zinc-900 border-b border-r border-zinc-200 dark:border-zinc-700 rotate-45" />
 
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
